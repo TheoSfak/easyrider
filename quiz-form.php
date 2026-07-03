@@ -1,0 +1,185 @@
+﻿<?php
+require_once __DIR__ . '/bootstrap.php';
+requirePermission('training_manage');
+
+$id = (int) get('id');
+$isEdit = !empty($id);
+$quiz = null;
+
+if ($isEdit) {
+    $quiz = dbFetchOne("SELECT * FROM training_quizzes WHERE id = ?", [$id]);
+    if (!$quiz) {
+        setFlash('error', 'Το κουίζ δεν βρέθηκε.');
+        redirect('exam-admin.php?tab=quizzes');
+    }
+}
+
+if (isPost()) {
+    verifyCsrf();
+    
+    $title = post('title');
+    $description = post('description');
+    $categoryId = post('category_id');
+    $questionsPerAttempt = post('questions_per_attempt', 10);
+    $passingPercentage = post('passing_percentage', 70);
+    $timeLimit = post('time_limit_minutes');
+    $useRandomPool = isset($_POST['use_random_pool']) ? 1 : 0;
+    $isActive = isset($_POST['is_active']) ? 1 : 0;
+    
+    $errors = [];
+    if (empty($title)) $errors[] = 'Το πεδίο τίτλος είναι υποχρεωτικό.';
+    if (empty($categoryId)) $errors[] = 'Επιλέξτε κατηγορία.';
+    if ($questionsPerAttempt < 1) $errors[] = 'Ο αριθμός ερωτήσεων πρέπει να είναι τουλάχιστον 1.';
+    if ($passingPercentage < 0 || $passingPercentage > 100) $errors[] = 'Το ποσοστό επιτυχίας πρέπει να είναι μεταξύ 0-100.';
+    
+    if (empty($errors)) {
+        if ($isEdit) {
+            dbExecute("
+                UPDATE training_quizzes 
+                SET title = ?, description = ?, category_id = ?, questions_per_attempt = ?, passing_percentage = ?, time_limit_minutes = ?, use_random_pool = ?, is_active = ?, updated_at = NOW()
+                WHERE id = ?
+            ", [$title, $description, $categoryId, $questionsPerAttempt, $passingPercentage, $timeLimit, $useRandomPool, $isActive, $id]);
+            logAudit('update', 'training_quizzes', $id);
+            setFlash('success', 'Το κουίζ ενημερώθηκε.');
+        } else {
+            $newId = dbInsert("
+                INSERT INTO training_quizzes (title, description, category_id, questions_per_attempt, passing_percentage, time_limit_minutes, use_random_pool, is_active, created_by)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ", [$title, $description, $categoryId, $questionsPerAttempt, $passingPercentage, $timeLimit, $useRandomPool, $isActive, getCurrentUserId()]);
+            logAudit('create', 'training_quizzes', $newId);
+            if ($useRandomPool) {
+                setFlash('success', 'Το κουίζ δημιουργήθηκε. Ο τυχαίος επιλογέας ερωτήσεων από pool είναι ενεργός — δεν χρειάζεται χειροκίνητη προσθήκη ερωτήσεων.');
+                redirect('exam-admin.php?tab=quizzes');
+            } else {
+                setFlash('success', 'Το κουίζ δημιουργήθηκε.');
+            }
+            redirect('quiz-questions-admin.php?quiz_id=' . $newId);
+        }
+        redirect('exam-admin.php?tab=quizzes');
+    } else {
+        foreach ($errors as $error) {
+            setFlash('error', $error);
+        }
+    }
+}
+
+$categories = dbFetchAll("SELECT * FROM training_categories WHERE is_active = 1 ORDER BY display_order, name");
+
+$pageTitle = $isEdit ? 'Επεξεργασία Κουίζ' : 'Νέο Κουίζ';
+include __DIR__ . '/includes/header.php';
+?>
+
+<div class="container-fluid">
+    <?php displayFlash(); ?>
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0">
+            <i class="bi bi-puzzle me-2"></i><?= $pageTitle ?>
+        </h1>
+        <a href="exam-admin.php?tab=quizzes" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Επιστροφή
+        </a>
+    </div>
+    
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        <?= csrfField() ?>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Τίτλος *</label>
+                            <input type="text" name="title" class="form-control" 
+                                   value="<?= h($quiz['title'] ?? '') ?>" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Περιγραφή</label>
+                            <textarea name="description" class="form-control" rows="4"><?= h($quiz['description'] ?? '') ?></textarea>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Κατηγορία *</label>
+                            <select name="category_id" class="form-select" required>
+                                <option value="">-- Επιλέξτε --</option>
+                                <?php foreach ($categories as $cat): ?>
+                                    <option value="<?= $cat['id'] ?>" <?= (($quiz['category_id'] ?? '') == $cat['id']) ? 'selected' : '' ?>>
+                                        <?= h($cat['icon']) ?> <?= h($cat['name']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Αριθμός Ερωτήσεων ανά Προσπάθεια *</label>
+                                <input type="number" name="questions_per_attempt" class="form-control" min="1" 
+                                       value="<?= h($quiz['questions_per_attempt'] ?? 10) ?>" required>
+                                <small class="text-muted">Πόσες ερωτήσεις να τραβηχτούν από το pool</small>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Ποσοστό Επιτυχίας (%) *</label>
+                                <input type="number" name="passing_percentage" class="form-control" min="0" max="100" 
+                                       value="<?= h($quiz['passing_percentage'] ?? 70) ?>" required>
+                                <small class="text-muted">Απαιτούμενο ποσοστό για επιτυχία</small>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Όριο Χρόνου (λεπτά)</label>
+                            <input type="number" name="time_limit_minutes" class="form-control" min="0" 
+                                   value="<?= h($quiz['time_limit_minutes'] ?? '') ?>">
+                            <small class="text-muted">Αφήστε κενό για απεριόριστο χρόνο</small>
+                        </div>
+                        
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" name="use_random_pool" id="use_random_pool" 
+                                   <?= ($quiz['use_random_pool'] ?? 0) ? 'checked' : '' ?>>
+                            <label class="form-check-label" for="use_random_pool">
+                                <strong>Τυχαία επιλογή από pool κατηγορίας</strong>
+                                <div class="text-muted small mt-1">Το σύστημα επιλέγει αυτόματα τυχαίες ερωτήσεις από <em>όλη</em> την κατηγορία κατά την έναρξη. Δεν χρειάζεται χειροκίνητη προσθήκη ερωτήσεων στο κουίζ.</div>
+                            </label>
+                        </div>
+
+                        <div class="form-check mb-3">
+                            <input class="form-check-input" type="checkbox" name="is_active" id="is_active" 
+                                   <?= ($quiz['is_active'] ?? 1) ? 'checked' : '' ?>>
+                            <label class="form-check-label" for="is_active">
+                                Ενεργό (ορατό σε εθελοντές)
+                            </label>
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-save"></i> Αποθήκευση
+                            </button>
+                            <a href="exam-admin.php?tab=quizzes" class="btn btn-secondary">
+                                Ακύρωση
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <?php if ($isEdit): ?>
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6 class="mb-0">Επόμενα Βήματα</h6>
+                    </div>
+                    <div class="card-body">
+                        <p>Αφού αποθηκεύσετε τις ρυθμίσεις:</p>
+                        <a href="quiz-questions-admin.php?quiz_id=<?= $id ?>" class="btn btn-info w-100 mb-2">
+                            <i class="bi bi-question-circle"></i> Διαχείριση Ερωτήσεων
+                        </a>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<?php include __DIR__ . '/includes/footer.php'; ?>

@@ -1,0 +1,892 @@
+<?php
+/**
+ * EasyRide - My Participations
+ * Μέλος βλέπει τις αιτήσεις συμμετοχής του
+ */
+
+require_once __DIR__ . '/bootstrap.php';
+requireLogin();
+
+$pageTitle = 'Οι Αιτήσεις μου';
+$user = getCurrentUser();
+
+// Get all participations for current user
+$participations = dbFetchAll(
+    "SELECT pr.*, 
+            s.start_time, s.end_time, s.max_volunteers,
+            m.title as mission_title, m.location, m.status as mission_status,
+            decider.name as decided_by_name
+     FROM participation_requests pr
+     JOIN shifts s ON pr.shift_id = s.id
+     JOIN missions m ON s.mission_id = m.id
+     LEFT JOIN users decider ON pr.decided_by = decider.id
+     WHERE pr.volunteer_id = ?
+     ORDER BY s.start_time DESC",
+    [$user['id']]
+);
+
+// Handle cancel action
+if (isPost()) {
+    verifyCsrf();
+    $action = post('action');
+    
+    if ($action === 'cancel') {
+        $prId = post('participation_id');
+        
+        // Verify ownership and status
+        $pr = dbFetchOne(
+            "SELECT * FROM participation_requests WHERE id = ? AND volunteer_id = ? AND status = ?",
+            [$prId, $user['id'], PARTICIPATION_PENDING]
+        );
+        
+        if ($pr) {
+            dbExecute(
+                "UPDATE participation_requests SET status = ?, updated_at = NOW() WHERE id = ?",
+                [PARTICIPATION_CANCELED_BY_USER, $prId]
+            );
+            logAudit('cancel_participation', 'participation_requests', $prId);
+            setFlash('success', 'Η αίτηση ακυρώθηκε.');
+        } else {
+            setFlash('error', 'Δεν μπορείτε να ακυρώσετε αυτή την αίτηση.');
+        }
+        redirect('my-participations.php');
+    }
+
+    if ($action === 'respond_swap') {
+        $swapId  = (int) post('swap_id');
+        $response = post('response'); // 'accept' or 'decline'
+
+        $swap = dbFetchOne(
+            "SELECT ssr.*, s.start_time, s.end_time, m.title as mission_title
+             FROM shift_swap_requests ssr
+             JOIN shifts s ON ssr.shift_id = s.id
+             JOIN missions m ON s.mission_id = m.id
+             WHERE ssr.id = ? AND ssr.to_volunteer_id = ? AND ssr.status = ?",
+            [$swapId, $user['id'], SWAP_PENDING_RESPONSE]
+        );
+
+        if ($swap) {
+            if ($response === 'accept') {
+                dbExecute(
+                    "UPDATE shift_swap_requests SET status = ?, to_volunteer_responded_at = NOW(), updated_at = NOW() WHERE id = ?",
+                    [SWAP_ACCEPTED, $swapId]
+                );
+                logAudit('swap_accepted', 'shift_swap_requests', $swapId);
+
+                // Notify requester (email + in-app)
+                $requester = dbFetchOne("SELECT name, email FROM users WHERE id = ?", [$swap['from_volunteer_id']]);
+                if ($requester) {
+                    if (!empty($requester['email']) && isNotificationEnabled('shift_swap_accepted')) {
+                        sendNotificationEmail('shift_swap_accepted', $requester['email'], [
+                            'user_name'        => $requester['name'],
+                            'replacement_name' => $user['name'],
+                            'mission_title'    => $swap['mission_title'],
+                            'shift_date'       => formatDateTime($swap['start_time'], 'd/m/Y'),
+                            'shift_time'       => formatDateTime($swap['start_time'], 'H:i') . ' - ' . formatDateTime($swap['end_time'], 'H:i'),
+                        ]);
+                    }
+                    sendNotification(
+                        $swap['from_volunteer_id'],
+                        'Αποδοχή Αντικατάστασης',
+                        'Ο/Η ' . $user['name'] . ' αποδέχτηκε το αίτημα αντικατάστασης για: ' . $swap['mission_title'] . '. Αναμένεται έγκριση διαχειριστή.'
+                    );
+                }
+                setFlash('success', 'Αποδεχτήκατε το αίτημα. Αναμένεται η τελική έγκριση από τον διαχειριστή.');
+            } else {
+                dbExecute(
+                    "UPDATE shift_swap_requests SET status = ?, to_volunteer_responded_at = NOW(), updated_at = NOW() WHERE id = ?",
+                    [SWAP_DECLINED, $swapId]
+                );
+                logAudit('swap_declined', 'shift_swap_requests', $swapId);
+
+                // Notify requester in-app
+                sendNotification(
+                    $swap['from_volunteer_id'],
+                    'Άρνηση Αντικατάστασης',
+                    'Ο/Η ' . $user['name'] . ' αρνήθηκε το αίτημα αντικατάστασης για: ' . $swap['mission_title'] . '. Μπορείτε να ζητήσετε άλλο μέλος.'
+                );
+                setFlash('warning', 'Αρνηθήκατε το αίτημα αντικατάστασης.');
+            }
+        } else {
+            setFlash('error', 'Δεν βρέθηκε το αίτημα αντικατάστασης.');
+        }
+        redirect('my-participations.php');
+    }
+
+    if ($action === 'cancel_swap') {
+        $swapId = (int) post('swap_id');
+        $swap = dbFetchOne(
+            "SELECT id FROM shift_swap_requests WHERE id = ? AND from_volunteer_id = ? AND status IN (?,?)",
+            [$swapId, $user['id'], SWAP_PENDING_RESPONSE, SWAP_ACCEPTED]
+        );
+        if ($swap) {
+            dbExecute(
+                "UPDATE shift_swap_requests SET status = ?, updated_at = NOW() WHERE id = ?",
+                [SWAP_CANCELED, $swapId]
+            );
+            logAudit('swap_canceled', 'shift_swap_requests', $swapId);
+            setFlash('success', 'Το αίτημα αντικατάστασης ακυρώθηκε.');
+        }
+        redirect('my-participations.php');
+    }
+}
+
+// Group by status
+$pending  = array_filter($participations, fn($p) => $p['status'] === PARTICIPATION_PENDING);
+$approved = array_filter($participations, fn($p) => $p['status'] === PARTICIPATION_APPROVED);
+$rejected = array_filter($participations, fn($p) => $p['status'] === PARTICIPATION_REJECTED);
+$canceled = array_filter($participations, fn($p) => in_array($p['status'], [PARTICIPATION_CANCELED_BY_USER, PARTICIPATION_CANCELED_BY_ADMIN]));
+
+// Active NOW: approved shifts currently in progress
+$now = time();
+$activeNow = array_filter($approved, fn($p) =>
+    strtotime($p['start_time']) <= $now && strtotime($p['end_time']) > $now
+);
+
+// Incoming swap requests (someone asked ME to cover)
+$incomingSwaps = dbFetchAll(
+    "SELECT ssr.*, s.start_time, s.end_time, m.title as mission_title, m.location,
+            fu.name as requester_name
+     FROM shift_swap_requests ssr
+     JOIN shifts s ON ssr.shift_id = s.id
+     JOIN missions m ON s.mission_id = m.id
+     JOIN users fu ON ssr.from_volunteer_id = fu.id
+     WHERE ssr.to_volunteer_id = ? AND ssr.status = ?
+     ORDER BY ssr.created_at DESC",
+    [$user['id'], SWAP_PENDING_RESPONSE]
+);
+
+// Outgoing swaps keyed by participation_id, for status badges on approved rows
+$outgoingSwaps = [];
+$outgoingRaw = dbFetchAll(
+    "SELECT ssr.*, u.name as to_volunteer_name
+     FROM shift_swap_requests ssr
+     JOIN users u ON ssr.to_volunteer_id = u.id
+     WHERE ssr.from_volunteer_id = ? AND ssr.status IN (?,?,?)",
+    [$user['id'], SWAP_PENDING_RESPONSE, SWAP_ACCEPTED, SWAP_APPROVED]
+);
+foreach ($outgoingRaw as $sr) {
+    $outgoingSwaps[$sr['participation_id']] = $sr;
+}
+
+include __DIR__ . '/includes/header.php';
+?>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">
+        <i class="bi bi-list-check me-2"></i>Οι Αιτήσεις μου
+    </h1>
+    <div class="d-flex gap-2">
+        <a href="volunteer-report.php?id=<?= getCurrentUserId() ?>" target="_blank" class="btn btn-outline-secondary">
+            <i class="bi bi-file-earmark-text me-1"></i>Αναφορά Δραστηριότητας
+        </a>
+        <a href="missions.php" class="btn btn-primary">
+            <i class="bi bi-search me-1"></i>Αναζήτηση Δράσεων
+        </a>
+    </div>
+</div>
+
+<?= showFlash() ?>
+
+<?php if (!empty($activeNow)): ?>
+<!-- ═══════════════════════════════════════════════════════════
+     LIVE OPS PANEL — Δράσεις Τώρα σε Εξέλιξη
+═══════════════════════════════════════════════════════════ -->
+<div id="liveOpsPanel" class="mb-4">
+    <div class="alert alert-danger d-flex align-items-center gap-2 mb-3">
+        <span class="spinner-grow spinner-grow-sm text-danger" role="status"></span>
+        <strong>Είστε σε ενεργή δράση!</strong> Ενημερώστε την κατάστασή σας και τη θέση σας.
+    </div>
+
+    <?php foreach ($activeNow as $p): ?>
+    <?php
+        $fieldStatus = $p['field_status'] ?? null;
+        $statusLabels = ['on_way' => '🚗 Σε Κίνηση', 'on_site' => '✅ Επί Τόπου', 'needs_help' => '🆘 Χρειάζεται Βοήθεια'];
+        $statusColors = ['on_way' => 'warning', 'on_site' => 'success', 'needs_help' => 'danger'];
+    ?>
+    <div class="card border-danger mb-3">
+        <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
+            <div>
+                <i class="bi bi-broadcast-pin me-2"></i>
+                <strong><?= h($p['mission_title']) ?></strong>
+                <span class="ms-2 text-white-50 small"><?= date('H:i', strtotime($p['start_time'])) ?> – <?= date('H:i', strtotime($p['end_time'])) ?></span>
+            </div>
+            <?php if ($fieldStatus): ?>
+                <span class="badge bg-light text-dark" id="statusBadge-<?= $p['id'] ?>"><?= $statusLabels[$fieldStatus] ?? '' ?></span>
+            <?php else: ?>
+                <span class="badge bg-light text-dark" id="statusBadge-<?= $p['id'] ?>">— Χωρίς κατάσταση</span>
+            <?php endif; ?>
+        </div>
+        <div class="card-body">
+            <div class="row g-3">
+
+                <!-- GPS Ping -->
+                <div class="col-md-5">
+                    <p class="small text-muted mb-2"><i class="bi bi-geo-alt-fill me-1 text-primary"></i><strong>Αναφορά Θέσης (GPS)</strong></p>
+                    <button type="button"
+                            class="btn btn-primary w-100 btn-ping"
+                            data-pr-id="<?= $p['id'] ?>"
+                            data-shift-id="<?= $p['shift_id'] ?>"
+                            onclick="sendGpsPing(this)">
+                        <i class="bi bi-send-fill me-1"></i>Αποστολή Θέσης
+                    </button>
+                    <div class="mt-1 small text-muted" id="pingStatus-<?= $p['id'] ?>"></div>
+                </div>
+
+                <!-- Field Status -->
+                <div class="col-md-7">
+                    <p class="small text-muted mb-2"><i class="bi bi-activity me-1 text-success"></i><strong>Κατάσταση Πεδίου</strong></p>
+                    <div class="btn-group w-100" role="group" id="statusBtns-<?= $p['id'] ?>">
+                        <button type="button"
+                                class="btn btn-sm <?= $fieldStatus === 'on_way' ? 'btn-warning' : 'btn-outline-warning' ?>"
+                                onclick="setStatus(this, <?= $p['id'] ?>, 'on_way')">
+                            🚗 Σε Κίνηση
+                        </button>
+                        <button type="button"
+                                class="btn btn-sm <?= $fieldStatus === 'on_site' ? 'btn-success' : 'btn-outline-success' ?>"
+                                onclick="setStatus(this, <?= $p['id'] ?>, 'on_site')">
+                            ✅ Επί Τόπου
+                        </button>
+                        <button type="button"
+                                class="btn btn-sm <?= $fieldStatus === 'needs_help' ? 'btn-danger' : 'btn-outline-danger' ?>"
+                                onclick="setStatus(this, <?= $p['id'] ?>, 'needs_help')">
+                            🆘 Βοήθεια!
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <?php endforeach; ?>
+</div>
+<?php endif; ?>
+
+<?php if (!empty($incomingSwaps)): ?>
+<!-- Incoming Swap Requests -->
+<div class="card mb-4" style="border:2px solid #8e44ad">
+    <div class="card-header text-white" style="background:#8e44ad">
+        <h5 class="mb-0"><i class="bi bi-arrow-left-right me-1"></i>Αιτήματα Αντικατάστασης που σας απευθύνονται (<?= count($incomingSwaps) ?>)</h5>
+    </div>
+    <div class="list-group list-group-flush">
+        <?php foreach ($incomingSwaps as $sr): ?>
+        <div class="list-group-item">
+            <div class="row align-items-center">
+                <div class="col">
+                    <strong><?= h($sr['requester_name']) ?></strong> δεν μπορεί να παραστεί στο σκέλος:
+                    <div class="mt-1">
+                        <i class="bi bi-flag-fill text-primary me-1"></i><?= h($sr['mission_title']) ?> &nbsp;
+                        <i class="bi bi-calendar3 me-1 text-muted"></i><?= formatDateTime($sr['start_time'], 'd/m/Y') ?> &nbsp;
+                        <i class="bi bi-clock me-1 text-muted"></i><?= formatDateTime($sr['start_time'], 'H:i') ?>–<?= formatDateTime($sr['end_time'], 'H:i') ?>
+                    </div>
+                    <?php if ($sr['message']): ?>
+                    <div class="mt-1 p-2 rounded" style="background:#ede7f6;font-size:.88rem;border-left:3px solid #8e44ad">
+                        <i class="bi bi-quote me-1"></i><?= h($sr['message']) ?>
+                    </div>
+                    <?php endif; ?>
+                </div>
+                <div class="col-auto d-flex gap-2 flex-wrap mt-2 mt-md-0">
+                    <form method="post" class="d-inline">
+                        <?= csrfField() ?>
+                        <input type="hidden" name="action" value="respond_swap">
+                        <input type="hidden" name="swap_id" value="<?= $sr['id'] ?>">
+                        <input type="hidden" name="response" value="accept">
+                        <button type="submit" class="btn btn-sm btn-success">
+                            <i class="bi bi-check-lg me-1"></i>Αποδοχή
+                        </button>
+                    </form>
+                    <form method="post" class="d-inline"
+                          onsubmit="return confirm('Να αρνηθείτε το αίτημα αντικατάστασης;')">
+                        <?= csrfField() ?>
+                        <input type="hidden" name="action" value="respond_swap">
+                        <input type="hidden" name="swap_id" value="<?= $sr['id'] ?>">
+                        <input type="hidden" name="response" value="decline">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                            <i class="bi bi-x-lg me-1"></i>Άρνηση
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <?php endforeach; ?>
+    </div>
+</div>
+<?php endif; ?>
+
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card bg-warning text-dark">
+            <div class="card-body text-center">
+                <h3><?= count($pending) ?></h3>
+                <small>Εκκρεμείς</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h3><?= count($approved) ?></h3>
+                <small>Εγκεκριμένες</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-danger text-white">
+            <div class="card-body text-center">
+                <h3><?= count($rejected) ?></h3>
+                <small>Απορριφθείσες</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-secondary text-white">
+            <div class="card-body text-center">
+                <h3><?= count($canceled) ?></h3>
+                <small>Ακυρωμένες</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Participations -->
+<?php if (!empty($pending)): ?>
+<div class="card mb-4 border-warning">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0"><i class="bi bi-hourglass-split me-1"></i>Εκκρεμείς Αιτήσεις (<?= count($pending) ?>)</h5>
+    </div>
+    <div class="card-body p-0">
+        <!-- Desktop/Tablet table view -->
+        <div class="table-responsive d-none d-sm-block">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Δράση</th>
+                        <th>Σκέλος</th>
+                        <th>Τοποθεσία</th>
+                        <th>Ημ/νία Αίτησης</th>
+                        <th>Ενέργειες</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($pending as $p): ?>
+                        <tr>
+                            <td>
+                                <strong><?= h($p['mission_title']) ?></strong>
+                                <?php if ($p['notes']): ?>
+                                    <br><small class="text-muted"><i class="bi bi-quote me-1"></i><?= h($p['notes']) ?></small>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?= formatDateTime($p['start_time'], 'd/m/Y') ?><br>
+                                <small><?= formatDateTime($p['start_time'], 'H:i') ?> - <?= formatDateTime($p['end_time'], 'H:i') ?></small>
+                            </td>
+                            <td><?= h($p['location']) ?></td>
+                            <td><?= formatDateTime($p['created_at'], 'd/m/Y H:i') ?></td>
+                            <td>
+                                <form method="post" class="d-inline" onsubmit="return confirm('Ακύρωση της αίτησης;')">
+                                    <?= csrfField() ?>
+                                    <input type="hidden" name="action" value="cancel">
+                                    <input type="hidden" name="participation_id" value="<?= $p['id'] ?>">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-x-lg"></i> Ακύρωση
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <!-- Mobile card view -->
+        <div class="d-sm-none mobile-cards-container p-2">
+            <?php foreach ($pending as $p): ?>
+                <div class="card mobile-card border-warning">
+                    <div class="card-body">
+                        <div class="mobile-card-header">
+                            <strong><?= h($p['mission_title']) ?></strong>
+                            <span class="badge bg-warning text-dark">Εκκρεμεί</span>
+                        </div>
+                        <?php if ($p['notes']): ?>
+                            <div class="mobile-card-row">
+                                <small class="text-muted"><i class="bi bi-quote me-1"></i><?= h($p['notes']) ?></small>
+                            </div>
+                        <?php endif; ?>
+                        <div class="mobile-card-row">
+                            <div class="mobile-card-label">Σκέλος</div>
+                            <small><i class="bi bi-calendar me-1"></i><?= formatDateTime($p['start_time'], 'd/m/Y') ?> &nbsp;<?= formatDateTime($p['start_time'], 'H:i') ?> - <?= formatDateTime($p['end_time'], 'H:i') ?></small>
+                        </div>
+                        <div class="mobile-card-row">
+                            <div class="mobile-card-label">Τοποθεσία</div>
+                            <small><i class="bi bi-geo-alt me-1"></i><?= h($p['location']) ?></small>
+                        </div>
+                        <div class="mobile-card-row">
+                            <div class="mobile-card-label">Ημ/νία Αίτησης</div>
+                            <small><?= formatDateTime($p['created_at'], 'd/m/Y H:i') ?></small>
+                        </div>
+                        <div class="mobile-card-actions">
+                            <form method="post" class="w-100" onsubmit="return confirm('Ακύρωση της αίτησης;')">
+                                <?= csrfField() ?>
+                                <input type="hidden" name="action" value="cancel">
+                                <input type="hidden" name="participation_id" value="<?= $p['id'] ?>">
+                                <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                                    <i class="bi bi-x-lg me-1"></i>Ακύρωση Αίτησης
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<!-- Approved Participations -->
+<?php if (!empty($approved)): ?>
+<div class="card mb-4 border-success">
+    <div class="card-header bg-success text-white">
+        <h5 class="mb-0"><i class="bi bi-check-circle me-1"></i>Εγκεκριμένες Συμμετοχές (<?= count($approved) ?>)</h5>
+    </div>
+    <div class="card-body p-0">
+        <!-- Desktop/Tablet table view -->
+        <div class="table-responsive d-none d-sm-block">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Δράση</th>
+                        <th>Σκέλος</th>
+                        <th>Τοποθεσία</th>
+                        <th>Κατάσταση</th>
+                        <th>Εγκρίθηκε</th>
+                        <th>Αντικατάσταση</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($approved as $p): ?>
+                        <?php 
+                        $isPast = strtotime($p['end_time']) < time();
+                        ?>
+                        <tr class="<?= $isPast ? 'table-light' : '' ?>">
+                            <td>
+                                <strong><?= h($p['mission_title']) ?></strong>
+                                <?php if ($p['notes']): ?>
+                                    <br><small class="text-muted"><i class="bi bi-quote me-1"></i><?= h($p['notes']) ?></small>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?= formatDateTime($p['start_time'], 'd/m/Y') ?><br>
+                                <small><?= formatDateTime($p['start_time'], 'H:i') ?> - <?= formatDateTime($p['end_time'], 'H:i') ?></small>
+                            </td>
+                            <td><?= h($p['location']) ?></td>
+                            <td>
+                                <?php if ($p['attended']): ?>
+                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Παρευρέθηκα</span>
+                                <?php elseif ($isPast): ?>
+                                    <span class="badge bg-secondary">Ολοκληρώθηκε</span>
+                                <?php else: ?>
+                                    <span class="badge bg-info">Αναμένεται</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?= formatDateTime($p['decided_at'], 'd/m/Y H:i') ?>
+                                <?php if ($p['decided_by_name']): ?>
+                                    <br><small class="text-muted">από <?= h($p['decided_by_name']) ?></small>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?php if (!$isPast && isset($outgoingSwaps[$p['id']])): ?>
+                                    <?php $sw = $outgoingSwaps[$p['id']]; ?>
+                                    <?php if ($sw['status'] === SWAP_PENDING_RESPONSE): ?>
+                                        <span class="badge" style="background:#8e44ad">Αναμένει απάντηση</span>
+                                        <br><small class="text-muted"><?= h($sw['to_volunteer_name']) ?></small>
+                                        <form method="post" class="mt-1">
+                                            <?= csrfField() ?>
+                                            <input type="hidden" name="action" value="cancel_swap">
+                                            <input type="hidden" name="swap_id" value="<?= $sw['id'] ?>">
+                                            <button type="submit" class="btn btn-xs btn-outline-secondary" style="font-size:.75rem;padding:1px 6px">
+                                                <i class="bi bi-x"></i> Ακύρωση
+                                            </button>
+                                        </form>
+                                    <?php elseif ($sw['status'] === SWAP_ACCEPTED): ?>
+                                        <span class="badge bg-success">Αποδεχτήκε</span>
+                                        <br><small class="text-muted"><?= h($sw['to_volunteer_name']) ?></small><br>
+                                        <small class="text-muted">Αναμένει admin</small>
+                                    <?php endif; ?>
+                                <?php elseif (!$isPast && !isset($outgoingSwaps[$p['id']])): ?>
+                                    <a href="shift-swap.php?participation_id=<?= $p['id'] ?>" class="btn btn-sm btn-outline-secondary" style="font-size:.8rem">
+                                        <i class="bi bi-arrow-left-right me-1"></i>Αντικατάσταση
+                                    </a>
+                                <?php else: ?>
+                                    <span class="text-muted">—</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <!-- Mobile card view -->
+        <div class="d-sm-none mobile-cards-container p-2">
+            <?php foreach ($approved as $p): ?>
+                <?php $isPast = strtotime($p['end_time']) < time(); ?>
+                <div class="card mobile-card border-success <?= $isPast ? 'opacity-75' : '' ?>">
+                    <div class="card-body">
+                        <div class="mobile-card-header">
+                            <strong><?= h($p['mission_title']) ?></strong>
+                            <div>
+                                <?php if ($p['attended']): ?>
+                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Παρευρέθηκα</span>
+                                <?php elseif ($isPast): ?>
+                                    <span class="badge bg-secondary">Ολοκληρώθηκε</span>
+                                <?php else: ?>
+                                    <span class="badge bg-info">Αναμένεται</span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <?php if ($p['notes']): ?>
+                            <div class="mobile-card-row">
+                                <small class="text-muted"><i class="bi bi-quote me-1"></i><?= h($p['notes']) ?></small>
+                            </div>
+                        <?php endif; ?>
+                        <div class="mobile-card-row">
+                            <div class="mobile-card-label">Σκέλος</div>
+                            <small><i class="bi bi-calendar me-1"></i><?= formatDateTime($p['start_time'], 'd/m/Y') ?> &nbsp;<?= formatDateTime($p['start_time'], 'H:i') ?> - <?= formatDateTime($p['end_time'], 'H:i') ?></small>
+                        </div>
+                        <div class="mobile-card-row">
+                            <div class="mobile-card-label">Τοποθεσία</div>
+                            <small><i class="bi bi-geo-alt me-1"></i><?= h($p['location']) ?></small>
+                        </div>
+                        <div class="mobile-card-row">
+                            <div class="mobile-card-label">Εγκρίθηκε</div>
+                            <small><?= formatDateTime($p['decided_at'], 'd/m/Y H:i') ?>
+                            <?php if ($p['decided_by_name']): ?>
+                                <span class="text-muted">από <?= h($p['decided_by_name']) ?></span>
+                            <?php endif; ?></small>
+                        </div>
+                        <?php if (!$isPast && isset($outgoingSwaps[$p['id']])): ?>
+                            <?php $sw = $outgoingSwaps[$p['id']]; ?>
+                            <?php if ($sw['status'] === SWAP_PENDING_RESPONSE): ?>
+                            <div class="mobile-card-row mt-2">
+                                <span class="badge" style="background:#8e44ad">Εκκρεμεί αίτημα αντικ.</span>
+                                <small class="text-muted"><?= h($sw['to_volunteer_name']) ?></small>
+                                <form method="post" class="ms-auto">
+                                    <?= csrfField() ?>
+                                    <input type="hidden" name="action" value="cancel_swap">
+                                    <input type="hidden" name="swap_id" value="<?= $sw['id'] ?>">
+                                    <button class="btn btn-xs btn-outline-secondary" style="font-size:.75rem;padding:1px 6px"><i class="bi bi-x"></i> Ακύρωση</button>
+                                </form>
+                            </div>
+                            <?php elseif ($sw['status'] === SWAP_ACCEPTED): ?>
+                            <div class="mobile-card-row mt-2">
+                                <span class="badge bg-success">Αποδεχτήκε</span>
+                                <small class="text-muted"><?= h($sw['to_volunteer_name']) ?> — αναμένει admin</small>
+                            </div>
+                            <?php endif; ?>
+                        <?php elseif (!$isPast && !isset($outgoingSwaps[$p['id']])): ?>
+                        <div class="d-grid mt-2">
+                            <a href="shift-swap.php?participation_id=<?= $p['id'] ?>" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-arrow-left-right me-1"></i>Αντικατάσταση
+                            </a>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<!-- Rejected Participations -->
+<?php if (!empty($rejected)): ?>
+<div class="card mb-4 border-danger">
+    <div class="card-header bg-danger text-white">
+        <h5 class="mb-0"><i class="bi bi-x-circle me-1"></i>Απορριφθείσες Αιτήσεις (<?= count($rejected) ?>)</h5>
+    </div>
+    <div class="card-body p-0">
+        <!-- Desktop/Tablet table view -->
+        <div class="table-responsive d-none d-sm-block">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Δράση</th>
+                        <th>Σκέλος</th>
+                        <th>Λόγος Απόρριψης</th>
+                        <th>Ημ/νία Απόρριψης</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($rejected as $p): ?>
+                        <tr>
+                            <td>
+                                <strong><?= h($p['mission_title']) ?></strong>
+                                <?php if ($p['notes']): ?>
+                                    <br><small class="text-muted"><i class="bi bi-quote me-1"></i>Η αίτησή μου: <?= h($p['notes']) ?></small>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?= formatDateTime($p['start_time'], 'd/m/Y') ?><br>
+                                <small><?= formatDateTime($p['start_time'], 'H:i') ?> - <?= formatDateTime($p['end_time'], 'H:i') ?></small>
+                            </td>
+                            <td>
+                                <?php if ($p['rejection_reason']): ?>
+                                    <span class="text-danger">
+                                        <i class="bi bi-info-circle me-1"></i><?= h($p['rejection_reason']) ?>
+                                    </span>
+                                <?php else: ?>
+                                    <span class="text-muted">Δεν δόθηκε αιτιολογία</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>
+                                <?= formatDateTime($p['decided_at'], 'd/m/Y H:i') ?>
+                                <?php if ($p['decided_by_name']): ?>
+                                    <br><small class="text-muted">από <?= h($p['decided_by_name']) ?></small>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <!-- Mobile card view -->
+        <div class="d-sm-none mobile-cards-container p-2">
+            <?php foreach ($rejected as $p): ?>
+                <div class="card mobile-card border-danger">
+                    <div class="card-body">
+                        <div class="mobile-card-header">
+                            <strong><?= h($p['mission_title']) ?></strong>
+                            <span class="badge bg-danger">Απορρίφθηκε</span>
+                        </div>
+                        <?php if ($p['notes']): ?>
+                            <div class="mobile-card-row">
+                                <small class="text-muted"><i class="bi bi-quote me-1"></i>Η αίτησή μου: <?= h($p['notes']) ?></small>
+                            </div>
+                        <?php endif; ?>
+                        <div class="mobile-card-row">
+                            <div class="mobile-card-label">Σκέλος</div>
+                            <small><i class="bi bi-calendar me-1"></i><?= formatDateTime($p['start_time'], 'd/m/Y') ?> &nbsp;<?= formatDateTime($p['start_time'], 'H:i') ?> - <?= formatDateTime($p['end_time'], 'H:i') ?></small>
+                        </div>
+                        <div class="mobile-card-row">
+                            <div class="mobile-card-label">Λόγος Απόρριψης</div>
+                            <?php if ($p['rejection_reason']): ?>
+                                <small class="text-danger"><i class="bi bi-info-circle me-1"></i><?= h($p['rejection_reason']) ?></small>
+                            <?php else: ?>
+                                <small class="text-muted">Δεν δόθηκε αιτιολογία</small>
+                            <?php endif; ?>
+                        </div>
+                        <div class="mobile-card-row">
+                            <div class="mobile-card-label">Ημ/νία Απόρριψης</div>
+                            <small><?= formatDateTime($p['decided_at'], 'd/m/Y H:i') ?>
+                            <?php if ($p['decided_by_name']): ?>
+                                <span class="text-muted">από <?= h($p['decided_by_name']) ?></span>
+                            <?php endif; ?></small>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<!-- Canceled Participations -->
+<?php if (!empty($canceled)): ?>
+<div class="card mb-4">
+    <div class="card-header bg-secondary text-white">
+        <h5 class="mb-0"><i class="bi bi-dash-circle me-1"></i>Ακυρωμένες Αιτήσεις (<?= count($canceled) ?>)</h5>
+    </div>
+    <div class="card-body p-0">
+        <!-- Desktop/Tablet table view -->
+        <div class="table-responsive d-none d-sm-block">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Δράση</th>
+                        <th>Σκέλος</th>
+                        <th>Κατάσταση</th>
+                        <th>Ημ/νία</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($canceled as $p): ?>
+                        <tr>
+                            <td><strong><?= h($p['mission_title']) ?></strong></td>
+                            <td>
+                                <?= formatDateTime($p['start_time'], 'd/m/Y') ?><br>
+                                <small><?= formatDateTime($p['start_time'], 'H:i') ?> - <?= formatDateTime($p['end_time'], 'H:i') ?></small>
+                            </td>
+                            <td>
+                                <?php if ($p['status'] === PARTICIPATION_CANCELED_BY_USER): ?>
+                                    <span class="badge bg-secondary">Ακυρώθηκε από εσάς</span>
+                                <?php else: ?>
+                                    <span class="badge bg-dark">Ακυρώθηκε από διαχειριστή</span>
+                                <?php endif; ?>
+                            </td>
+                            <td><?= formatDateTime($p['updated_at'], 'd/m/Y H:i') ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+        <!-- Mobile card view -->
+        <div class="d-sm-none mobile-cards-container p-2">
+            <?php foreach ($canceled as $p): ?>
+                <div class="card mobile-card border-secondary">
+                    <div class="card-body">
+                        <div class="mobile-card-header">
+                            <strong><?= h($p['mission_title']) ?></strong>
+                            <div>
+                                <?php if ($p['status'] === PARTICIPATION_CANCELED_BY_USER): ?>
+                                    <span class="badge bg-secondary">Από εσάς</span>
+                                <?php else: ?>
+                                    <span class="badge bg-dark">Από διαχειριστή</span>
+                                <?php endif; ?>
+                            </div>
+                        </div>
+                        <div class="mobile-card-row">
+                            <div class="mobile-card-label">Σκέλος</div>
+                            <small><i class="bi bi-calendar me-1"></i><?= formatDateTime($p['start_time'], 'd/m/Y') ?> &nbsp;<?= formatDateTime($p['start_time'], 'H:i') ?> - <?= formatDateTime($p['end_time'], 'H:i') ?></small>
+                        </div>
+                        <div class="mobile-card-row">
+                            <div class="mobile-card-label">Ημ/νία Ακύρωσης</div>
+                            <small><?= formatDateTime($p['updated_at'], 'd/m/Y H:i') ?></small>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
+<!-- Empty State -->
+<?php if (empty($participations)): ?>
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+        <h4 class="mt-3">Δεν έχετε υποβάλει αιτήσεις</h4>
+        <p class="text-muted">Αναζητήστε δράσεις για να υποβάλετε την πρώτη σας αίτηση συμμετοχής.</p>
+        <a href="missions.php" class="btn btn-primary">
+            <i class="bi bi-search me-1"></i>Αναζήτηση Δράσεων
+        </a>
+    </div>
+</div>
+<?php endif; ?>
+
+<script>
+let CSRF_TOKEN = '<?= csrfToken() ?>';
+
+// ── GPS Ping ─────────────────────────────────────────────────────────────────
+function sendGpsPing(btn) {
+    if (!navigator.geolocation) {
+        showPingStatus(btn.dataset.prId, 'Το GPS δεν υποστηρίζεται', 'danger');
+        return;
+    }
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Εντοπισμός...';
+
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const body = new URLSearchParams({
+                csrf_token: CSRF_TOKEN,
+                shift_id:   btn.dataset.shiftId,
+                lat:        pos.coords.latitude,
+                lng:        pos.coords.longitude,
+            });
+            fetch('ping-location.php', { method: 'POST', body })
+                .then(r => r.json())
+                .then(d => {
+                    if (d.ok) {
+                        showPingStatus(btn.dataset.prId, '✅ Θέση εστάλη (' + d.ts + ')', 'success');
+                    } else {
+                        showPingStatus(btn.dataset.prId, '❌ ' + d.error, 'danger');
+                    }
+                })
+                .catch(() => showPingStatus(btn.dataset.prId, '❌ Σφάλμα αποστολής', 'danger'))
+                .finally(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="bi bi-send-fill me-1"></i>Αποστολή Θέσης';
+                });
+        },
+        (err) => {
+            let msg = '❌ ';
+            switch (err.code) {
+                case err.PERMISSION_DENIED:
+                    msg += 'Η πρόσβαση GPS απορρίφθηκε. Ελέγξτε τις ρυθμίσεις τοποθεσίας του browser σας.';
+                    // Show help tooltip
+                    showPingStatus(btn.dataset.prId, msg + '<br><small class="text-muted">Κλικ στο εικονίδιο 🔒 στη γραμμή διεύθυνσης → Τοποθεσία → Επιτρέπεται</small>', 'danger');
+                    break;
+                case err.POSITION_UNAVAILABLE:
+                    msg += 'Η θέση δεν είναι διαθέσιμη. Ενεργοποιήστε το GPS.';
+                    showPingStatus(btn.dataset.prId, msg, 'warning');
+                    break;
+                case err.TIMEOUT:
+                    msg += 'Λήξη χρόνου εντοπισμού. Δοκιμάστε ξανά.';
+                    showPingStatus(btn.dataset.prId, msg, 'warning');
+                    break;
+                default:
+                    showPingStatus(btn.dataset.prId, '❌ Άγνωστο σφάλμα GPS', 'danger');
+            }
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-send-fill me-1"></i>Αποστολή Θέσης';
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+    );
+}
+
+function showPingStatus(prId, msg, type) {
+    const el = document.getElementById('pingStatus-' + prId);
+    if (el) el.innerHTML = '<span class="text-' + type + '">' + msg + '</span>';
+}
+
+// ── Field Status ─────────────────────────────────────────────────────────────
+function setStatus(btn, prId, status) {
+    const body = new URLSearchParams({
+        csrf_token: CSRF_TOKEN,
+        pr_id:   prId,
+        status:  status,
+    });
+    // Optimistically disable all buttons in group
+    const group = document.getElementById('statusBtns-' + prId);
+    if (group) group.querySelectorAll('button').forEach(b => b.disabled = true);
+
+    fetch('volunteer-status.php', { method: 'POST', body })
+        .then(r => r.json())
+        .then(d => {
+            if (d.ok) {
+                // Update badge
+                const badge = document.getElementById('statusBadge-' + prId);
+                if (badge) badge.textContent = d.label;
+
+                // Re-style buttons
+                const colorMap = { on_way: 'warning', on_site: 'success', needs_help: 'danger' };
+                if (group) {
+                    group.querySelectorAll('button').forEach(b => {
+                        const s = b.getAttribute('onclick').match(/'([^']+)'\s*\)$/)?.[1];
+                        if (s) {
+                            const c = colorMap[s];
+                            b.className = 'btn btn-sm ' + (s === d.status ? 'btn-' + c : 'btn-outline-' + c);
+                        }
+                        b.disabled = false;
+                    });
+                }
+
+                if (status === 'needs_help') {
+                    // Flash the panel red
+                    const panel = btn.closest('.card');
+                    if (panel) { panel.style.animation = 'pulse-red 0.5s 3'; }
+                }
+            }
+        })
+        .catch(() => { if (group) group.querySelectorAll('button').forEach(b => b.disabled = false); });
+}
+</script>
+<style>
+@keyframes pulse-red {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220,53,69,0); }
+  50%      { box-shadow: 0 0 0 10px rgba(220,53,69,0.4); }
+}
+</style>
+
+<?php include __DIR__ . '/includes/footer.php'; ?>

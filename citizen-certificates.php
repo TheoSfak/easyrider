@@ -1,0 +1,515 @@
+<?php
+/**
+ * VolunteerOps - Citizen Certificates (Πιστοποιητικά Πολιτών)
+ */
+
+require_once __DIR__ . '/bootstrap.php';
+requirePermission('citizens_manage');
+
+// Self-healing: rename father_name → phone if migration hasn't run yet
+try {
+    $cols = dbFetchAll("SHOW COLUMNS FROM citizen_certificates LIKE 'father_name'");
+    if (!empty($cols)) {
+        dbExecute("ALTER TABLE citizen_certificates CHANGE `father_name` `phone` VARCHAR(30) NULL COMMENT 'Τηλέφωνο'");
+    }
+    if (empty(dbFetchAll("SHOW COLUMNS FROM citizen_certificate_types LIKE 'duration_months'"))) {
+        dbExecute("ALTER TABLE citizen_certificate_types ADD COLUMN duration_months INT UNSIGNED NOT NULL DEFAULT 12 AFTER name");
+    }
+    if (empty(dbFetchAll("SHOW COLUMNS FROM citizen_certificates LIKE 'source'"))) {
+        dbExecute("ALTER TABLE citizen_certificates ADD COLUMN source VARCHAR(80) NULL AFTER email");
+    }
+    if (empty(dbFetchAll("SHOW COLUMNS FROM citizen_certificates LIKE 'partner_id'"))) {
+        dbExecute("ALTER TABLE citizen_certificates ADD COLUMN partner_id INT UNSIGNED NULL AFTER source");
+        dbExecute("CREATE INDEX idx_cc_partner ON citizen_certificates(partner_id)");
+    }
+} catch (Exception $e) {}
+
+$pageTitle = 'Λήξεις Συνδρομών';
+
+// Handle POST actions
+if (isPost()) {
+    verifyCsrf();
+    $action = post('action');
+
+    switch ($action) {
+        case 'create':
+        case 'update':
+            $id = (int) post('cert_id');
+            $certificateTypeId = (int) post('certificate_type_id') ?: null;
+            $firstName = trim(post('first_name'));
+            $lastName = trim(post('last_name'));
+            $phone = trim(post('phone')) ?: null;
+            $birthDate = post('birth_date') ?: null;
+            $issueDate = post('issue_date') ?: null;
+            $expiryDate = post('expiry_date') ?: null;
+            $email = trim(post('email')) ?: null;
+            $notes = trim(post('notes')) ?: null;
+
+            if ($issueDate && !$expiryDate && $certificateTypeId) {
+                $durationMonths = (int) dbFetchValue(
+                    "SELECT duration_months FROM citizen_certificate_types WHERE id = ?",
+                    [$certificateTypeId]
+                );
+                if ($durationMonths > 0) {
+                    $expiryDate = addMonthsToDate($issueDate, $durationMonths);
+                }
+            }
+
+            if (empty($firstName) || empty($lastName)) {
+                setFlash('error', 'Τα πεδία Όνομα και Επίθετο είναι υποχρεωτικά.');
+                redirect('citizen-certificates.php');
+            }
+
+            $data = [$certificateTypeId, $firstName, $lastName, $phone, $birthDate, $issueDate, $expiryDate, $email, $notes];
+
+            if ($action === 'update' && $id > 0) {
+                dbExecute(
+                    "UPDATE citizen_certificates SET certificate_type_id=?, first_name=?, last_name=?, phone=?,
+                     birth_date=?, issue_date=?, expiry_date=?, email=?, notes=?, updated_at=NOW() WHERE id=?",
+                    array_merge($data, [$id])
+                );
+                logAudit('update', 'citizen_certificates', $id);
+                setFlash('success', 'Η συνδρομή ενημερώθηκε επιτυχώς.');
+            } else {
+                $data[] = getCurrentUserId();
+                $newId = dbInsert(
+                    "INSERT INTO citizen_certificates (certificate_type_id, first_name, last_name, phone,
+                     birth_date, issue_date, expiry_date, email, notes, created_by)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                    $data
+                );
+                logAudit('create', 'citizen_certificates', $newId);
+                setFlash('success', 'Η συνδρομή προστέθηκε επιτυχώς.');
+            }
+            redirect('citizen-certificates.php');
+            break;
+
+        case 'delete':
+            $id = (int) post('cert_id');
+            if ($id > 0) {
+                dbExecute("DELETE FROM citizen_certificates WHERE id = ?", [$id]);
+                logAudit('delete', 'citizen_certificates', $id);
+                setFlash('success', 'Η συνδρομή διαγράφηκε.');
+            }
+            redirect('citizen-certificates.php');
+            break;
+    }
+}
+
+// Filters
+$search       = get('search', '');
+$filterType   = get('type', '');
+$expiryFilter = get('expiry', ''); // expired | 1m | 3m | 6m
+$sortCol      = in_array(get('sort'), ['expiry_date', 'last_name', 'issue_date']) ? get('sort') : 'last_name';
+$sortDir      = get('dir') === 'asc' ? 'ASC' : 'DESC';
+$page    = max(1, (int) get('page', 1));
+$perPage = 20;
+
+// Base WHERE (search + type) — used for expiry counts
+$baseWhere  = ['1=1'];
+$baseParams = [];
+if ($search) {
+    $baseWhere[] = "(cc.first_name LIKE ? OR cc.last_name LIKE ? OR cc.phone LIKE ? OR cc.source LIKE ?)";
+    $baseParams  = array_merge($baseParams, array_fill(0, 4, '%' . dbEscape($search) . '%'));
+}
+if ($filterType !== '') {
+    $baseWhere[]  = "cc.certificate_type_id = ?";
+    $baseParams[] = (int) $filterType;
+}
+$baseWhereClause = implode(' AND ', $baseWhere);
+
+// Expiry counts — each bucket is an EXCLUSIVE range
+$countExpired = (int) dbFetchValue("SELECT COUNT(*) FROM citizen_certificates cc WHERE $baseWhereClause AND cc.expiry_date IS NOT NULL AND cc.expiry_date < CURDATE()", $baseParams);
+$count1m      = (int) dbFetchValue("SELECT COUNT(*) FROM citizen_certificates cc WHERE $baseWhereClause AND cc.expiry_date IS NOT NULL AND cc.expiry_date >= CURDATE() AND cc.expiry_date <= DATE_ADD(CURDATE(), INTERVAL 1 MONTH)", $baseParams);
+$count3m      = (int) dbFetchValue("SELECT COUNT(*) FROM citizen_certificates cc WHERE $baseWhereClause AND cc.expiry_date IS NOT NULL AND cc.expiry_date > DATE_ADD(CURDATE(), INTERVAL 1 MONTH) AND cc.expiry_date <= DATE_ADD(CURDATE(), INTERVAL 3 MONTH)", $baseParams);
+$count6m      = (int) dbFetchValue("SELECT COUNT(*) FROM citizen_certificates cc WHERE $baseWhereClause AND cc.expiry_date IS NOT NULL AND cc.expiry_date > DATE_ADD(CURDATE(), INTERVAL 3 MONTH) AND cc.expiry_date <= DATE_ADD(CURDATE(), INTERVAL 6 MONTH)", $baseParams);
+
+// Full WHERE (includes expiry filter) — same exclusive ranges
+$where  = $baseWhere;
+$params = $baseParams;
+if ($expiryFilter === 'expired') {
+    $where[] = "cc.expiry_date IS NOT NULL AND cc.expiry_date < CURDATE()";
+} elseif ($expiryFilter === '1m') {
+    $where[] = "cc.expiry_date IS NOT NULL AND cc.expiry_date >= CURDATE() AND cc.expiry_date <= DATE_ADD(CURDATE(), INTERVAL 1 MONTH)";
+} elseif ($expiryFilter === '3m') {
+    $where[] = "cc.expiry_date IS NOT NULL AND cc.expiry_date > DATE_ADD(CURDATE(), INTERVAL 1 MONTH) AND cc.expiry_date <= DATE_ADD(CURDATE(), INTERVAL 3 MONTH)";
+} elseif ($expiryFilter === '6m') {
+    $where[] = "cc.expiry_date IS NOT NULL AND cc.expiry_date > DATE_ADD(CURDATE(), INTERVAL 3 MONTH) AND cc.expiry_date <= DATE_ADD(CURDATE(), INTERVAL 6 MONTH)";
+}
+
+$whereClause = implode(' AND ', $where);
+$total = dbFetchValue("SELECT COUNT(*) FROM citizen_certificates cc WHERE $whereClause", $params);
+$pagination = paginate($total, $page, $perPage);
+
+// Sort: if expiry_date, NULLs last
+$orderBy = $sortCol === 'expiry_date'
+    ? "cc.expiry_date IS NULL, cc.expiry_date $sortDir"
+    : "cc.$sortCol $sortDir";
+
+$certs = dbFetchAll(
+    "SELECT cc.*, cct.name as type_name
+     FROM citizen_certificates cc
+     LEFT JOIN citizen_certificate_types cct ON cc.certificate_type_id = cct.id
+     WHERE $whereClause ORDER BY $orderBy LIMIT ? OFFSET ?",
+    array_merge($params, [$pagination['per_page'], $pagination['offset']])
+);
+
+// Load certificate types for form dropdown and filter
+$certTypes = dbFetchAll("SELECT * FROM citizen_certificate_types WHERE is_active = 1 ORDER BY name");
+
+// CSV Export
+if (get('export') === 'csv') {
+    $expRows = dbFetchAll(
+        "SELECT cc.*, cct.name as type_name
+         FROM citizen_certificates cc
+         LEFT JOIN citizen_certificate_types cct ON cc.certificate_type_id = cct.id
+         WHERE $whereClause ORDER BY cc.last_name, cc.first_name",
+        $params
+    );
+    header('Content-Type: text/csv; charset=UTF-8');
+    header('Content-Disposition: attachment; filename="citizen_certificates_' . date('Y-m-d_His') . '.csv"');
+    $out = fopen('php://output', 'w');
+    fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF)); // UTF-8 BOM
+    fputcsv($out, ['#', 'Επίθετο', 'Όνομα', 'Τηλέφωνο', 'Τύπος', 'Πηγή', 'Email', 'Ημ. Γέννησης', 'Ημ. Έκδοσης', 'Ημ. Λήξης', 'Σημειώσεις'], ';', '"', '\\');
+    foreach ($expRows as $i => $r) {
+        fputcsv($out, [
+            $i + 1,
+            $r['last_name'] ?? '',
+            $r['first_name'] ?? '',
+            $r['phone'] ?? '',
+            $r['type_name'] ?? '',
+            $r['source'] ?? '',
+            $r['email'] ?? '',
+            $r['birth_date'] ? formatDate($r['birth_date']) : '',
+            $r['issue_date'] ? formatDate($r['issue_date']) : '',
+            $r['expiry_date'] ? formatDate($r['expiry_date']) : '',
+            $r['notes'] ?? '',
+        ], ';', '"', '\\');
+    }
+    fclose($out);
+    exit;
+}
+
+include __DIR__ . '/includes/header.php';
+?>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-file-earmark-medical"></i> Λήξεις Συνδρομών</h2>
+    <div>
+        <a href="?<?= http_build_query(array_merge($_GET, ['export' => 'csv'])) ?>" class="btn btn-success me-2">
+            <i class="bi bi-filetype-csv"></i> Εξαγωγή CSV
+        </a>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#certModal" onclick="resetForm()">
+            <i class="bi bi-plus-lg"></i> Νέα Συνδρομή
+        </button>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-5">
+                <label class="form-label">Αναζήτηση</label>
+                <input type="text" name="search" class="form-control" placeholder="Όνομα, Επίθετο, Τηλέφωνο, Πηγή..." value="<?= h($search) ?>">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Τύπος Συνδρομής</label>
+                <select name="type" class="form-select">
+                    <option value="">Όλοι</option>
+                    <?php foreach ($certTypes as $ct): ?>
+                    <option value="<?= $ct['id'] ?>" <?= $filterType == $ct['id'] ? 'selected' : '' ?>><?= h($ct['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-primary w-100 mt-4"><i class="bi bi-search"></i> Φίλτρο</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Expiry Quick-filters -->
+<?php
+$_eq = function($val) use ($expiryFilter, $search, $filterType) {
+    $p = array_filter(['search' => $search, 'type' => $filterType, 'expiry' => ($expiryFilter === $val ? '' : $val)], fn($v) => $v !== '');
+    return '?' . http_build_query($p);
+};
+?>
+<div class="d-flex flex-wrap gap-2 mb-4">
+    <?php
+    $btns = [
+        ['val' => 'expired', 'label' => 'Ληγμένα',          'count' => $countExpired, 'active' => 'btn-danger',           'inactive' => 'btn-outline-danger'],
+        ['val' => '1m',      'label' => 'Λήγουν σε 1 μήνα',  'count' => $count1m, 'active' => 'btn-danger fw-bold',             'inactive' => 'btn-outline-danger fw-bold'],
+        ['val' => '3m',      'label' => 'Λήγουν σε 3 μήνες', 'count' => $count3m, 'active' => 'btn-warning text-dark fw-bold',   'inactive' => 'btn-outline-warning text-warning fw-bold'],
+        ['val' => '6m',      'label' => 'Λήγουν σε 6 μήνες', 'count' => $count6m, 'active' => 'btn-info text-dark fw-bold',      'inactive' => 'btn-outline-info fw-bold'],
+    ];
+    foreach ($btns as $b):
+        $cls = $expiryFilter === $b['val'] ? $b['active'] : $b['inactive'];
+    ?>
+    <a href="<?= h($_eq($b['val'])) ?>" class="btn btn-sm <?= $cls ?>">
+        <?= $b['label'] ?>
+        <span class="badge <?= $expiryFilter === $b['val'] ? 'bg-white text-dark' : 'bg-secondary' ?> ms-1"><?= $b['count'] ?></span>
+    </a>
+    <?php endforeach; ?>
+    <?php if ($expiryFilter !== ''): ?>
+    <a href="<?= h($_eq($expiryFilter)) ?>" class="btn btn-sm btn-outline-secondary ms-2">
+        <i class="bi bi-x-circle"></i> Καθαρισμός φίλτρου λήξης
+    </a>
+    <?php endif; ?>
+</div>
+
+<!-- Results -->
+<div class="card">
+    <div class="card-header">
+        <i class="bi bi-list"></i> Σύνολο: <strong><?= $total ?></strong> συνδρομές
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped table-sm mb-0" style="font-size:.85rem">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Τύπος</th>
+                        <th>Όνομα</th>
+                        <th>Επίθετο</th>
+                        <th>Τηλ.</th>
+                        <th>Πηγή</th>
+                        <th>Email</th>
+                        <th>Έκδοση</th>
+                        <th><?php
+                            $_sd = ($sortCol === 'expiry_date' && $sortDir === 'DESC') ? 'asc' : 'desc';
+                            $_sp = array_filter(['search' => $search, 'type' => $filterType, 'expiry' => $expiryFilter, 'sort' => 'expiry_date', 'dir' => $_sd], fn($v) => $v !== '');
+                            $arrow = $sortCol === 'expiry_date' ? ($sortDir === 'DESC' ? ' ▼' : ' ▲') : '';
+                        ?><a href="?<?= http_build_query($_sp) ?>" class="text-decoration-none text-dark fw-semibold">Λήξη<?= $arrow ?></a></th>
+                        <th class="text-center">Ενέργ.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($certs)): ?>
+                    <tr><td colspan="10" class="text-center text-muted py-4">Δεν βρέθηκαν συνδρομές.</td></tr>
+                    <?php else: ?>
+                    <?php foreach ($certs as $i => $c): ?>
+                    <?php
+                        $rowClass = '';
+                        $expiryBadge = '';
+                        if ($c['expiry_date']) {
+                            $today = new DateTime();
+                            $expiry = new DateTime($c['expiry_date']);
+                            $diff = $today->diff($expiry);
+                            $daysLeft = $expiry > $today ? (int) $diff->days : -(int) $diff->days;
+
+                            if ($daysLeft < 0) {
+                                $rowClass = 'table-danger';
+                                $expiryBadge = '<span class="badge bg-danger ms-1">Ληγμένο</span>';
+                            } elseif ($daysLeft <= 90) {
+                                $rowClass = 'table-warning';
+                                $expiryBadge = '<span class="badge bg-warning text-dark ms-1">' . $daysLeft . ' ημέρες</span>';
+                            } elseif ($daysLeft <= 180) {
+                                $rowClass = 'table-info';
+                                $expiryBadge = '<span class="badge bg-info text-dark ms-1">' . $daysLeft . ' ημέρες</span>';
+                            }
+                        }
+                        $isExpired = $c['expiry_date'] && $c['expiry_date'] < date('Y-m-d');
+                    ?>
+                    <tr class="<?= $rowClass ?>">
+                        <td><?= $pagination['offset'] + $i + 1 ?></td>
+                        <td><?= h($c['type_name'] ?? '-') ?></td>
+                        <td><?= h($c['first_name']) ?></td>
+                        <td><?= h($c['last_name']) ?></td>
+                        <td><?= h($c['phone'] ?? '-') ?></td>
+                        <td><?= !empty($c['source']) ? '<span class="badge bg-secondary">' . h($c['source']) . '</span>' : '<span class="text-muted">—</span>' ?></td>
+                        <td><?= h($c['email'] ?? '-') ?></td>
+                        <td title="<?= $c['birth_date'] ? 'Γέν: ' . formatDate($c['birth_date']) : '' ?>"><?= $c['issue_date'] ? formatDate($c['issue_date']) : '-' ?></td>
+                        <td>
+                            <?php if ($c['expiry_date']): ?>
+                                <?php if ($isExpired): ?>
+                                    <span class="text-danger fw-bold"><?= formatDate($c['expiry_date']) ?></span>
+                                <?php else: ?>
+                                    <?= formatDate($c['expiry_date']) ?>
+                                <?php endif; ?>
+                                <?= $expiryBadge ?>
+                            <?php else: ?>
+                                -
+                            <?php endif; ?>
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-outline-primary py-0 px-1" onclick="editCert(<?= h(json_encode($c)) ?>)" title="Επεξεργασία">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="confirmDelete(<?= $c['id'] ?>, '<?= h($c['last_name'] . ' ' . $c['first_name']) ?>')" title="Διαγραφή">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <?php if ($pagination['total_pages'] > 1): ?>
+    <div class="card-footer">
+        <?= paginationLinks($pagination) ?>
+    </div>
+    <?php endif; ?>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">Διαγραφή Συνδρομής</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                Είστε σίγουροι ότι θέλετε να διαγράψετε τη συνδρομή του
+                <strong id="deleteNameLabel"></strong>;
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ακύρωση</button>
+                <form method="post" class="d-inline">
+                    <?= csrfField() ?>
+                    <input type="hidden" name="action" value="delete">
+                    <input type="hidden" name="cert_id" id="deleteIdInput" value="0">
+                    <button type="submit" class="btn btn-danger">Διαγραφή</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create / Edit Modal -->
+<div class="modal fade" id="certModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form method="post" id="certForm">
+                <?= csrfField() ?>
+                <input type="hidden" name="action" id="formAction" value="create">
+                <input type="hidden" name="cert_id" id="formCertId" value="0">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalTitle">Νέα Συνδρομή</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Τύπος Συνδρομής</label>
+                            <select name="certificate_type_id" id="certificate_type_id" class="form-select">
+                                <option value="">-- Επιλέξτε --</option>
+                                <?php foreach ($certTypes as $ct): ?>
+                                <option value="<?= $ct['id'] ?>" data-duration="<?= (int)($ct['duration_months'] ?? 12) ?>"><?= h($ct['name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="col-md-6"></div>
+                        <div class="col-md-4">
+                            <label class="form-label">Όνομα <span class="text-danger">*</span></label>
+                            <input type="text" name="first_name" id="first_name" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Επίθετο <span class="text-danger">*</span></label>
+                            <input type="text" name="last_name" id="last_name" class="form-control" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Τηλέφωνο</label>
+                            <input type="text" name="phone" id="cert_phone" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Ημερομηνία Γέννησης</label>
+                            <input type="date" name="birth_date" id="birth_date" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Email</label>
+                            <input type="email" name="email" id="cert_email" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Ημ. Έκδοσης</label>
+                            <input type="date" name="issue_date" id="issue_date" class="form-control">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Ημ. Λήξης</label>
+                            <input type="date" name="expiry_date" id="expiry_date" class="form-control">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label">Σημειώσεις</label>
+                            <textarea name="notes" id="cert_notes" class="form-control" rows="2"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ακύρωση</button>
+                    <button type="submit" class="btn btn-primary">Αποθήκευση</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmDelete(id, name) {
+    document.getElementById('deleteIdInput').value = id;
+    document.getElementById('deleteNameLabel').textContent = name;
+    var modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+function resetForm() {
+    document.getElementById('formAction').value = 'create';
+    document.getElementById('formCertId').value = '0';
+    document.getElementById('modalTitle').textContent = 'Νέα Συνδρομή';
+    document.getElementById('certForm').reset();
+    document.getElementById('issue_date').value = new Date().toISOString().split('T')[0];
+    updateCertExpiryFromType();
+}
+
+function editCert(c) {
+    document.getElementById('formAction').value = 'update';
+    document.getElementById('formCertId').value = c.id;
+    document.getElementById('modalTitle').textContent = 'Επεξεργασία Συνδρομής';
+    document.getElementById('first_name').value = c.first_name || '';
+    document.getElementById('last_name').value = c.last_name || '';
+    document.getElementById('cert_phone').value = c.phone || '';
+    document.getElementById('birth_date').value = c.birth_date || '';
+    document.getElementById('cert_email').value = c.email || '';
+    document.getElementById('issue_date').value = c.issue_date || '';
+    document.getElementById('expiry_date').value = c.expiry_date || '';
+    document.getElementById('cert_notes').value = c.notes || '';
+    document.getElementById('certificate_type_id').value = c.certificate_type_id || '';
+
+    var modal = new bootstrap.Modal(document.getElementById('certModal'));
+    modal.show();
+}
+
+function addMonthsIso(isoDate, months) {
+    if (!isoDate) return '';
+    var parts = isoDate.split('-').map(Number);
+    if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) return '';
+    var date = new Date(parts[0], parts[1] - 1, parts[2]);
+    var originalDay = date.getDate();
+    date.setMonth(date.getMonth() + months);
+    if (date.getDate() !== originalDay) {
+        date.setDate(0);
+    }
+    return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+}
+
+function updateCertExpiryFromType() {
+    var typeSelect = document.getElementById('certificate_type_id');
+    var issueInput = document.getElementById('issue_date');
+    var expiryInput = document.getElementById('expiry_date');
+    if (!typeSelect || !issueInput || !expiryInput || !issueInput.value) return;
+    var option = typeSelect.options[typeSelect.selectedIndex];
+    var months = option ? parseInt(option.dataset.duration || '12', 10) : 12;
+    expiryInput.value = addMonthsIso(issueInput.value, months);
+    if (expiryInput._flatpickr) {
+        expiryInput._flatpickr.setDate(expiryInput.value, false, 'Y-m-d');
+    }
+}
+
+document.getElementById('certificate_type_id').addEventListener('change', updateCertExpiryFromType);
+document.getElementById('issue_date').addEventListener('change', updateCertExpiryFromType);
+</script>
+
+<?php include __DIR__ . '/includes/footer.php'; ?>
