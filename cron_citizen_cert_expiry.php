@@ -1,9 +1,9 @@
 <?php
 /**
- * VolunteerOps - Citizen Certificate Expiry Reminders (Run daily via cron)
- * Sends email reminders when citizen certificates are about to expire.
+ * EasyRide - Subscription Expiry Reminders (Run daily via cron)
+ * Sends email reminders when member subscriptions are about to expire.
  * Intervals: 3 months, 1 month, 1 week, and on expiry day.
- * Each interval is configurable via Settings → Πολίτες tab.
+ * Each interval is configurable via Settings → Συνδρομές tab.
  */
 
 // CLI or manual admin trigger only
@@ -18,7 +18,7 @@ if (!defined('VOLUNTEEROPS')) {
 // Check master switch
 $enabled = getSetting('citizen_cert_notify_enabled', '0');
 if ($enabled !== '1') {
-    echo "Citizen certificate expiry notifications are disabled.\n";
+    echo "Subscription expiry notifications are disabled.\n";
     return;
 }
 
@@ -100,13 +100,14 @@ try {
         foreach ($certs as $cert) {
             $processedCount++;
             $daysLeft = max(0, (int)((strtotime($cert['expiry_date']) - time()) / 86400));
-            $certType = $cert['type_name'] ?? 'Πιστοποιητικό';
+            $certType = $cert['type_name'] ?? 'Συνδρομή';
 
             // Check if there's a notification setting + template
             if (isNotificationEnabled($tpl)) {
                 $result = sendNotificationEmail($tpl, $cert['email'], [
                     'citizen_name'     => $cert['first_name'] . ' ' . $cert['last_name'],
                     'certificate_type' => $certType,
+                    'subscription_type' => $certType,
                     'expiry_date'      => formatDate($cert['expiry_date']),
                     'days_remaining'   => $daysLeft,
                 ]);
@@ -116,15 +117,15 @@ try {
             } else {
                 // Fallback: send simple email if SMTP is configured
                 if (isEmailConfigured()) {
-                    $subject = "Λήξη Πιστοποιητικού - {$certType}";
+                    $subject = "Λήξη Συνδρομής - {$certType}";
                     if ($days === 0) {
                         $body = "<p>Αγαπητέ/ή {$cert['first_name']} {$cert['last_name']},</p>"
-                            . "<p>Το πιστοποιητικό σας <strong>{$certType}</strong> έληξε στις <strong>" . formatDate($cert['expiry_date']) . "</strong>.</p>"
-                            . "<p>Παρακαλούμε φροντίστε για την ανανέωσή του.</p>";
+                            . "<p>Η συνδρομή σας <strong>{$certType}</strong> έληξε στις <strong>" . formatDate($cert['expiry_date']) . "</strong>.</p>"
+                            . "<p>Παρακαλούμε φροντίστε για την ανανέωσή της.</p>";
                     } else {
                         $body = "<p>Αγαπητέ/ή {$cert['first_name']} {$cert['last_name']},</p>"
-                            . "<p>Το πιστοποιητικό σας <strong>{$certType}</strong> λήγει σε <strong>{$daysLeft} ημέρες</strong> (στις " . formatDate($cert['expiry_date']) . ").</p>"
-                            . "<p>Παρακαλούμε φροντίστε για την ανανέωσή του εγκαίρως.</p>";
+                            . "<p>Η συνδρομή σας <strong>{$certType}</strong> λήγει σε <strong>{$daysLeft} ημέρες</strong> (στις " . formatDate($cert['expiry_date']) . ").</p>"
+                            . "<p>Παρακαλούμε φροντίστε για την ανανέωσή της εγκαίρως.</p>";
                     }
                     $r = sendEmail($cert['email'], $subject, $body);
                     if ($r['success']) {
@@ -144,5 +145,5 @@ try {
 }
 
 echo "Total emails sent: $sentCount\n";
-echo "Total certificates processed: $processedCount\n";
+echo "Total subscriptions processed: $processedCount\n";
 echo "Completed at: " . date('Y-m-d H:i:s') . "\n";

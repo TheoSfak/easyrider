@@ -4198,6 +4198,85 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
             },
         ],
 
+        [
+            'version'     => 72,
+            'description' => 'Reword member subscription expiry templates',
+            'up' => function () {
+                $updates = [
+                    'citizen_cert_expiry_3months' => [
+                        'name' => 'Λήξη Συνδρομής Μέλους (3 μήνες)',
+                        'subject' => 'Υπενθύμιση: Η συνδρομή σας λήγει σε 3 μήνες',
+                        'description' => 'Email 3 μήνες πριν τη λήξη συνδρομής μέλους',
+                    ],
+                    'citizen_cert_expiry_1month' => [
+                        'name' => 'Λήξη Συνδρομής Μέλους (1 μήνα)',
+                        'subject' => 'Υπενθύμιση: Η συνδρομή σας λήγει σε 1 μήνα',
+                        'description' => 'Email 1 μήνα πριν τη λήξη συνδρομής μέλους',
+                    ],
+                    'citizen_cert_expiry_1week' => [
+                        'name' => 'Λήξη Συνδρομής Μέλους (1 εβδομάδα)',
+                        'subject' => 'Επείγον: Η συνδρομή σας λήγει σε 1 εβδομάδα',
+                        'description' => 'Email 1 εβδομάδα πριν τη λήξη συνδρομής μέλους',
+                    ],
+                    'citizen_cert_expiry_expired' => [
+                        'name' => 'Λήξη Συνδρομής Μέλους (Ληγμένη)',
+                        'subject' => 'Η συνδρομή σας έχει λήξει',
+                        'description' => 'Email όταν μια συνδρομή μέλους λήξει',
+                    ],
+                ];
+
+                foreach ($updates as $code => $data) {
+                    $body = dbFetchValue("SELECT body_html FROM email_templates WHERE code = ?", [$code]);
+                    if ($body !== false && $body !== null) {
+                        $body = str_replace(
+                            [
+                                'Το Πιστοποιητικό σας Λήγει Σύντομα',
+                                'Το Πιστοποιητικό σας Έληξε',
+                                'Υπενθύμιση Λήξης Πιστοποιητικού',
+                                'Επείγουσα Υπενθύμιση — Λήξη Πιστοποιητικού',
+                                'Πιστοποιητικό:',
+                                'Το πιστοποιητικό σας',
+                                'το πιστοποιητικό σας',
+                                'πιστοποιητικό σας',
+                                'πιστοποιητικό',
+                                'Πιστοποιητικό',
+                                'δεν είναι πλέον σε ισχύ',
+                            ],
+                            [
+                                'Η Συνδρομή σας Λήγει Σύντομα',
+                                'Η Συνδρομή σας Έληξε',
+                                'Υπενθύμιση Λήξης Συνδρομής',
+                                'Επείγουσα Υπενθύμιση — Λήξη Συνδρομής',
+                                'Συνδρομή:',
+                                'Η συνδρομή σας',
+                                'η συνδρομή σας',
+                                'συνδρομή σας',
+                                'συνδρομή',
+                                'Συνδρομή',
+                                'έχει λήξει',
+                            ],
+                            $body
+                        );
+                    } else {
+                        $body = null;
+                    }
+
+                    dbExecute(
+                        "UPDATE email_templates
+                         SET name = ?, subject = ?, description = ?, body_html = COALESCE(?, body_html), updated_at = NOW()
+                         WHERE code = ?",
+                        [$data['name'], $data['subject'], $data['description'], $body, $code]
+                    );
+                    dbExecute(
+                        "UPDATE notification_settings
+                         SET name = ?, description = ?, updated_at = NOW()
+                         WHERE code = ?",
+                        [$data['name'], $data['description'], $code]
+                    );
+                }
+            },
+        ],
+
     ];
     // ────────────────────────────────────────────────────────────────────────
 

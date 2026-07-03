@@ -618,7 +618,7 @@ if (isPost()) {
         redirect('settings.php?tab=inventory');
         
     } elseif ($action === 'save_citizens') {
-        // Save citizen certificate notification settings
+        // Save member subscription notification settings
         $citizenFields = [
             'citizen_cert_notify_enabled',
             'citizen_cert_notify_3months',
@@ -640,8 +640,8 @@ if (isPost()) {
         }
         
         clearSettingsCache();
-        logAudit('update_settings', 'settings', null, 'Ρυθμίσεις Πολιτών');
-        setFlash('success', 'Οι ρυθμίσεις πολιτών αποθηκεύτηκαν.');
+        logAudit('update_settings', 'settings', null, 'Ρυθμίσεις Συνδρομών');
+        setFlash('success', 'Οι ρυθμίσεις συνδρομών αποθηκεύτηκαν.');
         redirect('settings.php?tab=citizens');
         
     } elseif ($action === 'save_notifications') {
@@ -952,7 +952,7 @@ include __DIR__ . '/includes/header.php';
     </li>
     <li class="nav-item">
         <a class="nav-link <?= $activeTab === 'citizens' ? 'active' : '' ?>" href="settings.php?tab=citizens">
-            <i class="bi bi-person-vcard me-1"></i>Πολίτες
+            <i class="bi bi-person-vcard me-1"></i>Συνδρομές
         </a>
     </li>
     <li class="nav-item">
@@ -1868,11 +1868,11 @@ unset($_SESSION['cron_results'], $_SESSION['cron_elapsed']);
 </div>
 <?php endif; ?>
 
-<!-- Citizens Settings Tab -->
+<!-- Subscriptions Settings Tab -->
 <?php if ($activeTab === 'citizens'): ?>
 <?php
 $citizenStats = [
-    'total_citizens' => (int)dbFetchValue("SELECT COUNT(*) FROM citizens"),
+    'total_candidates' => (int)dbFetchValue("SELECT COUNT(*) FROM citizens"),
     'total_certs' => (int)dbFetchValue("SELECT COUNT(*) FROM citizen_certificates"),
     'expired_certs' => (int)dbFetchValue("SELECT COUNT(*) FROM citizen_certificates WHERE expiry_date IS NOT NULL AND expiry_date < CURDATE()"),
     'expiring_3m' => (int)dbFetchValue("SELECT COUNT(*) FROM citizen_certificates WHERE expiry_date IS NOT NULL AND expiry_date >= CURDATE() AND expiry_date <= DATE_ADD(CURDATE(), INTERVAL 3 MONTH)"),
@@ -1947,13 +1947,13 @@ $citizenStats = [
         <!-- Stats -->
         <div class="card mb-4">
             <div class="card-header">
-                <h5 class="mb-0"><i class="bi bi-bar-chart me-1"></i>Στατιστικά Πολιτών</h5>
+                <h5 class="mb-0"><i class="bi bi-bar-chart me-1"></i>Στατιστικά Συνδρομών</h5>
             </div>
             <div class="card-body">
                 <table class="table table-sm mb-0">
                     <tr>
-                        <td>Σύνολο Πολιτών</td>
-                        <td class="text-end"><strong><?= $citizenStats['total_citizens'] ?></strong></td>
+                        <td>Υποψήφια Μέλη</td>
+                        <td class="text-end"><strong><?= $citizenStats['total_candidates'] ?></strong></td>
                     </tr>
                     <tr>
                         <td>Σύνολο Συνδρομών</td>
@@ -1978,7 +1978,7 @@ $citizenStats = [
             </div>
             <div class="card-body d-grid gap-2">
                 <a href="citizens.php" class="btn btn-outline-primary">
-                    <i class="bi bi-person-vcard me-1"></i>Λίστα Πολιτών
+                    <i class="bi bi-person-vcard me-1"></i>Υποψήφια Μέλη
                 </a>
                 <a href="citizen-certificates.php" class="btn btn-outline-primary">
                     <i class="bi bi-file-earmark-medical me-1"></i>Λήξεις Συνδρομών

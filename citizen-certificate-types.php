@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Citizen Certificate Types (Τύποι Πιστοποιητικών)
+ * EasyRide - Subscription Types
  */
 
 require_once __DIR__ . '/bootstrap.php';

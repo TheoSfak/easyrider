@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Citizen Certificates (Πιστοποιητικά Πολιτών)
+ * EasyRide - Member Subscriptions
  */
 
 require_once __DIR__ . '/bootstrap.php';
@@ -65,7 +65,9 @@ if (isPost()) {
             if ($action === 'update' && $id > 0) {
                 dbExecute(
                     "UPDATE citizen_certificates SET certificate_type_id=?, first_name=?, last_name=?, phone=?,
-                     birth_date=?, issue_date=?, expiry_date=?, email=?, notes=?, updated_at=NOW() WHERE id=?",
+                     birth_date=?, issue_date=?, expiry_date=?, email=?, notes=?,
+                     reminder_sent_3m=0, reminder_sent_1m=0, reminder_sent_1w=0,
+                     reminder_sent_expired=0, updated_at=NOW() WHERE id=?",
                     array_merge($data, [$id])
                 );
                 logAudit('update', 'citizen_certificates', $id);
@@ -167,7 +169,7 @@ if (get('export') === 'csv') {
         $params
     );
     header('Content-Type: text/csv; charset=UTF-8');
-    header('Content-Disposition: attachment; filename="citizen_certificates_' . date('Y-m-d_His') . '.csv"');
+    header('Content-Disposition: attachment; filename="subscriptions_' . date('Y-m-d_His') . '.csv"');
     $out = fopen('php://output', 'w');
     fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF)); // UTF-8 BOM
     fputcsv($out, ['#', 'Επίθετο', 'Όνομα', 'Τηλέφωνο', 'Τύπος', 'Πηγή', 'Email', 'Ημ. Γέννησης', 'Ημ. Έκδοσης', 'Ημ. Λήξης', 'Σημειώσεις'], ';', '"', '\\');
@@ -337,6 +339,9 @@ $_eq = function($val) use ($expiryFilter, $search, $filterType) {
                             <button class="btn btn-sm btn-outline-primary py-0 px-1" onclick="editCert(<?= h(json_encode($c)) ?>)" title="Επεξεργασία">
                                 <i class="bi bi-pencil"></i>
                             </button>
+                            <button class="btn btn-sm btn-outline-success py-0 px-1" onclick="renewCert(<?= h(json_encode($c)) ?>)" title="Ανανέωση">
+                                <i class="bi bi-arrow-repeat"></i>
+                            </button>
                             <button class="btn btn-sm btn-outline-danger py-0 px-1" onclick="confirmDelete(<?= $c['id'] ?>, '<?= h($c['last_name'] . ' ' . $c['first_name']) ?>')" title="Διαγραφή">
                                 <i class="bi bi-trash"></i>
                             </button>
@@ -480,6 +485,13 @@ function editCert(c) {
 
     var modal = new bootstrap.Modal(document.getElementById('certModal'));
     modal.show();
+}
+
+function renewCert(c) {
+    editCert(c);
+    document.getElementById('modalTitle').textContent = 'Ανανέωση Συνδρομής';
+    document.getElementById('issue_date').value = new Date().toISOString().split('T')[0];
+    updateCertExpiryFromType();
 }
 
 function addMonthsIso(isoDate, months) {

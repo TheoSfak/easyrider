@@ -1,12 +1,12 @@
 <?php
 /**
- * VolunteerOps - Citizens Management (Πολίτες)
+ * EasyRide - Candidate Members
  */
 
 require_once __DIR__ . '/bootstrap.php';
 requirePermission('citizens_view');
 
-$pageTitle = 'Λίστα Πολιτών';
+$pageTitle = 'Υποψήφια Μέλη';
 
 // The database column keeps its historical name for compatibility; in the UI it is a subscription type.
 try {
@@ -111,7 +111,7 @@ if (isPost()) {
                     logAudit('add_contact', 'citizen_contacts', $newId);
                     echo json_encode(['ok' => true, 'id' => $newId]);
                 } else {
-                    echo json_encode(['ok' => false, 'error' => 'Μη έγκυρος πολίτης.']);
+                    echo json_encode(['ok' => false, 'error' => 'Μη έγκυρο υποψήφιο μέλος.']);
                 }
             } elseif ($action === 'delete_contact') {
                 $contactId = (int) post('contact_id');
@@ -192,7 +192,7 @@ if (isPost()) {
                     array_merge($data, [$id])
                 );
                 logAudit('update', 'citizens', $id);
-                setFlash('success', 'Ο πολίτης ενημερώθηκε επιτυχώς.');
+                setFlash('success', 'Το υποψήφιο μέλος ενημερώθηκε επιτυχώς.');
             } else {
                 if ($_hasTsCols) {
                     $contactAt = $data[8] ? date('Y-m-d H:i:s') : null;
@@ -221,7 +221,7 @@ if (isPost()) {
                     );
                 }
                 logAudit('create', 'citizens', $newId);
-                setFlash('success', 'Ο πολίτης προστέθηκε επιτυχώς.');
+                setFlash('success', 'Το υποψήφιο μέλος προστέθηκε επιτυχώς.');
             }
             redirect('citizens.php');
             break;
@@ -231,7 +231,7 @@ if (isPost()) {
             if ($id > 0) {
                 dbExecute("DELETE FROM citizens WHERE id = ?", [$id]);
                 logAudit('delete', 'citizens', $id);
-                setFlash('success', 'Ο πολίτης διαγράφηκε.');
+                setFlash('success', 'Το υποψήφιο μέλος διαγράφηκε.');
             }
             redirect('citizens.php');
             break;
@@ -287,41 +287,60 @@ if (isPost()) {
                         logAudit('update', 'citizens', $id);
                     }
 
-                    // Duplicate email check (only when citizen has email)
+                    // Existing subscription check (only when candidate has email)
                     $citizenEmail = trim($citizen['email'] ?? '');
-                    $isDuplicate = false;
+                    $existingSubscriptionId = 0;
                     if ($citizenEmail !== '') {
-                        $dupCount = (int) dbFetchValue(
-                            "SELECT COUNT(*) FROM citizen_certificates WHERE email = ?",
+                        $existingSubscriptionId = (int) dbFetchValue(
+                            "SELECT id FROM citizen_certificates WHERE email = ? ORDER BY id DESC LIMIT 1",
                             [$citizenEmail]
                         );
-                        $isDuplicate = $dupCount > 0;
                     }
 
-                    if ($isDuplicate) {
-                        setFlash('warning', 'Ο πολίτης σημειώθηκε ως ολοκληρωμένος, αλλά δεν δημιουργήθηκε πιστοποιητικό γιατί υπάρχει ήδη εγγραφή με το ίδιο email.');
-                    } else {
-                        $certTypeId = (int) post('certificate_type_id') ?: null;
-                        $issueDate  = post('issue_date')  ?: date('Y-m-d');
-                        $expiryDate = post('expiry_date') ?: null;
-                        // Validate date format — fallback to defaults if malformed
-                        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $issueDate))  $issueDate  = date('Y-m-d');
-                        if ($certTypeId) {
-                            $durationMonths = $certTypeId
-                                ? (int) dbFetchValue("SELECT duration_months FROM citizen_certificate_types WHERE id = ?", [$certTypeId])
-                                : 12;
-                            if ($durationMonths < 1) {
-                                $durationMonths = 12;
-                            }
-                            $expiryDate = addMonthsToDate($issueDate, $durationMonths);
-                        } elseif (!$expiryDate || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $expiryDate)) {
-                            $expiryDate = addMonthsToDate($issueDate, 12);
+                    $certTypeId = (int) post('certificate_type_id') ?: null;
+                    $issueDate  = post('issue_date')  ?: date('Y-m-d');
+                    $expiryDate = post('expiry_date') ?: null;
+                    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $issueDate))  $issueDate  = date('Y-m-d');
+                    if ($certTypeId) {
+                        $durationMonths = (int) dbFetchValue("SELECT duration_months FROM citizen_certificate_types WHERE id = ?", [$certTypeId]);
+                        if ($durationMonths < 1) {
+                            $durationMonths = 12;
                         }
+                        $expiryDate = addMonthsToDate($issueDate, $durationMonths);
+                    } elseif (!$expiryDate || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $expiryDate)) {
+                        $expiryDate = addMonthsToDate($issueDate, 12);
+                    }
+
+                    if ($existingSubscriptionId > 0) {
+                        dbExecute(
+                            "UPDATE citizen_certificates
+                             SET certificate_type_id = ?, first_name = ?, last_name = ?, phone = ?, birth_date = ?,
+                                 issue_date = ?, expiry_date = ?, email = ?, source = ?, notes = ?,
+                                 reminder_sent_3m = 0, reminder_sent_1m = 0, reminder_sent_1w = 0,
+                                 reminder_sent_expired = 0, updated_at = NOW()
+                             WHERE id = ?",
+                            [
+                                $certTypeId,
+                                $citizen['first_name_gr'],
+                                $citizen['last_name_gr'],
+                                $citizen['phone'] ?: null,
+                                $citizen['birth_date'] ?: null,
+                                $issueDate,
+                                $expiryDate,
+                                $citizenEmail,
+                                'Υποψήφιο Μέλος',
+                                null,
+                                $existingSubscriptionId,
+                            ]
+                        );
+                        logAudit('renew_from_candidate_member', 'citizen_certificates', $existingSubscriptionId);
+                        setFlash('success', 'Το υποψήφιο μέλος σημειώθηκε ως ολοκληρωμένο και η υπάρχουσα συνδρομή ανανεώθηκε (λήξη: ' . date('d/m/Y', strtotime($expiryDate)) . ').');
+                    } else {
                         $newCertId  = dbInsert(
                             "INSERT INTO citizen_certificates
                              (certificate_type_id, first_name, last_name, phone, birth_date,
-                              issue_date, expiry_date, email, notes, created_by)
-                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                              issue_date, expiry_date, email, source, notes, created_by)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                             [
                                 $certTypeId,
                                 $citizen['first_name_gr'],
@@ -331,12 +350,13 @@ if (isPost()) {
                                 $issueDate,
                                 $expiryDate,
                                 $citizenEmail !== '' ? $citizenEmail : null,
+                                'Υποψήφιο Μέλος',
                                 null,
                                 getCurrentUserId(),
                             ]
                         );
                         logAudit('create', 'citizen_certificates', $newCertId);
-                        setFlash('success', 'Ο πολίτης σημειώθηκε ως ολοκληρωμένος και το πιστοποιητικό καταχωρήθηκε επιτυχώς (λήξη: ' . date('d/m/Y', strtotime($expiryDate)) . ').');
+                        setFlash('success', 'Το υποψήφιο μέλος σημειώθηκε ως ολοκληρωμένο και η συνδρομή καταχωρήθηκε επιτυχώς (λήξη: ' . date('d/m/Y', strtotime($expiryDate)) . ').');
                     }
                 }
             }
@@ -361,7 +381,7 @@ if (get('export') === 'csv') {
     $rows = dbFetchAll("SELECT * FROM citizens WHERE $expWhereClause ORDER BY last_name_gr ASC, first_name_gr ASC, id ASC", $expParams);
 
     header('Content-Type: text/csv; charset=UTF-8');
-    header('Content-Disposition: attachment; filename="citizens_' . date('Y-m-d_His') . '.csv"');
+    header('Content-Disposition: attachment; filename="candidate_members_' . date('Y-m-d_His') . '.csv"');
     $out = fopen('php://output', 'w');
     fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF)); // UTF-8 BOM for Excel
     fputcsv($out, ['#', 'Επίθετο (GR)', 'Όνομα (GR)', 'Επίθετο (LAT)', 'Όνομα (LAT)', 'Τύπος Συνδρομής', 'Ημ. Γέννησης', 'Email', 'Τηλέφωνο', 'Επικοινωνία', 'Ημ/νία Επικοινωνίας', 'Πληρωμή', 'Ημ/νία Πληρωμής', 'Ολοκλήρωση', 'Ημ/νία Ολοκλήρωσης', 'Ημ. Εγγραφής', 'Πηγή', 'Σημειώσεις'], ';', '"', '\\');
@@ -456,13 +476,13 @@ include __DIR__ . '/includes/header.php';
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
-    <h2><i class="bi bi-person-vcard"></i> Λίστα Πολιτών</h2>
+    <h2><i class="bi bi-person-vcard"></i> Υποψήφια Μέλη</h2>
     <div>
         <a href="citizens.php?export=csv&search=<?= urlencode($search) ?>&contact=<?= urlencode($filterContact) ?>&payment=<?= urlencode($filterPayment) ?>&completed=<?= urlencode($filterCompleted) ?>&sort=<?= urlencode($sortCol) ?>&dir=<?= urlencode(strtolower($sortDir)) ?>" class="btn btn-success me-2">
             <i class="bi bi-filetype-csv"></i> Εξαγωγή CSV
         </a>
         <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#citizenModal" onclick="resetForm()">
-            <i class="bi bi-plus-lg"></i> Νέος Πολίτης
+            <i class="bi bi-plus-lg"></i> Νέο Υποψήφιο Μέλος
         </button>
     </div>
 </div>
@@ -511,7 +531,7 @@ include __DIR__ . '/includes/header.php';
 <!-- Results -->
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <span><i class="bi bi-list"></i> Σύνολο: <strong><?= $total ?></strong> πολίτες</span>
+        <span><i class="bi bi-list"></i> Σύνολο: <strong><?= $total ?></strong> υποψήφια μέλη</span>
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
@@ -547,7 +567,7 @@ $__f = ['search' => $search, 'contact' => $filterContact, 'payment' => $filterPa
                 </thead>
                 <tbody>
                     <?php if (empty($citizens)): ?>
-                    <tr><td colspan="10" class="text-center text-muted py-4">Δεν βρέθηκαν πολίτες.</td></tr>
+                    <tr><td colspan="10" class="text-center text-muted py-4">Δεν βρέθηκαν υποψήφια μέλη.</td></tr>
                     <?php else: ?>
                     <?php foreach ($citizens as $i => $c): ?>
                     <tr>
@@ -652,11 +672,11 @@ $__f = ['search' => $search, 'contact' => $filterContact, 'payment' => $filterPa
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title">Διαγραφή Πολίτη</h5>
+                <h5 class="modal-title">Διαγραφή Υποψήφιου Μέλους</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                Είστε σίγουροι ότι θέλετε να διαγράψετε τον πολίτη
+                Είστε σίγουροι ότι θέλετε να διαγράψετε το υποψήφιο μέλος
                 <strong id="deleteNameLabel"></strong>;
             </div>
             <div class="modal-footer">
@@ -694,12 +714,12 @@ $__f = ['search' => $search, 'contact' => $filterContact, 'payment' => $filterPa
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
-                <h5 class="modal-title"><i class="bi bi-patch-check"></i> Ολοκλήρωση &amp; Πιστοποιητικό</h5>
+                <h5 class="modal-title"><i class="bi bi-patch-check"></i> Ολοκλήρωση &amp; Συνδρομή</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                <p>Ο πολίτης <strong id="certModalCitizenName"></strong> θα σημειωθεί ως <span class="badge bg-success">Ολοκληρωμένος</span>.</p>
-                <p class="mb-3">Θέλετε να καταχωρήσετε και πιστοποιητικό στο μητρώο πιστοποιητικών πολιτών;</p>
+                <p>Το υποψήφιο μέλος <strong id="certModalCitizenName"></strong> θα σημειωθεί ως <span class="badge bg-success">Ολοκληρωμένο</span>.</p>
+                <p class="mb-3">Θέλετε να καταχωρήσετε και συνδρομή στη λίστα Συνδρομές;</p>
                 <div class="row g-3">
                     <div class="col-12">
                         <label class="form-label fw-semibold">Τύπος συνδρομής</label>
@@ -726,7 +746,7 @@ $__f = ['search' => $search, 'contact' => $filterContact, 'payment' => $filterPa
                     <i class="bi bi-check-circle"></i> Όχι, μόνο ολοκλήρωση
                 </button>
                 <button type="button" class="btn btn-success" onclick="submitWithCert()">
-                    <i class="bi bi-file-earmark-plus"></i> Ναι, καταχώρηση πιστοποιητικού
+                    <i class="bi bi-file-earmark-plus"></i> Ναι, καταχώρηση συνδρομής
                 </button>
             </div>
         </div>
@@ -742,7 +762,7 @@ $__f = ['search' => $search, 'contact' => $filterContact, 'payment' => $filterPa
                 <input type="hidden" name="action" id="formAction" value="create">
                 <input type="hidden" name="citizen_id" id="formCitizenId" value="0">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title" id="modalTitle">Νέος Πολίτης</h5>
+                    <h5 class="modal-title" id="modalTitle">Νέο Υποψήφιο Μέλος</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -832,7 +852,7 @@ function confirmDelete(id, name) {
 function resetForm() {
     document.getElementById('formAction').value = 'create';
     document.getElementById('formCitizenId').value = '0';
-    document.getElementById('modalTitle').textContent = 'Νέος Πολίτης';
+    document.getElementById('modalTitle').textContent = 'Νέο Υποψήφιο Μέλος';
     document.getElementById('citizenForm').reset();
     document.getElementById('registered_at').value = new Date().toISOString().split('T')[0];
 }
@@ -840,7 +860,7 @@ function resetForm() {
 function cloneCitizen(c) {
     document.getElementById('formAction').value = 'create';
     document.getElementById('formCitizenId').value = '0';
-    document.getElementById('modalTitle').textContent = 'Κλωνοποίηση Πολίτη';
+    document.getElementById('modalTitle').textContent = 'Κλωνοποίηση Υποψήφιου Μέλους';
     document.getElementById('first_name_gr').value = c.first_name_gr || '';
     document.getElementById('last_name_gr').value = c.last_name_gr || '';
     document.getElementById('first_name_lat').value = c.first_name_lat || '';
@@ -862,7 +882,7 @@ function cloneCitizen(c) {
 function editCitizen(c) {
     document.getElementById('formAction').value = 'update';
     document.getElementById('formCitizenId').value = c.id;
-    document.getElementById('modalTitle').textContent = 'Επεξεργασία Πολίτη';
+    document.getElementById('modalTitle').textContent = 'Επεξεργασία Υποψήφιου Μέλους';
     document.getElementById('first_name_gr').value = c.first_name_gr || '';
     document.getElementById('last_name_gr').value = c.last_name_gr || '';
     document.getElementById('first_name_lat').value = c.first_name_lat || '';
