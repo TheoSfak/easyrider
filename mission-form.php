@@ -1172,6 +1172,75 @@ include __DIR__ . '/includes/header.php';
         setTimeout(function() { routeMap.invalidateSize(); }, 150);
     }
 
+    var fullscreenMapInstance = null;
+
+    function openFullscreenRouteMap() {
+        if (!fullscreenMapInstance) {
+            var mapEl = document.getElementById('routeFullscreenMap');
+            if (!mapEl || typeof L === 'undefined') return;
+
+            var savedLocation = getSavedLocation();
+            var center = routePoints.length ? [routePoints[0].lat, routePoints[0].lng] : (savedLocation || defaultCenter);
+            var zoom = routePoints.length || savedLocation ? 14 : 9;
+
+            var map = L.map(mapEl, { scrollWheelZoom: true }).setView(center, zoom);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                maxZoom: 19
+            }).addTo(map);
+
+            map.on('click', function(e) {
+                routePoints.push({
+                    lat: Math.round(e.latlng.lat * 1000000) / 1000000,
+                    lng: Math.round(e.latlng.lng * 1000000) / 1000000,
+                    title: routePoints.length === 0 ? 'Εκκίνηση' : '',
+                    scheduled_time: '',
+                    stop_minutes: 0,
+                    notes: ''
+                });
+                renderRoute(false);
+            });
+
+            fullscreenMapInstance = { map: map, markers: [], line: null };
+            mapInstances.push(fullscreenMapInstance);
+        }
+
+        drawPointsOnMapInstance(fullscreenMapInstance);
+        renderFullscreenPointPanel();
+        if (routePoints.length > 0) {
+            fullscreenMapInstance.map.fitBounds(
+                L.latLngBounds(routePoints.map(function(point) { return [point.lat, point.lng]; })),
+                { padding: [25, 25] }
+            );
+        }
+        setTimeout(function() { fullscreenMapInstance.map.invalidateSize(); }, 150);
+    }
+
+    function closeFullscreenRouteMap() {
+        if (!fullscreenMapInstance) return;
+        var idx = mapInstances.indexOf(fullscreenMapInstance);
+        if (idx !== -1) mapInstances.splice(idx, 1);
+        fullscreenMapInstance.map.remove();
+        fullscreenMapInstance = null;
+    }
+
+    function initFullscreenRouteEditor() {
+        var modalEl = document.getElementById('routeFullscreenModal');
+        if (!modalEl) return;
+
+        modalEl.addEventListener('shown.bs.modal', openFullscreenRouteMap);
+        modalEl.addEventListener('hidden.bs.modal', closeFullscreenRouteMap);
+
+        document.getElementById('routeFullscreenUndoBtn').addEventListener('click', function() {
+            routePoints.pop();
+            renderRoute(false);
+        });
+        document.getElementById('routeFullscreenClearBtn').addEventListener('click', function() {
+            routePoints = [];
+            renderRoute(false);
+        });
+    }
+
     function handleMapsInput(url) {
         url = url.trim();
         if (!url) return;
@@ -1215,6 +1284,7 @@ include __DIR__ . '/includes/header.php';
         var input = document.getElementById('maps_link');
         var btn   = document.getElementById('parseMapsBtn');
         initRouteEditor();
+        initFullscreenRouteEditor();
 
         // Auto-parse on paste
         input.addEventListener('paste', function(e) {
