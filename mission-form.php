@@ -1057,9 +1057,14 @@ include __DIR__ . '/includes/header.php';
                 var popupEl = e.popup.getElement();
                 var deleteBtn = popupEl ? popupEl.querySelector('.route-point-delete-btn') : null;
                 if (deleteBtn) {
-                    deleteBtn.addEventListener('click', function() {
-                        routePoints.splice(index, 1);
-                        renderRoute(false);
+                    L.DomEvent.disableClickPropagation(deleteBtn);
+                    deleteBtn.addEventListener('click', function(evt) {
+                        evt.preventDefault();
+                        evt.stopPropagation();
+                        setTimeout(function() {
+                            routePoints.splice(index, 1);
+                            renderRoute(false);
+                        }, 0);
                     });
                 }
             });
