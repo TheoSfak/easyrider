@@ -1045,7 +1045,8 @@ include __DIR__ . '/includes/header.php';
                 color: '#0d6efd',
                 fillColor: '#0d6efd',
                 fillOpacity: 0.9,
-                weight: 2
+                weight: 2,
+                bubblingMouseEvents: false
             }).addTo(instance.map).bindTooltip(String(index + 1), {
                 permanent: true,
                 direction: 'center',
