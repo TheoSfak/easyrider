@@ -276,6 +276,59 @@ function rideRouteGeometry(array $mission): array {
     return count($points) >= 2 ? $points : [];
 }
 
+function rideEventRoutePositions(array $routeGeometry, array $events): array {
+    $vertexCount = count($routeGeometry);
+
+    if ($vertexCount < 2) {
+        foreach ($events as &$event) {
+            $event['route_fraction'] = null;
+        }
+        unset($event);
+        return $events;
+    }
+
+    $cumulative = [0.0];
+    for ($i = 1; $i < $vertexCount; $i++) {
+        $cumulative[] = $cumulative[$i - 1] + rideDistanceMeters(
+            (float)$routeGeometry[$i - 1][0],
+            (float)$routeGeometry[$i - 1][1],
+            (float)$routeGeometry[$i][0],
+            (float)$routeGeometry[$i][1]
+        );
+    }
+    $totalDistance = $cumulative[$vertexCount - 1];
+
+    foreach ($events as &$event) {
+        $lat = $event['lat'] ?? null;
+        $lng = $event['lng'] ?? null;
+
+        if ($lat === null || $lng === null || $totalDistance <= 0) {
+            $event['route_fraction'] = null;
+            continue;
+        }
+
+        $nearestIndex = 0;
+        $nearestDistance = null;
+        for ($i = 0; $i < $vertexCount; $i++) {
+            $distance = rideDistanceMeters(
+                (float)$lat,
+                (float)$lng,
+                (float)$routeGeometry[$i][0],
+                (float)$routeGeometry[$i][1]
+            );
+            if ($nearestDistance === null || $distance < $nearestDistance) {
+                $nearestDistance = $distance;
+                $nearestIndex = $i;
+            }
+        }
+
+        $event['route_fraction'] = $cumulative[$nearestIndex] / $totalDistance;
+    }
+    unset($event);
+
+    return $events;
+}
+
 function rideMissionRouteMetrics(array $mission, ?array $routePoints = null): array {
     if ($routePoints === null) {
         $routePoints = normalizeRideRoutePoints($mission['route_points'] ?? '[]');
