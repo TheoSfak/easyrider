@@ -384,6 +384,14 @@ include __DIR__ . '/includes/header.php';
 .route-point-row { border: 1px solid #dee2e6; border-radius: 8px; padding: 10px; background: #fff; }
 .route-point-row + .route-point-row { margin-top: 8px; }
 .route-point-index { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
+.route-fullscreen-layout { display: flex; height: 100%; }
+.route-fullscreen-map { flex: 1 1 auto; height: 100%; }
+.route-fullscreen-panel { flex: 0 0 200px; width: 200px; overflow-y: auto; padding: 10px; border-left: 1px solid #dee2e6; background: #f8f9fa; }
+@media (max-width: 767.98px) {
+    .route-fullscreen-layout { flex-direction: column; }
+    .route-fullscreen-map { height: 60vh; }
+    .route-fullscreen-panel { flex: 0 0 auto; width: 100%; border-left: 0; border-top: 1px solid #dee2e6; max-height: 30vh; }
+}
 </style>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -491,6 +499,9 @@ include __DIR__ . '/includes/header.php';
                             </button>
                             <button type="button" class="btn btn-sm btn-outline-danger" id="routeClearBtn">
                                 <i class="bi bi-trash me-1"></i>Καθαρισμός
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#routeFullscreenModal">
+                                <i class="bi bi-arrows-fullscreen me-1"></i>Μεγάλος χάρτης
                             </button>
                             <span class="badge bg-light text-dark border route-point-count" id="routePointCount">0 σημεία</span>
                         </div>
@@ -1228,6 +1239,32 @@ include __DIR__ . '/includes/header.php';
 <!-- Summernote JS -->
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/summernote-bs5.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/summernote@0.8.20/dist/lang/summernote-el-GR.min.js"></script>
+
+<!-- Fullscreen Route Point Editor -->
+<div class="modal fade" id="routeFullscreenModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen">
+        <div class="modal-content">
+            <div class="modal-header py-2">
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="routeFullscreenUndoBtn">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Αναίρεση
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" id="routeFullscreenClearBtn">
+                        <i class="bi bi-trash me-1"></i>Καθαρισμός
+                    </button>
+                    <span class="badge bg-light text-dark border route-point-count" id="routeFullscreenPointCount">0 σημεία</span>
+                </div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div class="route-fullscreen-layout">
+                    <div id="routeFullscreenMap" class="route-fullscreen-map"></div>
+                    <div id="routeFullscreenPointPanel" class="route-fullscreen-panel"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Date/Time Picker Modal -->
 <div class="modal fade" id="datePickerModal" tabindex="-1" aria-hidden="true">
