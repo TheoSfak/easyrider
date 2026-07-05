@@ -1422,6 +1422,27 @@ CREATE TABLE IF NOT EXISTS `ride_checklist_items` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================
+-- MULTI-DAY MISSION ITINERARIES
+-- =============================================
+CREATE TABLE IF NOT EXISTS `mission_days` (
+    `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    `mission_id` INT UNSIGNED NOT NULL,
+    `day_number` TINYINT UNSIGNED NOT NULL,
+    `day_date` DATE NOT NULL,
+    `title` VARCHAR(160) NULL,
+    `overnight_notes` TEXT NULL,
+    `route_points` MEDIUMTEXT NULL,
+    `route_geometry` MEDIUMTEXT NULL,
+    `route_distance_meters` INT UNSIGNED NULL,
+    `route_duration_seconds` INT UNSIGNED NULL,
+    `route_provider` VARCHAR(40) NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    UNIQUE KEY `uq_mission_day` (`mission_id`, `day_number`),
+    CONSTRAINT `fk_mission_days_mission` FOREIGN KEY (`mission_id`) REFERENCES `missions`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- =============================================
 -- INVENTORY SYSTEM TABLES
 -- =============================================
 
