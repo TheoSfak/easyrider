@@ -99,6 +99,88 @@ function normalizeRouteGeometryJson($raw): string {
     return count($geometry) >= 2 ? json_encode($geometry) : '';
 }
 
+function normalizeMissionDaysJson($raw): array {
+    $decoded = json_decode((string)$raw, true);
+    if (!is_array($decoded)) {
+        return [];
+    }
+
+    $days = [];
+    foreach ($decoded as $day) {
+        if (!is_array($day) || !isset($day['day_number'], $day['day_date'])) {
+            continue;
+        }
+        $dayNumber = (int)$day['day_number'];
+        if ($dayNumber < 1 || $dayNumber > 60) {
+            continue;
+        }
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', (string)$day['day_date'])) {
+            continue;
+        }
+
+        $routePointsRaw = json_encode($day['route_points'] ?? []);
+        $routeGeometryRaw = json_encode($day['route_geometry'] ?? []);
+
+        $days[] = [
+            'day_number' => $dayNumber,
+            'day_date' => $day['day_date'],
+            'title' => mb_substr(trim((string)($day['title'] ?? '')), 0, 160),
+            'overnight_notes' => mb_substr(trim((string)($day['overnight_notes'] ?? '')), 0, 2000),
+            'route_points' => normalizeRoutePointsJson($routePointsRaw),
+            'route_geometry' => normalizeRouteGeometryJson($routeGeometryRaw),
+            'route_distance_meters' => max(0, (int)($day['route_distance_meters'] ?? 0)),
+            'route_duration_seconds' => max(0, (int)($day['route_duration_seconds'] ?? 0)),
+            'route_provider' => in_array($day['route_provider'] ?? '', ['google'], true) ? 'google' : '',
+        ];
+
+        if (count($days) >= 60) {
+            break;
+        }
+    }
+
+    usort($days, function ($a, $b) {
+        return $a['day_number'] <=> $b['day_number'];
+    });
+
+    return $days;
+}
+
+function saveMissionDaysForMission(int $missionId, array $days): void {
+    dbExecute("DELETE FROM mission_days WHERE mission_id = ?", [$missionId]);
+
+    foreach ($days as $day) {
+        $geometry = $day['route_geometry'];
+        $distance = $day['route_distance_meters'];
+        $duration = $day['route_duration_seconds'];
+        $provider = $day['route_provider'];
+
+        if ($day['route_points'] === '' || $provider !== 'google' || $geometry === '' || $distance <= 0 || $duration <= 0) {
+            $geometry = null;
+            $distance = null;
+            $duration = null;
+            $provider = null;
+        }
+
+        dbExecute(
+            "INSERT INTO mission_days
+             (mission_id, day_number, day_date, title, overnight_notes, route_points, route_geometry, route_distance_meters, route_duration_seconds, route_provider, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())",
+            [
+                $missionId,
+                $day['day_number'],
+                $day['day_date'],
+                $day['title'] !== '' ? $day['title'] : null,
+                $day['overnight_notes'] !== '' ? $day['overnight_notes'] : null,
+                $day['route_points'] !== '' ? $day['route_points'] : null,
+                $geometry,
+                $distance,
+                $duration,
+                $provider,
+            ]
+        );
+    }
+}
+
 $errors = [];
 
 if (isPost()) {
@@ -132,6 +214,17 @@ if (isPost()) {
     // otherwise the app falls back to the straight-line estimate
     if ($data['route_points'] === '' || $data['route_provider'] !== 'google' || $data['route_geometry'] === ''
         || $data['route_distance_meters'] <= 0 || $data['route_duration_seconds'] <= 0) {
+        $data['route_geometry'] = null;
+        $data['route_distance_meters'] = null;
+        $data['route_duration_seconds'] = null;
+        $data['route_provider'] = null;
+    }
+
+    // Multi-day mission: route data lives in mission_days instead of the mission-level columns
+    $missionDaysData = normalizeMissionDaysJson($_POST['mission_days_json'] ?? '');
+    $isMultiDaySubmit = !empty($missionDaysData);
+    if ($isMultiDaySubmit) {
+        $data['route_points'] = '';
         $data['route_geometry'] = null;
         $data['route_distance_meters'] = null;
         $data['route_duration_seconds'] = null;
@@ -187,7 +280,9 @@ if (isPost()) {
                     $data['start_datetime'], $data['end_datetime'], $data['requirements'], $data['notes'],
                     $data['is_urgent'], $data['status'], $data['responsible_user_id'], $id
                 ]);
-                
+
+                saveMissionDaysForMission($id, $missionDaysData);
+
                 logAudit('update', 'missions', $id, $mission, $data);
                 setFlash('success', 'Η δράση ενημερώθηκε επιτυχώς.');
             } else {
@@ -332,6 +427,8 @@ if (isPost()) {
                         [$newId, $data['start_datetime'], $data['end_datetime']]
                     );
 
+                    saveMissionDaysForMission($newId, $missionDaysData);
+
                     logAudit('create', 'missions', $newId, null, $data);
                     setFlash('success', 'Η δράση δημιουργήθηκε επιτυχώς.');
                     redirect('mission-view.php?id=' . $newId);
@@ -371,6 +468,34 @@ if ($routeProviderInitial !== 'google' || empty($routeGeometryInitial) || $route
     $routeDurationInitial = 0;
 }
 $googleRoutingEnabled = trim((string)getSetting('google_maps_api_key', '')) !== '';
+
+// Multi-day itinerary: load existing days on edit, and detect the initial multi-day state
+$missionDaysInitial = [];
+if ($isEdit) {
+    $missionDayRows = dbFetchAll("SELECT * FROM mission_days WHERE mission_id = ? ORDER BY day_number", [$id]);
+    foreach ($missionDayRows as $row) {
+        $missionDaysInitial[] = [
+            'day_number' => (int)$row['day_number'],
+            'day_date' => $row['day_date'],
+            'title' => $row['title'] ?? '',
+            'overnight_notes' => $row['overnight_notes'] ?? '',
+            'route_points' => json_decode($row['route_points'] ?? '[]', true) ?: [],
+            'route_geometry' => json_decode($row['route_geometry'] ?? '[]', true) ?: [],
+            'route_distance_meters' => (int)($row['route_distance_meters'] ?? 0),
+            'route_duration_seconds' => (int)($row['route_duration_seconds'] ?? 0),
+            'route_provider' => $row['route_provider'] ?? '',
+        ];
+    }
+}
+
+$isMultiDayInitial = false;
+if (!empty($startDate) && !empty($endDate)) {
+    $startD = DateTime::createFromFormat('d/m/Y H:i', $startDate);
+    $endD = DateTime::createFromFormat('d/m/Y H:i', $endDate);
+    if ($startD && $endD) {
+        $isMultiDayInitial = $startD->format('Y-m-d') !== $endD->format('Y-m-d');
+    }
+}
 
 include __DIR__ . '/includes/header.php';
 ?>
