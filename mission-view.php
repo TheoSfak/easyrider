@@ -28,26 +28,9 @@ if (!$mission) {
     redirect('missions.php');
 }
 
-$routePoints = json_decode($mission['route_points'] ?? '[]', true);
-if (!is_array($routePoints)) {
-    $routePoints = [];
-}
-$routePoints = array_values(array_filter($routePoints, function ($point) {
-    return is_array($point)
-        && isset($point['lat'], $point['lng'])
-        && is_numeric($point['lat'])
-        && is_numeric($point['lng']);
-}));
-$routePoints = array_map(function ($point) {
-    return [
-        'lat' => (float)$point['lat'],
-        'lng' => (float)$point['lng'],
-        'title' => trim((string)($point['title'] ?? '')),
-        'scheduled_time' => trim((string)($point['scheduled_time'] ?? '')),
-        'stop_minutes' => max(0, (int)($point['stop_minutes'] ?? 0)),
-        'notes' => trim((string)($point['notes'] ?? '')),
-    ];
-}, $routePoints);
+$routePoints = normalizeRideRoutePoints($mission['route_points'] ?? '[]');
+$routeMetrics = rideMissionRouteMetrics($mission, $routePoints);
+$routeGeometry = rideRouteGeometry($mission);
 
 function buildGoogleMapsDirectionsUrl(array $routePoints, array $mission): string {
     if (count($routePoints) >= 2) {
@@ -1106,6 +1089,19 @@ include __DIR__ . '/includes/header.php';
                     <i class="bi bi-phone me-1"></i>Άνοιγμα στο κινητό
                 </a>
                 <?php endif; ?>
+            </div>
+            <div class="card-body py-2 border-bottom">
+                <div class="d-flex flex-wrap gap-2 small">
+                    <span class="badge bg-light text-dark border"><i class="bi bi-signpost-2 me-1"></i><?= h($routeMetrics['distance_label']) ?></span>
+                    <span class="badge bg-light text-dark border"><i class="bi bi-stopwatch me-1"></i>Οδήγηση <?= h($routeMetrics['moving_label']) ?></span>
+                    <span class="badge bg-warning text-dark"><i class="bi bi-cup-hot me-1"></i>Στάσεις <?= h($routeMetrics['stop_label']) ?></span>
+                    <span class="badge bg-primary"><i class="bi bi-clock-history me-1"></i>Σύνολο <?= h($routeMetrics['total_label']) ?></span>
+                    <?php if (($routeMetrics['provider'] ?? '') === 'google'): ?>
+                    <span class="text-success align-self-center"><i class="bi bi-google me-1"></i>Διαδρομή μέσω Google.</span>
+                    <?php else: ?>
+                    <span class="text-muted align-self-center">Εκτίμηση σε ευθεία γραμμή.</span>
+                    <?php endif; ?>
+                </div>
             </div>
             <div class="list-group list-group-flush">
                 <?php foreach ($routePoints as $idx => $point): ?>
@@ -2296,6 +2292,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var lng = <?= !empty($mission['longitude']) ? (float)$mission['longitude'] : 'null' ?>;
     var label = <?= json_encode($mission['location']) ?>;
     var routePoints = <?= json_encode($routePoints, JSON_UNESCAPED_UNICODE) ?>;
+    var routeGeometry = <?= json_encode($routeGeometry) ?>;
     var center = routePoints.length ? [routePoints[0].lat, routePoints[0].lng] : [lat, lng];
     var map = L.map('missionMap', { zoomControl: true, scrollWheelZoom: false }).setView(center, 15);
     function esc(value) {
@@ -2331,13 +2328,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }).bindPopup(popup);
         });
         if (routeLatLngs.length >= 2) {
-            L.polyline(routeLatLngs, {
+            L.polyline(routeGeometry.length >= 2 ? routeGeometry : routeLatLngs, {
                 color: '#0d6efd',
                 weight: 5,
                 opacity: 0.85
             }).addTo(map);
         }
-        map.fitBounds(L.latLngBounds(routeLatLngs), { padding: [25, 25] });
+        map.fitBounds(L.latLngBounds(routeGeometry.length >= 2 ? routeGeometry.concat(routeLatLngs) : routeLatLngs), { padding: [25, 25] });
     }
     setTimeout(function() { map.invalidateSize(); }, 150);
 })();

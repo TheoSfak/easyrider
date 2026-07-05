@@ -35,6 +35,7 @@ if (!isRideController($mission, $currentUser) && !$isResponsible && !hasPagePerm
 }
 
 $routePoints = normalizeRideRoutePoints($mission['route_points'] ?? '[]');
+$routeMetrics = rideMissionRouteMetrics($mission, $routePoints);
 $directionsUrl = buildRideDirectionsUrl($routePoints);
 $rideSummary = buildRideDebriefSuggestion($missionId);
 $rideEvents = getRideEvents($missionId, 100, false);
@@ -189,6 +190,12 @@ function reportEventLabel(array $event, array $typeLabels): string {
         <p><strong>Google Maps:</strong> <a href="<?= h($directionsUrl) ?>"><?= h($directionsUrl) ?></a></p>
     <?php endif; ?>
     <?php if (!empty($routePoints)): ?>
+        <p>
+            <strong>Απόσταση:</strong> <?= h($routeMetrics['distance_label']) ?> &nbsp;
+            <strong>Οδήγηση:</strong> <?= h($routeMetrics['moving_label']) ?> &nbsp;
+            <strong>Στάσεις:</strong> <?= h($routeMetrics['stop_label']) ?> &nbsp;
+            <strong>Σύνολο:</strong> <?= h($routeMetrics['total_label']) ?>
+        </p>
         <table>
             <thead><tr><th>#</th><th>Σημείο</th><th>Ώρα</th><th>Στάση</th><th>Σημειώσεις</th></tr></thead>
             <tbody>

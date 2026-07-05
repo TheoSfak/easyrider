@@ -27,12 +27,6 @@ $defaults = [
     'admin_email' => '',
     'timezone' => 'Europe/Athens',
     'date_format' => 'd/m/Y',
-    'points_per_hour' => '10',
-    'weekend_multiplier' => '1.5',
-    'night_multiplier' => '1.5',
-    'medical_multiplier' => '2.0',
-    'achievements_enabled' => '1',
-    'points_enabled' => '1',
     'registration_enabled' => '1',
     'show_register_button' => '0',
     'require_approval' => '0',
@@ -57,22 +51,7 @@ $defaults = [
     'citizen_cert_notify_1month' => '1',
     'citizen_cert_notify_1week' => '1',
     'citizen_cert_notify_expired' => '1',
-    // Prerequisites
-    'prereq_attendance_enabled' => '1',
-    'prereq_attendance_goal' => '10',
-    'prereq_hours_enabled' => '0',
-    'prereq_hours_goal' => '0',
-    'prereq_mission_types' => '',
-    'prereq_tep_attendance_enabled' => '0',
-    'prereq_tep_attendance_goal' => '0',
-    'prereq_tep_hours_enabled' => '1',
-    'prereq_tep_hours_goal' => '40',
-    'prereq_tep_mission_types' => '',
-    'prereq_edu_attendance_enabled' => '1',
-    'prereq_edu_attendance_goal' => '2',
-    'prereq_edu_hours_enabled' => '0',
-    'prereq_edu_hours_goal' => '0',
-    'prereq_edu_mission_types' => '',
+    'google_maps_api_key' => '',
 ];
 
 foreach ($defaults as $key => $value) {
@@ -159,7 +138,6 @@ function runHealthChecks() {
         'uploads' => __DIR__ . '/uploads',
         'uploads/logos' => __DIR__ . '/uploads/logos',
         'uploads/documents' => __DIR__ . '/uploads/documents',
-        'uploads/training' => __DIR__ . '/uploads/training',
         'uploads/photos' => __DIR__ . '/uploads/photos',
         'uploads/profile_photos' => __DIR__ . '/uploads/profile_photos',
         'exports' => __DIR__ . '/exports',
@@ -509,30 +487,29 @@ if (isPost()) {
         // Save general settings
         $fieldsToUpdate = [
             'app_name', 'app_description', 'admin_email', 'timezone', 'date_format',
-            'points_per_hour', 'weekend_multiplier', 'night_multiplier', 'medical_multiplier',
-            'achievements_enabled', 'points_enabled',
             'registration_enabled', 'show_register_button', 'require_approval', 'maintenance_mode',
             'session_timeout_minutes',
             'shift_reminder_hours', 'resend_mission_hours_before', 'resend_mission_enabled',
             'qr_checkin_enabled',
             'openweathermap_api_key',
+            'google_maps_api_key',
         ];
         
         foreach ($fieldsToUpdate as $field) {
             $value = isset($_POST[$field]) ? $_POST[$field] : '';
             
-            if (in_array($field, ['achievements_enabled', 'points_enabled', 'registration_enabled', 'show_register_button', 'require_approval', 'maintenance_mode', 'resend_mission_enabled', 'qr_checkin_enabled'])) {
+            if (in_array($field, ['registration_enabled', 'show_register_button', 'require_approval', 'maintenance_mode', 'resend_mission_enabled', 'qr_checkin_enabled'])) {
                 $value = isset($_POST[$field]) ? '1' : '0';
             }
 
-            // Trim the API key to avoid whitespace issues from copy-paste
-            if ($field === 'openweathermap_api_key') {
+            // Trim the API keys to avoid whitespace issues from copy-paste
+            if (in_array($field, ['openweathermap_api_key', 'google_maps_api_key'])) {
                 $value = trim($value);
-            }
 
-            // Don't overwrite API key if form was submitted empty (acts like a "keep existing" field)
-            if ($field === 'openweathermap_api_key' && empty($value) && !empty($settings['openweathermap_api_key'] ?? '')) {
-                continue;
+                // Don't overwrite API key if form was submitted empty (acts like a "keep existing" field)
+                if (empty($value) && !empty($settings[$field] ?? '')) {
+                    continue;
+                }
             }
             
             $exists = dbFetchValue("SELECT COUNT(*) FROM settings WHERE setting_key = ?", [$field]);
@@ -742,7 +719,6 @@ if (isPost()) {
             __DIR__ . '/uploads',
             __DIR__ . '/uploads/logos',
             __DIR__ . '/uploads/documents',
-            __DIR__ . '/uploads/training',
             __DIR__ . '/uploads/photos',
             __DIR__ . '/uploads/profile_photos',
             __DIR__ . '/exports',
@@ -816,38 +792,6 @@ if (isPost()) {
         setFlash('success', "Διαγράφηκαν $deleted εγγραφές email log παλαιότερες $months μηνών.");
         redirect('settings.php?tab=health');
 
-    } elseif ($action === 'save_prerequisites') {
-        $prereqKeys = [
-            'prereq_attendance_enabled', 'prereq_attendance_goal',
-            'prereq_hours_enabled', 'prereq_hours_goal',
-            'prereq_mission_types',
-            'prereq_tep_attendance_enabled', 'prereq_tep_attendance_goal',
-            'prereq_tep_hours_enabled', 'prereq_tep_hours_goal',
-            'prereq_tep_mission_types',
-            'prereq_edu_attendance_enabled', 'prereq_edu_attendance_goal',
-            'prereq_edu_hours_enabled', 'prereq_edu_hours_goal',
-            'prereq_edu_mission_types',
-        ];
-        foreach ($prereqKeys as $key) {
-            if (strpos($key, '_enabled') !== false) {
-                $value = isset($_POST[$key]) ? '1' : '0';
-            } elseif (strpos($key, '_mission_types') !== false) {
-                $arr = $_POST[$key] ?? [];
-                $value = is_array($arr) ? implode(',', array_map('intval', $arr)) : '';
-            } else {
-                $value = (string)(int) post($key, '0');
-            }
-            dbExecute(
-                "INSERT INTO settings (setting_key, setting_value, created_at, updated_at)
-                 VALUES (?, ?, NOW(), NOW())
-                 ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value), updated_at = NOW()",
-                [$key, $value]
-            );
-        }
-        logAudit('settings_update', 'settings', null, 'Ενημέρωση προαπαιτούμενων');
-        setFlash('success', 'Τα προαπαιτούμενα ενημερώθηκαν επιτυχώς.');
-        redirect('settings.php?tab=prerequisites');
-
     } elseif ($action === 'reset_data') {
         $confirmation = post('confirmation', '');
         if ($confirmation !== 'DELETE') {
@@ -866,12 +810,12 @@ if (isPost()) {
             dbExecute("UPDATE missions SET deleted_at = NOW() WHERE deleted_at IS NULL");
             dbExecute("DELETE FROM missions");
 
-            // Points & badges
+            // Legacy gamification data
             dbExecute("DELETE FROM volunteer_points");
             dbExecute("DELETE FROM user_achievements");
             dbExecute("UPDATE users SET total_points = 0, monthly_points = 0");
 
-            // Exam / quiz history (keep definitions & questions pool)
+            // Legacy training history
             dbExecute("DELETE FROM user_answers");
             dbExecute("DELETE FROM exam_attempts");
             dbExecute("DELETE FROM quiz_attempts");
@@ -963,11 +907,6 @@ include __DIR__ . '/includes/header.php';
     <li class="nav-item">
         <a class="nav-link <?= $activeTab === 'health' ? 'active' : '' ?>" href="settings.php?tab=health">
             <i class="bi bi-heart-pulse me-1"></i>Υγεία Εφαρμογής
-        </a>
-    </li>
-    <li class="nav-item">
-        <a class="nav-link <?= $activeTab === 'prerequisites' ? 'active' : '' ?>" href="settings.php?tab=prerequisites">
-            <i class="bi bi-list-check me-1"></i>Προαπαιτούμενα
         </a>
     </li>
     <li class="nav-item">
@@ -1096,58 +1035,6 @@ include __DIR__ . '/includes/header.php';
         </div>
         
         <div class="col-lg-6">
-            <!-- Points Settings -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-star me-1"></i>Ρυθμίσεις Πόντων & Επιτευγμάτων</h5>
-                </div>
-                <div class="card-body">
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" name="points_enabled" id="pointsEnabled"
-                               <?= $settings['points_enabled'] === '1' ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="pointsEnabled">
-                            <strong>Ενεργοποίηση Συστήματος Πόντων</strong>
-                        </label>
-                        <div class="form-text">Αν απενεργοποιηθεί, οι πόντοι, η κατάταξη (leaderboard) και οι σχετικές στατιστικές κρύβονται από όλες τις σελίδες. Τα δεδομένα διατηρούνται.</div>
-                    </div>
-                    <div class="form-check form-switch mb-3">
-                        <input class="form-check-input" type="checkbox" name="achievements_enabled" id="achievementsEnabled"
-                               <?= $settings['achievements_enabled'] === '1' ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="achievementsEnabled">
-                            <strong>Ενεργοποίηση Επιτευγμάτων (Badges)</strong>
-                        </label>
-                        <div class="form-text">Αν απενεργοποιηθεί, τα επιτεύγματα κρύβονται από όλες τις σελίδες. Τα δεδομένα διατηρούνται.</div>
-                    </div>
-                    <hr>
-                    <div class="mb-3">
-                        <label class="form-label">Πόντοι ανά ώρα</label>
-                        <input type="number" class="form-control" name="points_per_hour" 
-                               value="<?= h($settings['points_per_hour']) ?>" min="1">
-                    </div>
-                    <div class="row">
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Πολ/στής Σ/Κ</label>
-                            <input type="number" step="0.1" class="form-control" name="weekend_multiplier" 
-                                   value="<?= h($settings['weekend_multiplier']) ?>" min="1">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Πολ/στής Νυχτ.</label>
-                            <input type="number" step="0.1" class="form-control" name="night_multiplier" 
-                                   value="<?= h($settings['night_multiplier']) ?>" min="1">
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Πολ/στής Ιατρ.</label>
-                            <input type="number" step="0.1" class="form-control" name="medical_multiplier" 
-                                   value="<?= h($settings['medical_multiplier']) ?>" min="1">
-                        </div>
-                    </div>
-                    <small class="text-muted">
-                        Οι πολλαπλασιαστές εφαρμόζονται για βάρδιες Σαββατοκύριακου, νυχτερινές (22:00-06:00), 
-                        και ιατρικές αποστολές.
-                    </small>
-                </div>
-            </div>
-            
             <!-- Notification Settings -->
             <div class="card mb-4">
                 <div class="card-header">
@@ -1227,7 +1114,7 @@ include __DIR__ . '/includes/header.php';
                             <td><?= dbFetchValue("SELECT COUNT(*) FROM users WHERE is_active = 1") ?></td>
                         </tr>
                         <tr>
-                            <td>Αποστολές</td>
+                            <td>Δράσεις</td>
                             <td><?= dbFetchValue("SELECT COUNT(*) FROM missions WHERE deleted_at IS NULL") ?></td>
                         </tr>
                     </table>
@@ -1247,7 +1134,7 @@ include __DIR__ . '/includes/header.php';
                                autocomplete="new-password"
                                placeholder="<?= !empty($settings['openweathermap_api_key'] ?? '') ? '••••••••' : 'Εισάγετε το API key σας' ?>">
                         <div class="form-text">
-                            Απαιτείται για την εμφάνιση πρόβλεψης καιρού στις αποστολές.
+                            Απαιτείται για την εμφάνιση πρόβλεψης καιρού στις δράσεις.
                             <a href="https://openweathermap.org/appid" target="_blank" rel="noopener noreferrer">Δωρεάν εγγραφή στο OpenWeatherMap</a>
                         </div>
                     </div>
@@ -1263,7 +1150,37 @@ include __DIR__ . '/includes/header.php';
                     <div id="weatherTestResult" class="mt-2" style="display:none;"></div>
                     <?php else: ?>
                     <div class="alert alert-secondary py-1 px-2 mb-0 small">
-                        <i class="bi bi-info-circle me-1"></i>Χωρίς API key η πρόβλεψη καιρού δεν εμφανίζεται στις αποστολές
+                        <i class="bi bi-info-circle me-1"></i>Χωρίς API key η πρόβλεψη καιρού δεν εμφανίζεται στις δράσεις
+                    </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <!-- Google Maps Routing Settings -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="bi bi-sign-turn-right me-1"></i>Google Routing Διαδρομών</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label" for="googleMapsApiKey">Google Maps API Key</label>
+                        <input type="password" class="form-control" id="googleMapsApiKey"
+                               name="google_maps_api_key"
+                               autocomplete="new-password"
+                               placeholder="<?= !empty($settings['google_maps_api_key'] ?? '') ? '••••••••' : 'Εισάγετε το API key σας' ?>">
+                        <div class="form-text">
+                            Με API key οι διαδρομές «κουμπώνουν» στους δρόμους (Routes API) με πραγματική απόσταση και χρόνο οδήγησης.
+                            Απαιτεί ενεργό <strong>Routes API</strong> στο
+                            <a href="https://console.cloud.google.com/google/maps-apis" target="_blank" rel="noopener noreferrer">Google Cloud Console</a>.
+                        </div>
+                    </div>
+                    <?php if (!empty($settings['google_maps_api_key'] ?? '')): ?>
+                    <div class="alert alert-success py-1 px-2 mb-0 small">
+                        <i class="bi bi-check-circle me-1"></i>API Key έχει οριστεί — οι νέες διαδρομές θα υπολογίζονται μέσω Google
+                    </div>
+                    <?php else: ?>
+                    <div class="alert alert-secondary py-1 px-2 mb-0 small">
+                        <i class="bi bi-info-circle me-1"></i>Χωρίς API key χρησιμοποιείται η εκτίμηση απόστασης/χρόνου σε ευθεία γραμμή
                     </div>
                     <?php endif; ?>
                 </div>
@@ -1284,7 +1201,7 @@ include __DIR__ . '/includes/header.php';
                         </label>
                     </div>
                     <div class="form-text">
-                        Όταν είναι ενεργό, κάθε βάρδια αποκτά μοναδικό QR κωδικό. Ο υπεύθυνος βάρδιας ανοίγει το QR από τη βάρδια και οι εθελοντές σκανάρουν για αυτόματο check-in παρουσίας.
+                        Όταν είναι ενεργό, κάθε σκέλος αποκτά μοναδικό QR κωδικό. Ο υπεύθυνος ανοίγει το QR και τα μέλη σκανάρουν για αυτόματο check-in παρουσίας.
                     </div>
                 </div>
             </div>
@@ -2384,135 +2301,6 @@ unset($_SESSION['health_results'], $_SESSION['health_ran']);
 <?php endif; ?>
 <?php endif; ?>
 
-<?php if ($activeTab === 'prerequisites'): ?>
-<?php
-    $missionTypes = dbFetchAll("SELECT id, name FROM mission_types ORDER BY name");
-    $selAttendance = array_filter(explode(',', getSetting('prereq_mission_types', '')));
-    $selTep        = array_filter(explode(',', getSetting('prereq_tep_mission_types', '')));
-    $selEdu        = array_filter(explode(',', getSetting('prereq_edu_mission_types', '')));
-?>
-<form method="post">
-    <?= csrfField() ?>
-    <input type="hidden" name="action" value="save_prerequisites">
-
-    <div class="alert alert-info mb-4">
-        <i class="bi bi-info-circle me-1"></i>
-        Ρυθμίστε τους στόχους προαπαιτούμενων για κάθε κατηγορία. Οι στόχοι μπορούν να βασίζονται σε αριθμό παρουσιών ή/και ωρών.
-        Επιλέξτε τους τύπους αποστολών που μετρούν για κάθε κατηγορία.
-    </div>
-
-    <!-- Παρουσίες Αποστολών -->
-    <div class="card mb-4">
-        <div class="card-header"><h6 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Παρουσίες Αποστολών</h6></div>
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" id="prereq_attendance_enabled" name="prereq_attendance_enabled" value="1"
-                            <?= getSetting('prereq_attendance_enabled', '1') === '1' ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="prereq_attendance_enabled">Παρουσίες</label>
-                    </div>
-                    <input type="number" class="form-control form-control-sm" name="prereq_attendance_goal" min="0"
-                        value="<?= h(getSetting('prereq_attendance_goal', '10')) ?>" placeholder="Στόχος παρουσιών">
-                </div>
-                <div class="col-md-3">
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" id="prereq_hours_enabled" name="prereq_hours_enabled" value="1"
-                            <?= getSetting('prereq_hours_enabled', '0') === '1' ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="prereq_hours_enabled">Ώρες</label>
-                    </div>
-                    <input type="number" class="form-control form-control-sm" name="prereq_hours_goal" min="0"
-                        value="<?= h(getSetting('prereq_hours_goal', '0')) ?>" placeholder="Στόχος ωρών">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Τύποι Αποστολών</label>
-                    <select class="form-select form-select-sm" name="prereq_mission_types[]" multiple size="4">
-                        <?php foreach ($missionTypes as $mt): ?>
-                        <option value="<?= $mt['id'] ?>" <?= in_array($mt['id'], $selAttendance) ? 'selected' : '' ?>><?= h($mt['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    <div class="form-text">Ctrl+click για πολλαπλή επιλογή. Αν δεν επιλέξετε κανένα, μετρούν όλοι οι τύποι.</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Τ.Ε.Π. -->
-    <div class="card mb-4">
-        <div class="card-header"><h6 class="mb-0"><i class="bi bi-hospital me-2"></i>Τ.Ε.Π.</h6></div>
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" id="prereq_tep_attendance_enabled" name="prereq_tep_attendance_enabled" value="1"
-                            <?= getSetting('prereq_tep_attendance_enabled', '0') === '1' ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="prereq_tep_attendance_enabled">Παρουσίες</label>
-                    </div>
-                    <input type="number" class="form-control form-control-sm" name="prereq_tep_attendance_goal" min="0"
-                        value="<?= h(getSetting('prereq_tep_attendance_goal', '0')) ?>" placeholder="Στόχος παρουσιών">
-                </div>
-                <div class="col-md-3">
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" id="prereq_tep_hours_enabled" name="prereq_tep_hours_enabled" value="1"
-                            <?= getSetting('prereq_tep_hours_enabled', '1') === '1' ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="prereq_tep_hours_enabled">Ώρες</label>
-                    </div>
-                    <input type="number" class="form-control form-control-sm" name="prereq_tep_hours_goal" min="0"
-                        value="<?= h(getSetting('prereq_tep_hours_goal', '40')) ?>" placeholder="Στόχος ωρών">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Τύποι Αποστολών</label>
-                    <select class="form-select form-select-sm" name="prereq_tep_mission_types[]" multiple size="4">
-                        <?php foreach ($missionTypes as $mt): ?>
-                        <option value="<?= $mt['id'] ?>" <?= in_array($mt['id'], $selTep) ? 'selected' : '' ?>><?= h($mt['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    <div class="form-text">Ctrl+click για πολλαπλή επιλογή.</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Επανεκπαίδευση Εθελοντών -->
-    <div class="card mb-4">
-        <div class="card-header"><h6 class="mb-0"><i class="bi bi-mortarboard me-2"></i>Επανεκπαίδευση Εθελοντών</h6></div>
-        <div class="card-body">
-            <div class="row g-3">
-                <div class="col-md-3">
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" id="prereq_edu_attendance_enabled" name="prereq_edu_attendance_enabled" value="1"
-                            <?= getSetting('prereq_edu_attendance_enabled', '1') === '1' ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="prereq_edu_attendance_enabled">Παρουσίες</label>
-                    </div>
-                    <input type="number" class="form-control form-control-sm" name="prereq_edu_attendance_goal" min="0"
-                        value="<?= h(getSetting('prereq_edu_attendance_goal', '2')) ?>" placeholder="Στόχος παρουσιών">
-                </div>
-                <div class="col-md-3">
-                    <div class="form-check form-switch mb-2">
-                        <input class="form-check-input" type="checkbox" id="prereq_edu_hours_enabled" name="prereq_edu_hours_enabled" value="1"
-                            <?= getSetting('prereq_edu_hours_enabled', '0') === '1' ? 'checked' : '' ?>>
-                        <label class="form-check-label" for="prereq_edu_hours_enabled">Ώρες</label>
-                    </div>
-                    <input type="number" class="form-control form-control-sm" name="prereq_edu_hours_goal" min="0"
-                        value="<?= h(getSetting('prereq_edu_hours_goal', '0')) ?>" placeholder="Στόχος ωρών">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label">Τύποι Αποστολών</label>
-                    <select class="form-select form-select-sm" name="prereq_edu_mission_types[]" multiple size="4">
-                        <?php foreach ($missionTypes as $mt): ?>
-                        <option value="<?= $mt['id'] ?>" <?= in_array($mt['id'], $selEdu) ? 'selected' : '' ?>><?= h($mt['name']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                    <div class="form-text">Ctrl+click για πολλαπλή επιλογή.</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Αποθήκευση</button>
-</form>
-<?php endif; ?>
-
 <?php if ($activeTab === 'reset'): ?>
 <div class="row justify-content-center">
     <div class="col-lg-7">
@@ -2523,26 +2311,22 @@ unset($_SESSION['health_results'], $_SESSION['health_ran']);
             <div class="card-body">
                 <div class="alert alert-warning">
                     <strong><i class="bi bi-exclamation-triangle me-1"></i>Προσοχή — Μη αναστρέψιμη ενέργεια!</strong>
-                    <p class="mb-0 mt-1">Αυτή η ενέργεια θα διαγράψει μόνιμα τα παρακάτω δεδομένα. Οι χρήστες, τα εκπαιδευτικά αρχεία και η τράπεζα ερωτήσεων <strong>δεν</strong> επηρεάζονται.</p>
+                    <p class="mb-0 mt-1">Αυτή η ενέργεια θα διαγράψει μόνιμα τα λειτουργικά δεδομένα. Οι χρήστες, οι ρυθμίσεις, οι ρόλοι και οι συνδρομές <strong>δεν</strong> επηρεάζονται.</p>
                 </div>
 
                 <h6 class="text-danger mt-3 mb-2"><i class="bi bi-trash3 me-1"></i>Τι θα διαγραφεί:</h6>
                 <div class="row">
                     <div class="col-md-6">
                         <ul class="list-group list-group-flush mb-3">
-                            <li class="list-group-item py-1"><i class="bi bi-x-circle-fill text-danger me-2"></i>Όλες οι αποστολές &amp; βάρδιες</li>
+                            <li class="list-group-item py-1"><i class="bi bi-x-circle-fill text-danger me-2"></i>Όλες οι δράσεις &amp; σκέλη</li>
                             <li class="list-group-item py-1"><i class="bi bi-x-circle-fill text-danger me-2"></i>Αιτήσεις συμμετοχής &amp; παρουσίες</li>
-                            <li class="list-group-item py-1"><i class="bi bi-x-circle-fill text-danger me-2"></i>Σχόλια αποστολών &amp; απολογισμοί</li>
-                            <li class="list-group-item py-1"><i class="bi bi-x-circle-fill text-danger me-2"></i>Πόντοι &amp; ιστορικό πόντων</li>
-                            <li class="list-group-item py-1"><i class="bi bi-x-circle-fill text-danger me-2"></i>Badges εθελοντών</li>
-                            <li class="list-group-item py-1"><i class="bi bi-x-circle-fill text-danger me-2"></i>Σύνολο πόντων (→ 0)</li>
+                            <li class="list-group-item py-1"><i class="bi bi-x-circle-fill text-danger me-2"></i>Συζητήσεις δράσεων &amp; απολογισμοί</li>
+                            <li class="list-group-item py-1"><i class="bi bi-x-circle-fill text-danger me-2"></i>Παλιό ιστορικό πόντων, αν υπάρχει</li>
                         </ul>
                     </div>
                     <div class="col-md-6">
                         <ul class="list-group list-group-flush mb-3">
-                            <li class="list-group-item py-1"><i class="bi bi-x-circle-fill text-danger me-2"></i>Ιστορικό quiz &amp; εξετάσεων</li>
-                            <li class="list-group-item py-1"><i class="bi bi-x-circle-fill text-danger me-2"></i>Απαντήσεις χρηστών</li>
-                            <li class="list-group-item py-1"><i class="bi bi-x-circle-fill text-danger me-2"></i>Πρόοδος εκπαιδευτικού υλικού</li>
+                            <li class="list-group-item py-1"><i class="bi bi-x-circle-fill text-danger me-2"></i>Παλιό ιστορικό εκπαιδεύσεων, αν υπάρχει</li>
                             <li class="list-group-item py-1"><i class="bi bi-x-circle-fill text-danger me-2"></i>Ειδοποιήσεις</li>
                             <li class="list-group-item py-1"><i class="bi bi-x-circle-fill text-danger me-2"></i>Αρχείο ενεργειών (audit log)</li>
                         </ul>
@@ -2552,11 +2336,10 @@ unset($_SESSION['health_results'], $_SESSION['health_ran']);
                 <h6 class="text-success mt-2 mb-2"><i class="bi bi-shield-check me-1"></i>Τι διατηρείται:</h6>
                 <ul class="list-group list-group-flush mb-4">
                     <li class="list-group-item py-1 text-success"><i class="bi bi-check-circle-fill me-2"></i>Όλοι οι χρήστες &amp; λογαριασμοί</li>
-                    <li class="list-group-item py-1 text-success"><i class="bi bi-check-circle-fill me-2"></i>Εκπαιδευτικά αρχεία &amp; κατηγορίες</li>
-                    <li class="list-group-item py-1 text-success"><i class="bi bi-check-circle-fill me-2"></i>Τράπεζα ερωτήσεων &amp; ορισμοί quiz/εξετάσεων</li>
-                    <li class="list-group-item py-1 text-success"><i class="bi bi-check-circle-fill me-2"></i>Τμήματα, παραρτήματα, δεξιότητες</li>
+                    <li class="list-group-item py-1 text-success"><i class="bi bi-check-circle-fill me-2"></i>Ρόλοι, δικαιώματα και προφίλ μελών</li>
+                    <li class="list-group-item py-1 text-success"><i class="bi bi-check-circle-fill me-2"></i>Συνεργάτες και σημεία δρόμου</li>
                     <li class="list-group-item py-1 text-success"><i class="bi bi-check-circle-fill me-2"></i>Συνδρομές μελών</li>
-                    <li class="list-group-item py-1 text-success"><i class="bi bi-check-circle-fill me-2"></i>Ορισμοί Badges &amp; ρυθμίσεις συστήματος</li>
+                    <li class="list-group-item py-1 text-success"><i class="bi bi-check-circle-fill me-2"></i>Ρυθμίσεις συστήματος και email templates</li>
                 </ul>
 
                 <form method="post" id="resetForm" onsubmit="return confirmReset()">

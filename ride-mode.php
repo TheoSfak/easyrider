@@ -24,6 +24,8 @@ if (!canAccessRideMission($mission, $currentUser)) {
 $isController = isRideController($mission, $currentUser);
 $participation = getRideParticipation($missionId, (int)$currentUser['id']);
 $routePoints = normalizeRideRoutePoints($mission['route_points'] ?? '[]');
+$routeMetrics = rideMissionRouteMetrics($mission, $routePoints);
+$routeGeometry = rideRouteGeometry($mission);
 $directionsUrl = buildRideDirectionsUrl($routePoints);
 $statusOptions = rideStatusOptions();
 $csrf = csrfToken();
@@ -347,6 +349,12 @@ $pageTitle = $isController ? 'Ride Control' : 'Ride Mode';
             <?php if (empty($routePoints)): ?>
                 <div class="ride-meta">Δεν έχει οριστεί διαδρομή.</div>
             <?php else: ?>
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <span class="badge bg-light text-dark border"><i class="bi bi-signpost-2 me-1"></i><?= h($routeMetrics['distance_label']) ?></span>
+                    <span class="badge bg-light text-dark border"><i class="bi bi-stopwatch me-1"></i><?= h($routeMetrics['moving_label']) ?></span>
+                    <span class="badge bg-warning text-dark"><i class="bi bi-cup-hot me-1"></i><?= h($routeMetrics['stop_label']) ?></span>
+                    <span class="badge bg-primary"><i class="bi bi-clock-history me-1"></i><?= h($routeMetrics['total_label']) ?></span>
+                </div>
                 <?php foreach ($routePoints as $idx => $point): ?>
                 <div class="route-step">
                     <span class="route-index"><?= $idx + 1 ?></span>
@@ -377,6 +385,7 @@ const missionId = <?= (int)$missionId ?>;
 const shiftId = <?= $participation ? (int)$participation['shift_id'] : 0 ?>;
 const csrfTokenValue = <?= json_encode($csrf) ?>;
 const routePoints = <?= json_encode($routePoints, JSON_UNESCAPED_UNICODE) ?>;
+const routeGeometry = <?= json_encode($routeGeometry) ?>;
 const isController = <?= $isController ? 'true' : 'false' ?>;
 const statusColors = <?= json_encode(array_map(fn($item) => $item['color'], $statusOptions), JSON_UNESCAPED_UNICODE) ?>;
 const statusLabels = <?= json_encode(array_map(fn($item) => $item['label'], $statusOptions), JSON_UNESCAPED_UNICODE) ?>;
@@ -440,7 +449,7 @@ function initMap() {
     if (routePoints.length) {
         const latLngs = routePoints.map(point => [point.lat, point.lng]);
         if (latLngs.length >= 2) {
-            L.polyline(latLngs, { color: '#0d6efd', weight: 5, opacity: .8 }).addTo(routeLayer);
+            L.polyline(routeGeometry.length >= 2 ? routeGeometry : latLngs, { color: '#0d6efd', weight: 5, opacity: .8 }).addTo(routeLayer);
         }
         routePoints.forEach((point, index) => {
             L.circleMarker([point.lat, point.lng], {

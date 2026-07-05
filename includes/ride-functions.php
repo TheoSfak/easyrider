@@ -187,6 +187,126 @@ function rideFormatDistance(float $meters): string {
     return (string)round($meters) . ' m';
 }
 
+function rideRouteDistanceMeters(array $routePoints): float {
+    $distance = 0.0;
+    $count = count($routePoints);
+    for ($i = 0; $i < $count - 1; $i++) {
+        $distance += rideDistanceMeters(
+            (float)$routePoints[$i]['lat'],
+            (float)$routePoints[$i]['lng'],
+            (float)$routePoints[$i + 1]['lat'],
+            (float)$routePoints[$i + 1]['lng']
+        );
+    }
+
+    return $distance;
+}
+
+function rideRouteStopMinutes(array $routePoints): int {
+    $minutes = 0;
+    foreach ($routePoints as $point) {
+        $minutes += max(0, (int)($point['stop_minutes'] ?? 0));
+    }
+
+    return $minutes;
+}
+
+function rideEstimateRouteMovingMinutes(float $distanceMeters, ?float $averageKmh = null): int {
+    if ($distanceMeters <= 0) {
+        return 0;
+    }
+
+    $averageKmh = $averageKmh ?: (float)getSetting('ride_route_avg_speed_kmh', '55');
+    if ($averageKmh < 10 || $averageKmh > 140) {
+        $averageKmh = 55.0;
+    }
+
+    return max(1, (int)ceil(($distanceMeters / 1000) / $averageKmh * 60));
+}
+
+function rideFormatDurationMinutes(int $minutes): string {
+    $minutes = max(0, $minutes);
+    if ($minutes < 60) {
+        return $minutes . "'";
+    }
+
+    $hours = intdiv($minutes, 60);
+    $remaining = $minutes % 60;
+    return $remaining > 0 ? $hours . 'ω ' . $remaining . "'" : $hours . 'ω';
+}
+
+function rideRouteMetrics(array $routePoints): array {
+    $distanceMeters = rideRouteDistanceMeters($routePoints);
+    $movingMinutes = rideEstimateRouteMovingMinutes($distanceMeters);
+    $stopMinutes = rideRouteStopMinutes($routePoints);
+    $totalMinutes = $movingMinutes + $stopMinutes;
+
+    return [
+        'distance_meters' => $distanceMeters,
+        'distance_label' => rideFormatDistance($distanceMeters),
+        'moving_minutes' => $movingMinutes,
+        'moving_label' => rideFormatDurationMinutes($movingMinutes),
+        'stop_minutes' => $stopMinutes,
+        'stop_label' => rideFormatDurationMinutes($stopMinutes),
+        'total_minutes' => $totalMinutes,
+        'total_label' => rideFormatDurationMinutes($totalMinutes),
+        'point_count' => count($routePoints),
+        'estimated' => true,
+    ];
+}
+
+function rideRouteGeometry(array $mission): array {
+    if (empty($mission['route_geometry'])) {
+        return [];
+    }
+
+    $geometry = json_decode((string)$mission['route_geometry'], true);
+    if (!is_array($geometry)) {
+        return [];
+    }
+
+    $points = [];
+    foreach ($geometry as $pair) {
+        if (!is_array($pair) || !isset($pair[0], $pair[1]) || !is_numeric($pair[0]) || !is_numeric($pair[1])) {
+            continue;
+        }
+        $points[] = [(float)$pair[0], (float)$pair[1]];
+    }
+
+    return count($points) >= 2 ? $points : [];
+}
+
+function rideMissionRouteMetrics(array $mission, ?array $routePoints = null): array {
+    if ($routePoints === null) {
+        $routePoints = normalizeRideRoutePoints($mission['route_points'] ?? '[]');
+    }
+
+    $metrics = rideRouteMetrics($routePoints);
+    $metrics['provider'] = 'estimate';
+
+    $provider = (string)($mission['route_provider'] ?? '');
+    $distanceMeters = (int)($mission['route_distance_meters'] ?? 0);
+    $durationSeconds = (int)($mission['route_duration_seconds'] ?? 0);
+
+    if ($provider === 'google' && $distanceMeters > 0 && $durationSeconds > 0 && count($routePoints) >= 2) {
+        $movingMinutes = max(1, (int)ceil($durationSeconds / 60));
+        $stopMinutes = rideRouteStopMinutes($routePoints);
+
+        $metrics['distance_meters'] = (float)$distanceMeters;
+        $metrics['distance_label'] = rideFormatDistance((float)$distanceMeters);
+        $metrics['moving_minutes'] = $movingMinutes;
+        $metrics['moving_label'] = rideFormatDurationMinutes($movingMinutes);
+        $metrics['stop_minutes'] = $stopMinutes;
+        $metrics['stop_label'] = rideFormatDurationMinutes($stopMinutes);
+        $metrics['total_minutes'] = $movingMinutes + $stopMinutes;
+        $metrics['total_label'] = rideFormatDurationMinutes($movingMinutes + $stopMinutes);
+        $metrics['estimated'] = false;
+        $metrics['provider'] = 'google';
+    }
+
+    return $metrics;
+}
+
 function rideEventTableExists(): bool {
     try {
         return (bool) dbFetchValue(

@@ -4277,6 +4277,113 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
             },
         ],
 
+        [
+            'version'     => 73,
+            'description' => 'Clean legacy VolunteerOps settings and template labels',
+            'up' => function () {
+                $legacySettingKeys = [
+                    'points_per_hour',
+                    'weekend_multiplier',
+                    'night_multiplier',
+                    'medical_multiplier',
+                    'achievements_enabled',
+                    'points_enabled',
+                    'prereq_attendance_enabled',
+                    'prereq_attendance_goal',
+                    'prereq_hours_enabled',
+                    'prereq_hours_goal',
+                    'prereq_mission_types',
+                    'prereq_tep_attendance_enabled',
+                    'prereq_tep_attendance_goal',
+                    'prereq_tep_hours_enabled',
+                    'prereq_tep_hours_goal',
+                    'prereq_tep_mission_types',
+                    'prereq_edu_attendance_enabled',
+                    'prereq_edu_attendance_goal',
+                    'prereq_edu_hours_enabled',
+                    'prereq_edu_hours_goal',
+                    'prereq_edu_mission_types',
+                ];
+
+                $placeholders = implode(',', array_fill(0, count($legacySettingKeys), '?'));
+                dbExecute("DELETE FROM settings WHERE setting_key IN ($placeholders)", $legacySettingKeys);
+
+                $templateReplacements = [
+                    'VolunteerOps' => 'EasyRide',
+                    'Σύστημα Διαχείρισης Εθελοντών' => 'Λέσχη Μοτοσικλετιστών',
+                    'Εθελοντικές Δράσεις' => 'Δράσεις Λέσχης',
+                    'Αγαπητοί εθελοντές' => 'Αγαπητά μέλη',
+                    'Αγαπητοί Εθελοντές' => 'Αγαπητά Μέλη',
+                    'Κορυφαίοι Εθελοντές' => 'Ενεργά Μέλη',
+                    'νέους εθελοντές' => 'νέα μέλη',
+                    'νέοι εθελοντές' => 'νέα μέλη',
+                    'νέος εθελοντής' => 'νέο μέλος',
+                    'εθελοντισμού' => 'της λέσχης',
+                    'εθελοντική μας ομάδα' => 'λέσχη μας',
+                    'εθελοντική ομάδα' => 'λέσχη',
+                    'εθελοντική' => 'της λέσχης',
+                    'Εθελοντής' => 'Μέλος',
+                    'Εθελοντές' => 'Μέλη',
+                    'εθελοντής' => 'μέλος',
+                    'εθελοντές' => 'μέλη',
+                    'εθελοντή' => 'μέλους',
+                    'αποστολή' => 'δράση',
+                    'Αποστολή' => 'Δράση',
+                    'αποστολές' => 'δράσεις',
+                    'Αποστολές' => 'Δράσεις',
+                ];
+
+                $emailColumns = ['name', 'subject', 'description', 'body_html'];
+                foreach ($emailColumns as $column) {
+                    foreach ($templateReplacements as $from => $to) {
+                        dbExecute(
+                            "UPDATE email_templates
+                             SET `$column` = REPLACE(`$column`, ?, ?), updated_at = NOW()
+                             WHERE `$column` LIKE ?",
+                            [$from, $to, '%' . $from . '%']
+                        );
+                    }
+                }
+
+                foreach (['name', 'description'] as $column) {
+                    foreach ($templateReplacements as $from => $to) {
+                        dbExecute(
+                            "UPDATE notification_settings
+                             SET `$column` = REPLACE(`$column`, ?, ?), updated_at = NOW()
+                             WHERE `$column` LIKE ?",
+                            [$from, $to, '%' . $from . '%']
+                        );
+                    }
+                }
+            },
+        ],
+
+        [
+            'version'     => 74,
+            'description' => 'Store routed mission geometry and duration',
+            'up' => function () {
+                $columns = [
+                    'route_geometry' => "ADD COLUMN route_geometry MEDIUMTEXT NULL AFTER route_points",
+                    'route_distance_meters' => "ADD COLUMN route_distance_meters INT UNSIGNED NULL AFTER route_geometry",
+                    'route_duration_seconds' => "ADD COLUMN route_duration_seconds INT UNSIGNED NULL AFTER route_distance_meters",
+                    'route_provider' => "ADD COLUMN route_provider VARCHAR(40) NULL AFTER route_duration_seconds",
+                ];
+
+                foreach ($columns as $column => $definition) {
+                    $exists = dbFetchValue(
+                        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+                         WHERE TABLE_SCHEMA = DATABASE()
+                           AND TABLE_NAME = 'missions'
+                           AND COLUMN_NAME = ?",
+                        [$column]
+                    );
+                    if (!$exists) {
+                        dbExecute("ALTER TABLE missions $definition");
+                    }
+                }
+            },
+        ],
+
     ];
     // ────────────────────────────────────────────────────────────────────────
 

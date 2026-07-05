@@ -300,6 +300,14 @@ php /path/to/easyride/cron_daily.php
 
 ## Current Release Highlights
 
+### v3.81.0
+
+- route distance and estimated ride/stop/total duration are shown across route screens
+- optional Google Routes API integration: routes snap to real roads with true driving distance/time (Settings → Ενσωματώσεις)
+- automatic fallback to the straight-line estimate when no Google Maps API key is set or the API fails
+- snapped route geometry is stored per mission and drawn on mission view, Ride Mode, and ops dashboard maps
+- legacy VolunteerOps settings keys and template labels are cleaned by schema migration 73
+
 ### v3.80.0
 
 - subscription renewal resets expiry reminder flags

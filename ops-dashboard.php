@@ -5,6 +5,7 @@
  */
 
 require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/includes/ride-functions.php';
 requirePermission('ops_dashboard');
 
 $pageTitle = 'Live Επιχειρησιακό';
@@ -107,6 +108,7 @@ if (isPost()) {
 $missionRows = dbFetchAll(
     "SELECT m.id as mission_id, m.title, m.is_urgent, m.status as mission_status,
             m.start_datetime, m.end_datetime, m.location, m.location_details, m.route_points,
+            m.route_geometry, m.route_distance_meters, m.route_duration_seconds, m.route_provider,
             m.latitude, m.longitude, m.type as mission_type,
             d.name as department_name,
             s.id as shift_id, s.start_time, s.end_time,
@@ -140,6 +142,10 @@ foreach ($missionRows as $row) {
             'location'        => $row['location'],
             'location_details'=> $row['location_details'],
             'route_points'    => $row['route_points'],
+            'route_geometry'  => $row['route_geometry'],
+            'route_distance_meters' => $row['route_distance_meters'],
+            'route_duration_seconds' => $row['route_duration_seconds'],
+            'route_provider'  => $row['route_provider'],
             'latitude'        => $row['latitude'],
             'longitude'       => $row['longitude'],
             'mission_type'    => $row['mission_type'],
@@ -479,6 +485,7 @@ foreach ($missions as $m) {
             'id' => (int)$m['id'],
             'title' => $m['title'],
             'points' => $routePoints,
+            'metrics' => rideMissionRouteMetrics($m, $routePoints),
             'directions_url' => buildOpsGoogleMapsDirectionsUrl($routePoints),
         ];
     }
@@ -501,6 +508,7 @@ foreach ($missions as $m) {
             'color' => $worstColor,
             'urgent'=> (bool)$m['is_urgent'],
             'route' => $routePoints,
+            'geometry' => rideRouteGeometry($m),
         ];
     }
 }
@@ -568,6 +576,12 @@ $renderMissionChat = function (array $mission) use ($chatAccessByMission, $chatM
                             <div class="<?= $isOwn ? 'text-white-50' : 'text-muted' ?> ops-chat-time">
                                 <?= formatDateTime($msg['created_at'], 'd/m H:i') ?>
                             </div>
+                        </div>
+                        <div class="d-flex flex-wrap gap-2 mt-2 small">
+                            <span class="badge bg-white text-dark border"><i class="bi bi-signpost-2 me-1"></i><?= h($routeMission['metrics']['distance_label']) ?></span>
+                            <span class="badge bg-white text-dark border"><i class="bi bi-stopwatch me-1"></i>Οδήγηση <?= h($routeMission['metrics']['moving_label']) ?></span>
+                            <span class="badge bg-warning text-dark"><i class="bi bi-cup-hot me-1"></i>Στάσεις <?= h($routeMission['metrics']['stop_label']) ?></span>
+                            <span class="badge bg-primary"><i class="bi bi-clock-history me-1"></i>Σύνολο <?= h($routeMission['metrics']['total_label']) ?></span>
                         </div>
                     </div>
                 <?php endforeach; ?>
@@ -1116,7 +1130,7 @@ let routeLayerGroup = null;
         if (Array.isArray(p.route) && p.route.length) {
             const routeLatLngs = p.route.map(point => [point.lat, point.lng]);
             if (routeLatLngs.length >= 2) {
-                L.polyline(routeLatLngs, {
+                L.polyline((Array.isArray(p.geometry) && p.geometry.length >= 2) ? p.geometry : routeLatLngs, {
                     color: p.urgent ? '#dc3545' : '#0d6efd',
                     weight: 4,
                     opacity: 0.75

@@ -1,27 +1,7 @@
 <?php
 if (!defined('VOLUNTEEROPS')) die('Direct access not permitted');
 
-// ── Achievement badge popup ─────────────────────────────────────────────────
 $_pendingBadges = [];
-if (isLoggedIn() && getSetting('achievements_enabled', '1') === '1') {
-    try {
-        $_pendingBadges = dbFetchAll(
-            "SELECT a.* FROM user_achievements ua
-             JOIN achievements a ON ua.achievement_id = a.id
-             WHERE ua.user_id = ? AND ua.notified = 0
-             ORDER BY ua.earned_at ASC",
-            [getCurrentUserId()]
-        );
-        if (!empty($_pendingBadges)) {
-            dbExecute(
-                "UPDATE user_achievements SET notified = 1 WHERE user_id = ? AND notified = 0",
-                [getCurrentUserId()]
-            );
-        }
-    } catch (Exception $e) {
-        $_pendingBadges = [];
-    }
-}
 ?>
         </div><!-- /.content-wrapper -->
         
@@ -31,7 +11,7 @@ if (isLoggedIn() && getSetting('achievements_enabled', '1') === '1') {
                 <div class="row align-items-center">
                     <div class="col-md-6 text-center text-md-start">
                         <span class="text-muted fs-6">
-                            &copy; <?= date('Y') ?> VolunteerOps. Με επιφύλαξη παντός δικαιώματος.
+                            &copy; <?= date('Y') ?> EasyRide. Με επιφύλαξη παντός δικαιώματος.
                         </span>
                     </div>
                     <div class="col-md-6 text-center text-md-end">

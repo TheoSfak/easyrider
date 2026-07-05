@@ -20,9 +20,10 @@ if (isPost() && post('action') === 'duplicate' && isAdmin()) {
         $newId = dbInsert(
             "INSERT INTO missions
              (title, description, mission_type_id, department_id, location, location_details, maps_link, route_points,
+              route_geometry, route_distance_meters, route_duration_seconds, route_provider,
               latitude, longitude, start_datetime, end_datetime, requirements, notes,
               is_urgent, status, responsible_user_id, created_by, created_at, updated_at)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())",
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())",
             [
                 'Αντίγραφο: ' . $src['title'],
                 $src['description'],
@@ -32,6 +33,10 @@ if (isPost() && post('action') === 'duplicate' && isAdmin()) {
                 $src['location_details'],
                 $src['maps_link'] ?? null,
                 $src['route_points'] ?? null,
+                $src['route_geometry'] ?? null,
+                $src['route_distance_meters'] ?? null,
+                $src['route_duration_seconds'] ?? null,
+                $src['route_provider'] ?? null,
                 $src['latitude'],
                 $src['longitude'],
                 $src['start_datetime'],

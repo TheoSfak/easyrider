@@ -4,6 +4,7 @@
  */
 
 require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/includes/ride-functions.php';
 requirePermission('missions_manage');
 
 $id = (int) get('id');
@@ -73,6 +74,31 @@ function normalizeRoutePointsJson($raw): string {
     return empty($points) ? '' : json_encode($points, JSON_UNESCAPED_UNICODE);
 }
 
+function normalizeRouteGeometryJson($raw): string {
+    $decoded = json_decode((string)$raw, true);
+    if (!is_array($decoded)) {
+        return '';
+    }
+
+    $geometry = [];
+    foreach ($decoded as $pair) {
+        if (!is_array($pair) || !isset($pair[0], $pair[1]) || !is_numeric($pair[0]) || !is_numeric($pair[1])) {
+            continue;
+        }
+        $lat = (float)$pair[0];
+        $lng = (float)$pair[1];
+        if ($lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) {
+            continue;
+        }
+        $geometry[] = [round($lat, 6), round($lng, 6)];
+        if (count($geometry) >= 20000) {
+            break;
+        }
+    }
+
+    return count($geometry) >= 2 ? json_encode($geometry) : '';
+}
+
 $errors = [];
 
 if (isPost()) {
@@ -89,6 +115,10 @@ if (isPost()) {
         'latitude' => post('latitude') ?: null,
         'longitude' => post('longitude') ?: null,
         'route_points' => normalizeRoutePointsJson($_POST['route_points'] ?? ''),
+        'route_geometry' => normalizeRouteGeometryJson($_POST['route_geometry'] ?? ''),
+        'route_distance_meters' => max(0, (int)post('route_distance_meters', 0)),
+        'route_duration_seconds' => max(0, (int)post('route_duration_seconds', 0)),
+        'route_provider' => in_array(post('route_provider'), ['google'], true) ? 'google' : '',
         'start_datetime' => post('start_datetime'),
         'end_datetime' => post('end_datetime'),
         'requirements' => post('requirements'),
@@ -97,7 +127,17 @@ if (isPost()) {
         'status' => post('status') ?: STATUS_DRAFT,
         'responsible_user_id' => post('responsible_user_id') ?: null,
     ];
-    
+
+    // Routed geometry is kept only as a complete Google result for an actual route,
+    // otherwise the app falls back to the straight-line estimate
+    if ($data['route_points'] === '' || $data['route_provider'] !== 'google' || $data['route_geometry'] === ''
+        || $data['route_distance_meters'] <= 0 || $data['route_duration_seconds'] <= 0) {
+        $data['route_geometry'] = null;
+        $data['route_distance_meters'] = null;
+        $data['route_duration_seconds'] = null;
+        $data['route_provider'] = null;
+    }
+
     // Validation
     if (empty($data['title'])) $errors[] = 'Ο τίτλος είναι υποχρεωτικός.';
     if (empty($data['location'])) $errors[] = 'Η τοποθεσία είναι υποχρεωτική.';
@@ -131,15 +171,19 @@ if (isPost()) {
     if (empty($errors)) {
         try {
             if ($isEdit) {
-                $sql = "UPDATE missions SET 
+                $sql = "UPDATE missions SET
                         title = ?, description = ?, mission_type_id = ?, department_id = ?,
-                        location = ?, location_details = ?, maps_link = ?, route_points = ?, latitude = ?, longitude = ?,
+                        location = ?, location_details = ?, maps_link = ?, route_points = ?,
+                        route_geometry = ?, route_distance_meters = ?, route_duration_seconds = ?, route_provider = ?,
+                        latitude = ?, longitude = ?,
                         start_datetime = ?, end_datetime = ?, requirements = ?, notes = ?,
                         is_urgent = ?, status = ?, responsible_user_id = ?, updated_at = NOW()
                         WHERE id = ?";
                 dbExecute($sql, [
                     $data['title'], $data['description'], $data['mission_type_id'], $data['department_id'],
-                    $data['location'], $data['location_details'], $data['maps_link'] ?: null, $data['route_points'] ?: null, $data['latitude'], $data['longitude'],
+                    $data['location'], $data['location_details'], $data['maps_link'] ?: null, $data['route_points'] ?: null,
+                    $data['route_geometry'], $data['route_distance_meters'], $data['route_duration_seconds'], $data['route_provider'],
+                    $data['latitude'], $data['longitude'],
                     $data['start_datetime'], $data['end_datetime'], $data['requirements'], $data['notes'],
                     $data['is_urgent'], $data['status'], $data['responsible_user_id'], $id
                 ]);
@@ -235,12 +279,15 @@ if (isPost()) {
                         $missionId = dbInsert(
                             "INSERT INTO missions
                              (title, description, mission_type_id, department_id, location, location_details, maps_link, route_points,
+                              route_geometry, route_distance_meters, route_duration_seconds, route_provider,
                               latitude, longitude, start_datetime, end_datetime, requirements, notes,
                               is_urgent, status, responsible_user_id, created_by, recurrence_id, recurrence_instance_date, created_at, updated_at)
-                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())",
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())",
                             [
                                 $data['title'], $data['description'], $data['mission_type_id'], $data['department_id'],
-                                $data['location'], $data['location_details'], $data['maps_link'] ?: null, $data['route_points'] ?: null, $data['latitude'], $data['longitude'],
+                                $data['location'], $data['location_details'], $data['maps_link'] ?: null, $data['route_points'] ?: null,
+                                $data['route_geometry'], $data['route_distance_meters'], $data['route_duration_seconds'], $data['route_provider'],
+                                $data['latitude'], $data['longitude'],
                                 $instStart, $instEnd, $data['requirements'], $data['notes'],
                                 $data['is_urgent'], STATUS_OPEN, $data['responsible_user_id'], $user['id'],
                                 $recurrenceId, $instanceDate,
@@ -265,14 +312,17 @@ if (isPost()) {
 
                 } else {
                     // ── SINGLE MISSION ───────────────────────────────────────────────
-                    $sql = "INSERT INTO missions 
+                    $sql = "INSERT INTO missions
                             (title, description, mission_type_id, department_id, location, location_details, maps_link, route_points,
+                             route_geometry, route_distance_meters, route_duration_seconds, route_provider,
                              latitude, longitude, start_datetime, end_datetime, requirements, notes,
                              is_urgent, status, responsible_user_id, created_by, created_at, updated_at)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())";
                     $newId = dbInsert($sql, [
                         $data['title'], $data['description'], $data['mission_type_id'], $data['department_id'],
-                        $data['location'], $data['location_details'], $data['maps_link'] ?: null, $data['route_points'] ?: null, $data['latitude'], $data['longitude'],
+                        $data['location'], $data['location_details'], $data['maps_link'] ?: null, $data['route_points'] ?: null,
+                        $data['route_geometry'], $data['route_distance_meters'], $data['route_duration_seconds'], $data['route_provider'],
+                        $data['latitude'], $data['longitude'],
                         $data['start_datetime'], $data['end_datetime'], $data['requirements'], $data['notes'],
                         $data['is_urgent'], $data['status'], $data['responsible_user_id'], $user['id']
                     ]);
@@ -308,6 +358,19 @@ if ($mission) {
 }
 $routePointsForForm = normalizeRoutePointsJson(post('route_points', $mission['route_points'] ?? ''));
 $routePointsInitial = json_decode($routePointsForForm ?: '[]', true) ?: [];
+$routeGeometryForForm = normalizeRouteGeometryJson(post('route_geometry', $mission['route_geometry'] ?? ''));
+$routeGeometryInitial = json_decode($routeGeometryForForm ?: '[]', true) ?: [];
+$routeProviderInitial = post('route_provider', $mission['route_provider'] ?? '') === 'google' ? 'google' : '';
+$routeDistanceInitial = max(0, (int)post('route_distance_meters', $mission['route_distance_meters'] ?? 0));
+$routeDurationInitial = max(0, (int)post('route_duration_seconds', $mission['route_duration_seconds'] ?? 0));
+if ($routeProviderInitial !== 'google' || empty($routeGeometryInitial) || $routeDistanceInitial <= 0 || $routeDurationInitial <= 0) {
+    $routeGeometryForForm = '';
+    $routeGeometryInitial = [];
+    $routeProviderInitial = '';
+    $routeDistanceInitial = 0;
+    $routeDurationInitial = 0;
+}
+$googleRoutingEnabled = trim((string)getSetting('google_maps_api_key', '')) !== '';
 
 include __DIR__ . '/includes/header.php';
 ?>
@@ -415,6 +478,10 @@ include __DIR__ . '/includes/header.php';
                     <input type="hidden" id="latitude" name="latitude" value="<?= h($mission['latitude'] ?? post('latitude')) ?>">
                     <input type="hidden" id="longitude" name="longitude" value="<?= h($mission['longitude'] ?? post('longitude')) ?>">
                     <input type="hidden" id="route_points" name="route_points" value="<?= h($routePointsForForm) ?>">
+                    <input type="hidden" id="route_geometry" name="route_geometry" value="<?= h($routeGeometryForForm) ?>">
+                    <input type="hidden" id="route_distance_meters" name="route_distance_meters" value="<?= $routeDistanceInitial ?: '' ?>">
+                    <input type="hidden" id="route_duration_seconds" name="route_duration_seconds" value="<?= $routeDurationInitial ?: '' ?>">
+                    <input type="hidden" id="route_provider" name="route_provider" value="<?= h($routeProviderInitial) ?>">
 
                     <div class="mb-3">
                         <label class="form-label"><i class="bi bi-signpost-split me-1 text-primary"></i>Διαδρομή Δράσης</label>
@@ -427,6 +494,7 @@ include __DIR__ . '/includes/header.php';
                             </button>
                             <span class="badge bg-light text-dark border route-point-count" id="routePointCount">0 σημεία</span>
                         </div>
+                        <div class="d-flex flex-wrap gap-2 mb-2 small" id="routeMetricsSummary" style="display:none;"></div>
                         <div id="routeEditorMap"></div>
                         <div class="mt-3" id="routePointList"></div>
                     </div>
@@ -656,6 +724,76 @@ include __DIR__ . '/includes/header.php';
     var locationMarker = null;
     var routePoints = <?= json_encode($routePointsInitial, JSON_UNESCAPED_UNICODE) ?>;
     var defaultCenter = [35.3387, 25.1442];
+    var googleRoutingEnabled = <?= $googleRoutingEnabled ? 'true' : 'false' ?>;
+    var routedGeometry = <?= json_encode($routeGeometryInitial) ?>;
+    var routedDistanceMeters = <?= $routeDistanceInitial ?>;
+    var routedDurationSeconds = <?= $routeDurationInitial ?>;
+    var routedProvider = <?= json_encode($routeProviderInitial) ?>;
+    var routeFetchTimer = null;
+    var routeFetchPending = false;
+    var lastRoutedSignature = routedProvider === 'google' ? routeSignature() : null;
+
+    function routeSignature() {
+        return JSON.stringify(routePoints.map(function(point) { return [point.lat, point.lng]; }));
+    }
+
+    function clearRoutedData() {
+        routedGeometry = [];
+        routedDistanceMeters = 0;
+        routedDurationSeconds = 0;
+        routedProvider = '';
+        document.getElementById('route_geometry').value = '';
+        document.getElementById('route_distance_meters').value = '';
+        document.getElementById('route_duration_seconds').value = '';
+        document.getElementById('route_provider').value = '';
+    }
+
+    function scheduleRouteFetch() {
+        if (routeFetchTimer) {
+            clearTimeout(routeFetchTimer);
+            routeFetchTimer = null;
+        }
+        if (!googleRoutingEnabled || routePoints.length < 2) return;
+        routeFetchTimer = setTimeout(fetchSnappedRoute, 900);
+    }
+
+    function fetchSnappedRoute() {
+        routeFetchTimer = null;
+        if (routePoints.length < 2) return;
+        var requestSignature = routeSignature();
+        routeFetchPending = true;
+        updateRouteMetricsSummary();
+        fetch('api-route-directions.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({ points: routePoints.map(function(point) { return { lat: point.lat, lng: point.lng }; }) })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            routeFetchPending = false;
+            // Route changed while the request was in flight — result is stale
+            if (requestSignature !== routeSignature()) return;
+            if (data && data.ok && data.provider === 'google' && Array.isArray(data.geometry) && data.geometry.length >= 2) {
+                routedGeometry = data.geometry;
+                routedDistanceMeters = parseInt(data.distance_meters, 10) || 0;
+                routedDurationSeconds = parseInt(data.duration_seconds, 10) || 0;
+                routedProvider = 'google';
+                lastRoutedSignature = requestSignature;
+                document.getElementById('route_geometry').value = JSON.stringify(routedGeometry);
+                document.getElementById('route_distance_meters').value = routedDistanceMeters;
+                document.getElementById('route_duration_seconds').value = routedDurationSeconds;
+                document.getElementById('route_provider').value = 'google';
+            } else {
+                clearRoutedData();
+            }
+            renderRoute(false, true);
+        })
+        .catch(function() {
+            routeFetchPending = false;
+            clearRoutedData();
+            renderRoute(false, true);
+        });
+    }
 
     function extractLatLng(url) {
         if (!url) return null;
@@ -706,9 +844,79 @@ include __DIR__ . '/includes/header.php';
         });
     }
 
+    function routeDistanceMeters() {
+        var total = 0;
+        for (var i = 0; i < routePoints.length - 1; i++) {
+            total += haversineMeters(routePoints[i], routePoints[i + 1]);
+        }
+        return total;
+    }
+
+    function haversineMeters(a, b) {
+        var radius = 6371000;
+        var lat1 = Number(a.lat) * Math.PI / 180;
+        var lat2 = Number(b.lat) * Math.PI / 180;
+        var dLat = (Number(b.lat) - Number(a.lat)) * Math.PI / 180;
+        var dLng = (Number(b.lng) - Number(a.lng)) * Math.PI / 180;
+        var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        return radius * 2 * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
+    }
+
+    function formatRouteDistance(meters) {
+        return meters >= 1000 ? (meters / 1000).toLocaleString('el-GR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' km' : Math.round(meters) + ' m';
+    }
+
+    function formatRouteMinutes(minutes) {
+        minutes = Math.max(0, Math.round(minutes));
+        if (minutes < 60) return minutes + "'";
+        var hours = Math.floor(minutes / 60);
+        var rest = minutes % 60;
+        return rest ? hours + 'ω ' + rest + "'" : hours + 'ω';
+    }
+
+    function updateRouteMetricsSummary() {
+        var el = document.getElementById('routeMetricsSummary');
+        if (!el) return;
+        if (routePoints.length < 2) {
+            el.style.display = 'none';
+            el.innerHTML = '';
+            return;
+        }
+        var usingGoogle = routedProvider === 'google' && routedDistanceMeters > 0 && routedDurationSeconds > 0;
+        var meters = usingGoogle ? routedDistanceMeters : routeDistanceMeters();
+        var movingMinutes = usingGoogle ? Math.max(1, Math.ceil(routedDurationSeconds / 60)) : Math.max(1, Math.ceil((meters / 1000) / 55 * 60));
+        var stopMinutes = routePoints.reduce(function(total, point) {
+            return total + Math.max(0, parseInt(point.stop_minutes || '0', 10) || 0);
+        }, 0);
+        var sourceNote;
+        if (usingGoogle) {
+            sourceNote = '<span class="text-success align-self-center"><i class="bi bi-google me-1"></i>Διαδρομή μέσω Google.</span>';
+        } else if (routeFetchPending) {
+            sourceNote = '<span class="text-muted align-self-center"><span class="spinner-border spinner-border-sm me-1"></span>Υπολογισμός διαδρομής Google...</span>';
+        } else if (googleRoutingEnabled) {
+            sourceNote = '<span class="text-muted align-self-center">Εκτίμηση σε ευθεία γραμμή.</span>';
+        } else {
+            sourceNote = '<span class="text-muted align-self-center">Εκτίμηση — προσθέστε Google Maps API key στις Ρυθμίσεις για routing δρόμων.</span>';
+        }
+        el.innerHTML =
+            '<span class="badge bg-light text-dark border"><i class="bi bi-signpost-2 me-1"></i>' + formatRouteDistance(meters) + '</span>' +
+            '<span class="badge bg-light text-dark border"><i class="bi bi-stopwatch me-1"></i>Οδήγηση ' + formatRouteMinutes(movingMinutes) + '</span>' +
+            '<span class="badge bg-warning text-dark"><i class="bi bi-cup-hot me-1"></i>Στάσεις ' + formatRouteMinutes(stopMinutes) + '</span>' +
+            '<span class="badge bg-primary"><i class="bi bi-clock-history me-1"></i>Σύνολο ' + formatRouteMinutes(movingMinutes + stopMinutes) + '</span>' +
+            sourceNote;
+        el.style.display = '';
+    }
+
     function syncRouteInput() {
         document.getElementById('route_points').value = routePoints.length ? JSON.stringify(routePoints) : '';
         document.getElementById('routePointCount').textContent = routePoints.length + (routePoints.length === 1 ? ' σημείο' : ' σημεία');
+        if (routeSignature() !== lastRoutedSignature) {
+            clearRoutedData();
+            lastRoutedSignature = null;
+            scheduleRouteFetch();
+        }
+        updateRouteMetricsSummary();
     }
 
     function updateRoutePoint(index, field, value) {
@@ -826,7 +1034,8 @@ include __DIR__ . '/includes/header.php';
         });
 
         if (latLngs.length >= 2) {
-            routeLine = L.polyline(latLngs, {
+            var lineLatLngs = (routedProvider === 'google' && routedGeometry.length >= 2) ? routedGeometry : latLngs;
+            routeLine = L.polyline(lineLatLngs, {
                 color: '#0d6efd',
                 weight: 5,
                 opacity: 0.85
