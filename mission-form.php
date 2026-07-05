@@ -1061,6 +1061,9 @@ include __DIR__ . '/includes/header.php';
                     deleteBtn.addEventListener('click', function(evt) {
                         evt.preventDefault();
                         evt.stopPropagation();
+                        // Defer past Leaflet's current click gesture: destroying/recreating this
+                        // marker synchronously here races with Leaflet's own click-vs-drag
+                        // detection and causes the map's add-point click to fire too.
                         setTimeout(function() {
                             routePoints.splice(index, 1);
                             renderRoute(false);
