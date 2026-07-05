@@ -1173,6 +1173,43 @@ include __DIR__ . '/includes/header.php';
                             Απαιτεί ενεργό <strong>Routes API</strong> στο
                             <a href="https://console.cloud.google.com/google/maps-apis" target="_blank" rel="noopener noreferrer">Google Cloud Console</a>.
                         </div>
+                        <button class="btn btn-sm btn-outline-secondary mt-2" type="button" data-bs-toggle="collapse" data-bs-target="#mapsApiKeyGuide">
+                            <i class="bi bi-question-circle me-1"></i>Πώς βγάζω το API Key;
+                        </button>
+                        <div class="collapse mt-2" id="mapsApiKeyGuide">
+                            <div class="card card-body bg-light small">
+                                <p class="fw-semibold mb-2">Βήμα προς βήμα — Google Cloud Console</p>
+                                <ol class="mb-2 ps-3">
+                                    <li class="mb-2">
+                                        Δημιούργησε (ή επίλεξε) ένα project στο
+                                        <a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener noreferrer">Google Cloud Console — New Project</a>.
+                                    </li>
+                                    <li class="mb-2">
+                                        Ενεργοποίησε billing account για το project (απαιτείται από τη Google, υπάρχει δωρεάν μηνιαίο credit):
+                                        <a href="https://console.cloud.google.com/billing" target="_blank" rel="noopener noreferrer">Billing</a>.
+                                    </li>
+                                    <li class="mb-2">
+                                        Ενεργοποίησε το <strong>Routes API</strong> για το project:
+                                        <a href="https://console.cloud.google.com/apis/library/routes.googleapis.com" target="_blank" rel="noopener noreferrer">Routes API — Enable</a>.
+                                    </li>
+                                    <li class="mb-2">
+                                        Δημιούργησε API key από τη σελίδα credentials:
+                                        <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer">Credentials → Create Credentials → API key</a>.
+                                    </li>
+                                    <li class="mb-2">
+                                        (Συνιστάται) Περιόρισε το key ώστε να δουλεύει μόνο με το <strong>Routes API</strong> — κάνε κλικ στο key που μόλις δημιούργησες, στο
+                                        <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener noreferrer">Credentials</a>
+                                        και κάτω από «API restrictions» επίλεξε «Restrict key» → Routes API.
+                                    </li>
+                                    <li>
+                                        Αντίγραψε το key (μορφή <code>AIza...</code>) και επικόλλησέ το εδώ πάνω, μετά πάτα Αποθήκευση.
+                                    </li>
+                                </ol>
+                                <p class="mb-0 text-muted">
+                                    Χωρίς API key το EasyRide συνεχίζει να λειτουργεί κανονικά — υπολογίζει απόσταση/χρόνο με εκτίμηση σε ευθεία γραμμή αντί για πραγματική διαδρομή.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                     <?php if (!empty($settings['google_maps_api_key'] ?? '')): ?>
                     <div class="alert alert-success py-1 px-2 mb-0 small">
