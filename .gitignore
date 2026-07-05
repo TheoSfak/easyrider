@@ -39,3 +39,6 @@ backups/
 *.temp
 ~*
 VolunteerOps-v2.1-PRODUCTION.zip
+
+# Superpowers session scratch (SDD ledgers, brainstorm mockups)
+.superpowers/
