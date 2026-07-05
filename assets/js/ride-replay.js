@@ -72,6 +72,12 @@
             return hours > 0 ? (hours + 'ω ' + mins + 'λ') : (mins + ' λεπτά');
         }
 
+        function esc(value) {
+            return String(value || '').replace(/[&<>"']/g, function(ch) {
+                return {'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;'}[ch];
+            });
+        }
+
         function updateFrame(fraction) {
             var pos = positionAtFraction(fraction);
             marker.setLatLng(pos);
@@ -144,7 +150,7 @@
                     fillOpacity: 0.4,
                     opacity: 0.4,
                     weight: 2
-                }).addTo(map).bindPopup(event.title);
+                }).addTo(map).bindPopup(esc(event.title));
                 eventMarkers.push({ marker: circleMarker, routeFraction: event.routeFraction, highlighted: false });
             });
 
