@@ -509,6 +509,7 @@ include __DIR__ . '/includes/header.php';
 .route-point-row { border: 1px solid #dee2e6; border-radius: 8px; padding: 10px; background: #fff; }
 .route-point-row + .route-point-row { margin-top: 8px; }
 .route-point-index { width: 28px; height: 28px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; }
+#missionDayTabs .nav-link { cursor: pointer; }
 .route-fullscreen-layout { display: flex; height: 100%; }
 .route-fullscreen-map { flex: 1 1 auto; height: 100%; }
 .route-fullscreen-panel { flex: 0 0 200px; width: 200px; overflow-y: auto; padding: 10px; border-left: 1px solid #dee2e6; background: #f8f9fa; }
@@ -538,7 +539,7 @@ include __DIR__ . '/includes/header.php';
     </div>
 <?php endif; ?>
 
-<form method="post" action="">
+<form method="post" action="" id="missionForm">
     <?= csrfField() ?>
     
     <div class="row">
@@ -618,6 +619,19 @@ include __DIR__ . '/includes/header.php';
 
                     <div class="mb-3">
                         <label class="form-label"><i class="bi bi-signpost-split me-1 text-primary"></i>Διαδρομή Δράσης</label>
+                        <div id="multiDayTabsWrap" style="<?= $isMultiDayInitial ? '' : 'display:none;' ?>" class="mb-3 p-2 border rounded bg-light">
+                            <ul class="nav nav-pills mb-2" id="missionDayTabs"></ul>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <label class="form-label small text-muted mb-1">Τίτλος ημέρας (προαιρετικό)</label>
+                                    <input type="text" class="form-control form-control-sm" id="dayTitleInput" maxlength="160" placeholder="π.χ. Ηράκλειο &rarr; Ρέθυμνο">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small text-muted mb-1">Διανυκτέρευση (προαιρετικό)</label>
+                                    <input type="text" class="form-control form-control-sm" id="dayOvernightInput" maxlength="500" placeholder="π.χ. Ξενοδοχείο Χ, Ρέθυμνο">
+                                </div>
+                            </div>
+                        </div>
                         <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
                             <button type="button" class="btn btn-sm btn-outline-secondary" id="routeUndoBtn">
                                 <i class="bi bi-arrow-counterclockwise me-1"></i>Αναίρεση
@@ -633,6 +647,7 @@ include __DIR__ . '/includes/header.php';
                         <div class="d-flex flex-wrap gap-2 mb-2 small" id="routeMetricsSummary" style="display:none;"></div>
                         <div id="routeEditorMap"></div>
                         <div class="mt-3" id="routePointList"></div>
+                        <input type="hidden" id="mission_days_json" name="mission_days_json" value="">
                     </div>
                     
                     <div class="row">
