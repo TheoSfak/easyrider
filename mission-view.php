@@ -107,6 +107,24 @@ $isResponsible = !empty($mission['responsible_user_id']) && $mission['responsibl
 $canResolveRideEvents = isRideController($mission, $user);
 $canViewRideEvents = $canManageMissions || $isResponsible || $canResolveRideEvents;
 $rideEvents = $canViewRideEvents ? getRideEvents($id, 40, false) : [];
+
+$rideReplayEvents = [];
+if ($mission['status'] === STATUS_COMPLETED && count($routeGeometry) >= 2) {
+    $eventsWithFractions = rideEventRoutePositions($routeGeometry, $rideEvents ?? []);
+    foreach ($eventsWithFractions as $event) {
+        if ($event['route_fraction'] === null) {
+            continue;
+        }
+        $rideReplayEvents[] = [
+            'lat' => (float)$event['lat'],
+            'lng' => (float)$event['lng'],
+            'title' => (string)$event['title'],
+            'severity' => (string)($event['severity'] ?? 'info'),
+            'routeFraction' => (float)$event['route_fraction'],
+        ];
+    }
+}
+
 $rideReadiness = $canViewRideEvents ? getRideReadinessSummary($id) : null;
 $activeRideEventCount = 0;
 foreach ($rideEvents as $rideEvent) {
@@ -1071,6 +1089,12 @@ include __DIR__ . '/includes/header.php';
                    class="btn btn-outline-primary btn-sm py-0 px-2" style="font-size:.75rem">
                     <i class="bi bi-box-arrow-up-right me-1"></i>Google Maps
                 </a>
+                <?php endif; ?>
+                <?php if ($mission['status'] === STATUS_COMPLETED && count($routeGeometry) >= 2): ?>
+                <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2" style="font-size:.75rem"
+                        data-bs-toggle="modal" data-bs-target="#rideReplayModal">
+                    <i class="bi bi-film me-1"></i>Ride Replay
+                </button>
                 <?php endif; ?>
                 </div>
             </div>
@@ -2049,6 +2073,38 @@ if (!empty($shiftIds)) {
     </div>
 </div>
 
+<div class="modal fade" id="rideReplayModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-film me-1"></i>Ride Replay</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="rideReplayMap" style="height:360px;"></div>
+                <div class="p-3 border-top">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <span id="rideReplayKm" class="fw-bold">0 m</span>
+                            <span class="text-muted mx-1">&middot;</span>
+                            <span id="rideReplayTime" class="fw-bold">0 λεπτά</span>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" id="rideReplayRestart" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </button>
+                            <button type="button" id="rideReplayPlayPause" class="btn btn-sm btn-primary">
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <input type="range" id="rideReplayScrubber" class="form-range" min="0" max="1" step="0.001" value="0">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Apply Modal (for volunteers) -->
 <?php if (!$canManageMissions): ?>
 <div class="modal fade" id="applyModal" tabindex="-1" aria-hidden="true">
@@ -2286,6 +2342,7 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php if ((!empty($mission['latitude']) && !empty($mission['longitude'])) || !empty($routePoints)): ?>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="<?= rtrim(BASE_URL, '/') ?>/assets/js/ride-replay.js?v=<?= APP_VERSION ?>"></script>
 <script>
 (function () {
     var lat = <?= !empty($mission['latitude']) ? (float)$mission['latitude'] : 'null' ?>;
@@ -2293,6 +2350,14 @@ document.addEventListener('DOMContentLoaded', function() {
     var label = <?= json_encode($mission['location']) ?>;
     var routePoints = <?= json_encode($routePoints, JSON_UNESCAPED_UNICODE) ?>;
     var routeGeometry = <?= json_encode($routeGeometry) ?>;
+    window.easyRideReplayData = {
+        points: routeGeometry,
+        distanceMeters: <?= json_encode((float)($routeMetrics['distance_meters'] ?? 0)) ?>,
+        distanceLabel: <?= json_encode((string)($routeMetrics['distance_label'] ?? '')) ?>,
+        totalMinutes: <?= json_encode((int)($routeMetrics['total_minutes'] ?? 0)) ?>,
+        totalLabel: <?= json_encode((string)($routeMetrics['total_label'] ?? '')) ?>,
+        events: <?= json_encode($rideReplayEvents, JSON_UNESCAPED_UNICODE) ?>
+    };
     var center = routePoints.length ? [routePoints[0].lat, routePoints[0].lng] : [lat, lng];
     var map = L.map('missionMap', { zoomControl: true, scrollWheelZoom: false }).setView(center, 15);
     function esc(value) {
