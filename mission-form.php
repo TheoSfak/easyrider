@@ -1968,8 +1968,12 @@ function rebuildWeekdayInputs() {
 }
 
 // ── Count preview ────────────────────────────────────────────────────────────
-document.getElementById('recur_end_date').addEventListener('change', updateRecurPreview);
-document.getElementById('recurIntervalDays').addEventListener('change', updateRecurPreview);
+// These elements only exist when creating a new mission (the recurring card is
+// wrapped in <?php if (!$isEdit) ?>), so guard against edit-page loads.
+const recurEndDateEl = document.getElementById('recur_end_date');
+if (recurEndDateEl) recurEndDateEl.addEventListener('change', updateRecurPreview);
+const recurIntervalDaysEl = document.getElementById('recurIntervalDays');
+if (recurIntervalDaysEl) recurIntervalDaysEl.addEventListener('change', updateRecurPreview);
 
 function getSeriesStartDate() {
     const startVal = document.getElementById('start_datetime').value;
