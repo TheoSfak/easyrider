@@ -873,6 +873,8 @@ include __DIR__ . '/includes/header.php';
     var locationMarker = null;
     var mapInstances = []; // each: { map: L.Map, markers: L.CircleMarker[], line: L.Polyline|null }
     var routePoints = <?= json_encode($routePointsInitial, JSON_UNESCAPED_UNICODE) ?>;
+    var missionDaysStore = <?= json_encode($missionDaysInitial, JSON_UNESCAPED_UNICODE) ?>;
+    var activeDayNumber = null; // null = single-day mode (no mission_days involved)
     var defaultCenter = [35.3387, 25.1442];
     var googleRoutingEnabled = <?= $googleRoutingEnabled ? 'true' : 'false' ?>;
     var routedGeometry = <?= json_encode($routeGeometryInitial) ?>;
@@ -897,6 +899,141 @@ include __DIR__ . '/includes/header.php';
         document.getElementById('route_duration_seconds').value = '';
         document.getElementById('route_provider').value = '';
     }
+
+    function parseDmyDateOnly(fieldId) {
+        var val = document.getElementById(fieldId).value; // dd/mm/yyyy hh:ii
+        var m = val.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+        if (!m) return null;
+        return new Date(parseInt(m[3], 10), parseInt(m[2], 10) - 1, parseInt(m[1], 10));
+    }
+
+    function computeDaySpan() {
+        var start = parseDmyDateOnly('start_datetime');
+        var end = parseDmyDateOnly('end_datetime');
+        if (!start || !end || end < start) return [];
+
+        var pad = function(n) { return String(n).padStart(2, '0'); };
+        var days = [];
+        var cursor = new Date(start);
+        var dayNumber = 1;
+        while (cursor <= end && dayNumber <= 60) {
+            days.push({
+                day_number: dayNumber,
+                day_date: cursor.getFullYear() + '-' + pad(cursor.getMonth() + 1) + '-' + pad(cursor.getDate())
+            });
+            cursor.setDate(cursor.getDate() + 1);
+            dayNumber++;
+        }
+        return days;
+    }
+
+    function emptyDayEntry(dayNumber, dayDate) {
+        return {
+            day_number: dayNumber,
+            day_date: dayDate,
+            title: '',
+            overnight_notes: '',
+            route_points: [],
+            route_geometry: [],
+            route_distance_meters: 0,
+            route_duration_seconds: 0,
+            route_provider: ''
+        };
+    }
+
+    function findDayEntry(dayNumber) {
+        for (var i = 0; i < missionDaysStore.length; i++) {
+            if (missionDaysStore[i].day_number === dayNumber) return missionDaysStore[i];
+        }
+        return null;
+    }
+
+    function flushActiveDayIntoStore() {
+        if (activeDayNumber === null) return;
+        var entry = findDayEntry(activeDayNumber);
+        if (!entry) return;
+        entry.title = document.getElementById('dayTitleInput').value;
+        entry.overnight_notes = document.getElementById('dayOvernightInput').value;
+        entry.route_points = routePoints;
+        entry.route_geometry = routedGeometry;
+        entry.route_distance_meters = routedDistanceMeters;
+        entry.route_duration_seconds = routedDurationSeconds;
+        entry.route_provider = routedProvider;
+    }
+
+    function switchToDay(dayNumber) {
+        flushActiveDayIntoStore();
+        activeDayNumber = dayNumber;
+        var entry = findDayEntry(dayNumber);
+        if (!entry) return;
+
+        routePoints = entry.route_points || [];
+        routedGeometry = entry.route_geometry || [];
+        routedDistanceMeters = entry.route_distance_meters || 0;
+        routedDurationSeconds = entry.route_duration_seconds || 0;
+        routedProvider = entry.route_provider || '';
+        lastRoutedSignature = routedProvider === 'google' ? routeSignature() : null;
+
+        document.getElementById('route_geometry').value = routedGeometry.length ? JSON.stringify(routedGeometry) : '';
+        document.getElementById('route_distance_meters').value = routedDistanceMeters || '';
+        document.getElementById('route_duration_seconds').value = routedDurationSeconds || '';
+        document.getElementById('route_provider').value = routedProvider || '';
+        document.getElementById('dayTitleInput').value = entry.title || '';
+        document.getElementById('dayOvernightInput').value = entry.overnight_notes || '';
+
+        renderDayTabs();
+        renderRoute(true);
+    }
+
+    function renderDayTabs() {
+        var tabs = document.getElementById('missionDayTabs');
+        tabs.innerHTML = '';
+        missionDaysStore.forEach(function(entry) {
+            var li = document.createElement('li');
+            li.className = 'nav-item';
+            var a = document.createElement('a');
+            a.href = '#';
+            a.className = 'nav-link py-1 px-2' + (entry.day_number === activeDayNumber ? ' active' : '');
+            var dateParts = entry.day_date.split('-');
+            a.textContent = 'Μέρα ' + entry.day_number + ' · ' + dateParts[2] + '/' + dateParts[1];
+            a.addEventListener('click', function(e) {
+                e.preventDefault();
+                if (entry.day_number !== activeDayNumber) switchToDay(entry.day_number);
+            });
+            li.appendChild(a);
+            tabs.appendChild(li);
+        });
+    }
+
+    function updateMultiDayUI() {
+        var span = computeDaySpan();
+        var wrap = document.getElementById('multiDayTabsWrap');
+
+        if (span.length < 2) {
+            activeDayNumber = null;
+            missionDaysStore = [];
+            wrap.style.display = 'none';
+            return;
+        }
+
+        wrap.style.display = '';
+        missionDaysStore = span.map(function(day) {
+            var existing = findDayEntry(day.day_number);
+            if (existing) {
+                existing.day_date = day.day_date;
+                return existing;
+            }
+            return emptyDayEntry(day.day_number, day.day_date);
+        });
+
+        if (activeDayNumber === null || !findDayEntry(activeDayNumber)) {
+            switchToDay(missionDaysStore[0].day_number);
+        } else {
+            renderDayTabs();
+        }
+    }
+
+    window.updateMultiDayUI = updateMultiDayUI;
 
     function scheduleRouteFetch() {
         if (routeFetchTimer) {
@@ -1319,6 +1456,7 @@ include __DIR__ . '/includes/header.php';
 
         renderRoute(routePoints.length > 0);
         setTimeout(function() { routeMap.invalidateSize(); }, 150);
+        updateMultiDayUI();
     }
 
     var fullscreenMapInstance = null;
@@ -1434,6 +1572,21 @@ include __DIR__ . '/includes/header.php';
         var btn   = document.getElementById('parseMapsBtn');
         initRouteEditor();
         initFullscreenRouteEditor();
+
+        document.getElementById('missionForm').addEventListener('submit', function() {
+            flushActiveDayIntoStore();
+            var jsonField = document.getElementById('mission_days_json');
+            if (missionDaysStore.length >= 2) {
+                jsonField.value = JSON.stringify(missionDaysStore);
+                document.getElementById('route_points').value = '';
+                document.getElementById('route_geometry').value = '';
+                document.getElementById('route_distance_meters').value = '';
+                document.getElementById('route_duration_seconds').value = '';
+                document.getElementById('route_provider').value = '';
+            } else {
+                jsonField.value = '';
+            }
+        });
 
         // Auto-parse on paste
         input.addEventListener('paste', function(e) {
@@ -1701,6 +1854,7 @@ document.getElementById('confirmDateBtn').addEventListener('click', function() {
             document.getElementById('end_datetime_display').value = endDmy;
         }
     }
+    if (window.updateMultiDayUI) window.updateMultiDayUI();
     window._dpModal.hide();
 });
 
