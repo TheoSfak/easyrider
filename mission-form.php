@@ -719,9 +719,8 @@ include __DIR__ . '/includes/header.php';
 <script>
 (function() {
     var routeMap = null;
-    var routeLine = null;
-    var routeMarkers = [];
     var locationMarker = null;
+    var mapInstances = []; // each: { map: L.Map, markers: L.CircleMarker[], line: L.Polyline|null }
     var routePoints = <?= json_encode($routePointsInitial, JSON_UNESCAPED_UNICODE) ?>;
     var defaultCenter = [35.3387, 25.1442];
     var googleRoutingEnabled = <?= $googleRoutingEnabled ? 'true' : 'false' ?>;
@@ -910,7 +909,10 @@ include __DIR__ . '/includes/header.php';
 
     function syncRouteInput() {
         document.getElementById('route_points').value = routePoints.length ? JSON.stringify(routePoints) : '';
-        document.getElementById('routePointCount').textContent = routePoints.length + (routePoints.length === 1 ? ' σημείο' : ' σημεία');
+        var countLabel = routePoints.length + (routePoints.length === 1 ? ' σημείο' : ' σημεία');
+        document.getElementById('routePointCount').textContent = countLabel;
+        var fullscreenCount = document.getElementById('routeFullscreenPointCount');
+        if (fullscreenCount) fullscreenCount.textContent = countLabel;
         if (routeSignature() !== lastRoutedSignature) {
             clearRoutedData();
             lastRoutedSignature = null;
@@ -1007,14 +1009,22 @@ include __DIR__ . '/includes/header.php';
         }
     }
 
-    function renderRoute(fitBounds, skipListRender) {
-        if (!routeMap) return;
+    function buildRoutePointPopupHtml(index) {
+        var point = routePoints[index];
+        var titleLine = point.title ? '<br>' + escapeHtml(point.title) : '';
+        return '<div class="route-point-popup">' +
+            '<strong>Σημείο ' + (index + 1) + '</strong>' + titleLine +
+            '<div class="mt-2"><button type="button" class="btn btn-sm btn-outline-danger route-point-delete-btn">' +
+            '<i class="bi bi-trash me-1"></i>Διαγραφή σημείου</button></div>' +
+            '</div>';
+    }
 
-        routeMarkers.forEach(function(marker) { marker.remove(); });
-        routeMarkers = [];
-        if (routeLine) {
-            routeLine.remove();
-            routeLine = null;
+    function drawPointsOnMapInstance(instance) {
+        instance.markers.forEach(function(marker) { marker.remove(); });
+        instance.markers = [];
+        if (instance.line) {
+            instance.line.remove();
+            instance.line = null;
         }
 
         var latLngs = routePoints.map(function(point) { return [point.lat, point.lng]; });
@@ -1025,29 +1035,84 @@ include __DIR__ . '/includes/header.php';
                 fillColor: '#0d6efd',
                 fillOpacity: 0.9,
                 weight: 2
-            }).addTo(routeMap).bindTooltip(String(index + 1), {
+            }).addTo(instance.map).bindTooltip(String(index + 1), {
                 permanent: true,
                 direction: 'center',
                 className: 'route-point-label'
-            }).bindPopup('<strong>Σημείο ' + (index + 1) + '</strong>' + (routePoints[index].title ? '<br>' + escapeHtml(routePoints[index].title) : ''));
-            routeMarkers.push(marker);
+            }).bindPopup(buildRoutePointPopupHtml(index));
+
+            marker.on('popupopen', function(e) {
+                var popupEl = e.popup.getElement();
+                var deleteBtn = popupEl ? popupEl.querySelector('.route-point-delete-btn') : null;
+                if (deleteBtn) {
+                    deleteBtn.addEventListener('click', function() {
+                        routePoints.splice(index, 1);
+                        renderRoute(false);
+                    });
+                }
+            });
+
+            instance.markers.push(marker);
         });
 
         if (latLngs.length >= 2) {
             var lineLatLngs = (routedProvider === 'google' && routedGeometry.length >= 2) ? routedGeometry : latLngs;
-            routeLine = L.polyline(lineLatLngs, {
+            instance.line = L.polyline(lineLatLngs, {
                 color: '#0d6efd',
                 weight: 5,
                 opacity: 0.85
-            }).addTo(routeMap);
+            }).addTo(instance.map);
         }
+    }
+
+    function renderFullscreenPointPanel() {
+        var panel = document.getElementById('routeFullscreenPointPanel');
+        if (!panel) return;
+
+        panel.innerHTML = '';
+        if (!routePoints.length) {
+            panel.innerHTML = '<div class="text-muted small p-2">Δεν έχουν οριστεί σημεία.</div>';
+            return;
+        }
+
+        routePoints.forEach(function(point, index) {
+            var row = document.createElement('div');
+            row.className = 'route-fullscreen-point-row d-flex align-items-center gap-1 mb-2';
+            row.innerHTML =
+                '<span class="route-point-index bg-primary text-white fw-bold flex-shrink-0">' + (index + 1) + '</span>' +
+                '<input type="text" class="form-control form-control-sm route-fullscreen-title" maxlength="120" placeholder="Τίτλος">' +
+                '<button type="button" class="btn btn-sm btn-outline-danger flex-shrink-0 route-fullscreen-remove" title="Αφαίρεση σημείου"><i class="bi bi-x-lg"></i></button>';
+
+            var titleInput = row.querySelector('.route-fullscreen-title');
+            titleInput.value = point.title || '';
+            titleInput.addEventListener('input', function() {
+                updateRoutePoint(index, 'title', titleInput.value);
+            });
+
+            row.querySelector('.route-fullscreen-remove').addEventListener('click', function() {
+                routePoints.splice(index, 1);
+                renderRoute(false);
+            });
+
+            panel.appendChild(row);
+        });
+    }
+
+    function renderRoute(fitBounds, skipListRender) {
+        mapInstances.forEach(function(instance) {
+            drawPointsOnMapInstance(instance);
+            if (fitBounds && routePoints.length > 0) {
+                instance.map.fitBounds(
+                    L.latLngBounds(routePoints.map(function(point) { return [point.lat, point.lng]; })),
+                    { padding: [25, 25] }
+                );
+            }
+        });
 
         syncRouteInput();
         if (!skipListRender) {
             renderRoutePointList();
-        }
-        if (fitBounds && latLngs.length > 0) {
-            routeMap.fitBounds(L.latLngBounds(latLngs), { padding: [25, 25] });
+            renderFullscreenPointPanel();
         }
     }
 
@@ -1064,6 +1129,8 @@ include __DIR__ . '/includes/header.php';
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
             maxZoom: 19
         }).addTo(routeMap);
+
+        mapInstances.push({ map: routeMap, markers: [], line: null });
 
         if (savedLocation) {
             setLocationMarker(savedLocation[0], savedLocation[1], false);
