@@ -10,6 +10,14 @@ After a mission/ride is completed, let members watch an animated recap of the ro
 - No new database tables. No new page/route. No public/unauthenticated sharing.
 - Real GPS pings (`volunteer_pings`) are NOT used as the source of truth — the replay animates along the stored `route_geometry` only. This means playback speed is a constant, linear interpolation over time, not a reconstruction of actual moment-to-moment speed. This is a deliberate simplification and is called out to the user in review.
 
+## Future Consideration: Public Share Link (not in this scope)
+
+The user wants a follow-up phase where a Ride Replay can be published via a public, no-login link for social media sharing. Not designed or built now, but this design is kept compatible with it:
+
+- The data-prep step (route + annotated events → JSON) is written as a self-contained server-side step, not tangled into page-specific auth checks, so it can later be re-exposed behind a public token-based endpoint without rewriting it.
+- `ride-replay.js` takes its data as a plain JS object/JSON, not tied to being inline-rendered — so a future public page can feed it the same shape of data fetched via a public URL instead of an inline `<script>` block.
+- Out of scope for now: share tokens, a public route, expiry/revocation, rate limiting, and hiding any sensitive info (e.g. member names) from a public audience — all of that is a separate spec when that phase starts.
+
 ## Entry Point
 
 - New button "🎬 Ride Replay" rendered in `mission-view.php`, in the same area as the existing route/map card.
