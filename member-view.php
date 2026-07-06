@@ -750,25 +750,11 @@ include __DIR__ . '/includes/header.php';
                     </div>
                 </div>
                 
+                <?php if (!empty($member['club_registry_number'])): ?>
                 <hr class="my-3">
-                <div class="row g-2">
-                    <div class="col-md-6">
-                        <h6 class="text-primary mb-2" style="font-size:.85rem"><i class="bi bi-person-badge me-1"></i>Μεγέθη Στολής</h6>
-                        <div class="d-flex flex-wrap gap-2 mb-2">
-                            <span class="badge bg-light text-dark border"><i class="bi bi-slash-circle me-1"></i>Παντ: <?= h($member['pants_size'] ?: '-') ?></span>
-                            <span class="badge bg-light text-dark border"><i class="bi bi-slash-circle me-1"></i>Χιτ: <?= h($member['shirt_size'] ?: '-') ?></span>
-                            <span class="badge bg-light text-dark border"><i class="bi bi-slash-circle me-1"></i>Μπλ: <?= h($member['blouse_size'] ?: '-') ?></span>
-                            <span class="badge bg-light text-dark border"><i class="bi bi-slash-circle me-1"></i>Fl: <?= h($member['fleece_size'] ?: '-') ?></span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="text-primary mb-2" style="font-size:.85rem"><i class="bi bi-journal-text me-1"></i>Μητρώα</h6>
-                        <div class="vp-info-label">ΕΠΙΔΡΑΣΙΣ</div>
-                        <div class="vp-info-value"><?= h($member['registry_epidrasis'] ?: '-') ?></div>
-                        <div class="vp-info-label">Γ.Γ.Π.Π.</div>
-                        <div class="vp-info-value"><?= h($member['registry_ggpp'] ?: '-') ?></div>
-                    </div>
-                </div>
+                <div class="vp-info-label"><i class="bi bi-journal-text me-1"></i>Αρ. Μητρώου Λέσχης</div>
+                <div class="vp-info-value"><?= h($member['club_registry_number']) ?></div>
+                <?php endif; ?>
 
                 <?php if ($profile): ?>
                 <hr>

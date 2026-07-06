@@ -4474,6 +4474,31 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                 }
             },
         ],
+        [
+            'version'     => 77,
+            'description' => 'Replace uniform size / ΕΠΙΔΡΑΣΙΣ / ΓΓΠΠ registry fields with a single optional club registry number',
+            'up' => function () {
+                $dropColumns = ['pants_size', 'shirt_size', 'blouse_size', 'fleece_size', 'registry_epidrasis', 'registry_ggpp'];
+                foreach ($dropColumns as $col) {
+                    $exists = dbFetchValue(
+                        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+                         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = ?",
+                        [$col]
+                    );
+                    if ($exists) {
+                        dbExecute("ALTER TABLE users DROP COLUMN `$col`");
+                    }
+                }
+
+                $newExists = dbFetchValue(
+                    "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+                     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'club_registry_number'"
+                );
+                if (!$newExists) {
+                    dbExecute("ALTER TABLE users ADD COLUMN club_registry_number VARCHAR(50) NULL AFTER vehicle_plate");
+                }
+            },
+        ],
 
     ];
     // ────────────────────────────────────────────────────────────────────────

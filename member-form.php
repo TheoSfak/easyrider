@@ -59,12 +59,7 @@ if (isPost()) {
         'amka' => post('amka') ?: null,
         'driving_license' => post('driving_license') ?: null,
         'vehicle_plate' => post('vehicle_plate') ?: null,
-        'pants_size' => post('pants_size') ?: null,
-        'shirt_size' => post('shirt_size') ?: null,
-        'blouse_size' => post('blouse_size') ?: null,
-        'fleece_size' => post('fleece_size') ?: null,
-        'registry_epidrasis' => post('registry_epidrasis') ?: null,
-        'registry_ggpp' => post('registry_ggpp') ?: null,
+        'club_registry_number' => post('club_registry_number') ?: null,
         'custom_role_id' => post('custom_role_id') ?: null,
     ];
 
@@ -129,20 +124,18 @@ if (isPost()) {
         if ($member) {
             // Update
             dbExecute(
-                "UPDATE users SET 
+                "UPDATE users SET
                  name = ?, email = ?, phone = ?, role = ?, custom_role_id = ?, department_id = ?, warehouse_id = ?, is_active = ?,
                  member_type = ?, cohort_year = ?, position_id = ?,
                  id_card = ?, afm = ?, amka = ?, driving_license = ?, vehicle_plate = ?,
-                 pants_size = ?, shirt_size = ?, blouse_size = ?, fleece_size = ?,
-                 registry_epidrasis = ?, registry_ggpp = ?, updated_at = NOW()
+                 club_registry_number = ?, updated_at = NOW()
                  WHERE id = ?",
                 [
                     $data['name'], $data['email'], $data['phone'],
                     $data['role'], $data['custom_role_id'], $data['department_id'], $data['warehouse_id'], $data['is_active'],
                     $memberType, $cohortYear, $data['position_id'],
                     $data['id_card'], $data['afm'], $data['amka'], $data['driving_license'], $data['vehicle_plate'],
-                    $data['pants_size'], $data['shirt_size'], $data['blouse_size'], $data['fleece_size'],
-                    $data['registry_epidrasis'], $data['registry_ggpp'], $id
+                    $data['club_registry_number'], $id
                 ]
             );
             
@@ -159,18 +152,16 @@ if (isPost()) {
         } else {
             // Create
             $id = dbInsert(
-                "INSERT INTO users 
+                "INSERT INTO users
                  (name, email, password, phone, role, custom_role_id, department_id, warehouse_id, is_active, member_type, cohort_year, position_id,
-                  id_card, afm, amka, driving_license, vehicle_plate, pants_size, shirt_size, blouse_size, fleece_size,
-                  registry_epidrasis, registry_ggpp, total_points, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW(), NOW())",
+                  id_card, afm, amka, driving_license, vehicle_plate, club_registry_number, total_points, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW(), NOW())",
                 [
                     $data['name'], $data['email'], password_hash($password, PASSWORD_DEFAULT),
                     $data['phone'], $data['role'], $data['custom_role_id'], $data['department_id'], $data['warehouse_id'], $data['is_active'],
                     $memberType, $cohortYear, $data['position_id'],
                     $data['id_card'], $data['afm'], $data['amka'], $data['driving_license'], $data['vehicle_plate'],
-                    $data['pants_size'], $data['shirt_size'], $data['blouse_size'], $data['fleece_size'],
-                    $data['registry_epidrasis'], $data['registry_ggpp']
+                    $data['club_registry_number']
                 ]
             );
             logAudit('create', 'users', $id);
@@ -239,12 +230,7 @@ $form = $member ?: [
     'amka' => '',
     'driving_license' => '',
     'vehicle_plate' => '',
-    'pants_size' => '',
-    'shirt_size' => '',
-    'blouse_size' => '',
-    'fleece_size' => '',
-    'registry_epidrasis' => '',
-    'registry_ggpp' => '',
+    'club_registry_number' => '',
     'custom_role_id' => null,
 ];
 
@@ -417,43 +403,14 @@ include __DIR__ . '/includes/header.php';
                     <input type="text" class="form-control" name="vehicle_plate" value="<?= h($form['vehicle_plate'] ?? '') ?>" placeholder="π.χ. ΑΒΓ-1234">
                 </div>
             </div>
-            
-            <hr>
-            <h5 class="mb-3"><i class="bi bi-person-badge me-2"></i>Μεγέθη Στολής</h5>
-            
-            <div class="row">
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Παντελόνι</label>
-                    <input type="text" class="form-control" name="pants_size" value="<?= h($form['pants_size'] ?? '') ?>" placeholder="π.χ. M, L, XL">
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Χιτώνιο</label>
-                    <input type="text" class="form-control" name="shirt_size" value="<?= h($form['shirt_size'] ?? '') ?>" placeholder="π.χ. M, L, XL">
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Μπλούζα</label>
-                    <input type="text" class="form-control" name="blouse_size" value="<?= h($form['blouse_size'] ?? '') ?>" placeholder="π.χ. M, L, XL">
-                </div>
-                <div class="col-md-3 mb-3">
-                    <label class="form-label">Fleece</label>
-                    <input type="text" class="form-control" name="fleece_size" value="<?= h($form['fleece_size'] ?? '') ?>" placeholder="π.χ. M, L, XL">
-                </div>
-            </div>
-            
-            <hr>
-            <h5 class="mb-3"><i class="bi bi-journal-text me-2"></i>Μητρώα</h5>
-            
+
             <div class="row">
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">Μητρώο ΕΠΙΔΡΑΣΙΣ</label>
-                    <input type="text" class="form-control" name="registry_epidrasis" value="<?= h($form['registry_epidrasis'] ?? '') ?>" placeholder="Αριθμός Μητρώου">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <label class="form-label">Μητρώο Γ.Γ.Π.Π.</label>
-                    <input type="text" class="form-control" name="registry_ggpp" value="<?= h($form['registry_ggpp'] ?? '') ?>" placeholder="Αριθμός Μητρώου">
+                    <label class="form-label">Αρ. Μητρώου Λέσχης</label>
+                    <input type="text" class="form-control" name="club_registry_number" value="<?= h($form['club_registry_number'] ?? '') ?>" placeholder="Προαιρετικό">
                 </div>
             </div>
-            
+
             <hr>
             <h5 class="mb-3"><i class="bi bi-person-lines-fill me-2"></i>Προφίλ Μέλους</h5>
 

@@ -169,12 +169,7 @@ function importMembersFromCsv(array $rows, bool $dryRun = false): array {
         $amka             = _col($row, 'ΑΜΚΑ');
         $drivingLicense   = _col($row, 'Δίπλωμα Οδήγησης');
         $vehiclePlate     = _col($row, 'Πινακίδα Οχήματος');
-        $pantsSize        = _col($row, 'Παντελόνι');
-        $shirtSize        = _col($row, 'Μπλούζα');
-        $blouseSize       = _col($row, 'Μπλάκετ');
-        $fleeceSize       = _col($row, 'Fleece');
-        $regEpidrasis     = _col($row, 'Μητρώο Επίδρασης');
-        $regGgpp          = _col($row, 'Μητρώο ΓΓΠΠ');
+        $clubRegistryNumber = _col($row, 'Αρ. Μητρώου Λέσχης');
 
         // ── member_profiles row ──
         $address              = _col($row, 'Διεύθυνση');
@@ -196,14 +191,12 @@ function importMembersFromCsv(array $rows, bool $dryRun = false): array {
                 "INSERT INTO users
                     (name, email, phone, password, role, member_type, department_id,
                      id_card, afm, amka, driving_license, vehicle_plate,
-                     pants_size, shirt_size, blouse_size, fleece_size,
-                     registry_epidrasis, registry_ggpp,
+                     club_registry_number,
                      is_active, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())",
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())",
                 [$name, $email, $phone, $hashedPassword, $role, $memberType, $deptId,
                  $idCard, $afm, $amka, $drivingLicense, $vehiclePlate,
-                 $pantsSize, $shirtSize, $blouseSize, $fleeceSize,
-                 $regEpidrasis, $regGgpp]
+                 $clubRegistryNumber]
             );
 
             if ($userId) {
