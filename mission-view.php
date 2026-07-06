@@ -1920,7 +1920,7 @@ include __DIR__ . '/includes/header.php';
                     <h5 class="modal-title"><i class="bi bi-flag-fill me-1"></i>Κλείσιμο Διαδρομής</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body" style="max-height: 60vh; overflow-y: auto;">
                     <?php if (($rideClosureSummary['active_event_count'] ?? 0) > 0): ?>
                     <div class="alert alert-warning">
                         <i class="bi bi-exclamation-triangle-fill me-1"></i>

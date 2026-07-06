@@ -1212,7 +1212,7 @@ include __DIR__ . '/includes/header.php';
                 <h5 class="modal-title"><i class="bi bi-folder2-open me-2"></i>Όλα τα Αρχεία <span class="badge bg-secondary"><?= $docCount ?></span></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body p-0">
+            <div class="modal-body p-0" style="max-height: 60vh; overflow-y: auto;">
                 <!-- Search -->
                 <div class="p-3 border-bottom bg-light">
                     <div class="input-group input-group-sm">
