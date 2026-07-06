@@ -13,9 +13,12 @@ if (!$id) {
 
 $member = dbFetchOne(
     "SELECT u.*,
-            vp.name as position_name, vp.color as position_color, vp.icon as position_icon
-     FROM users u 
+            vp.name as position_name, vp.color as position_color, vp.icon as position_icon,
+            mb.name as motorcycle_brand_name, mm.name as motorcycle_model_name
+     FROM users u
      LEFT JOIN member_positions vp ON u.position_id = vp.id
+     LEFT JOIN motorcycle_brands mb ON u.motorcycle_brand_id = mb.id
+     LEFT JOIN motorcycle_models mm ON u.motorcycle_model_id = mm.id
      WHERE u.id = ?",
     [$id]
 );
@@ -722,6 +725,10 @@ include __DIR__ . '/includes/header.php';
                         <div class="vp-info-value"><?= h($member['amka'] ?: '-') ?></div>
                         <div class="vp-info-label"><i class="bi bi-car-front me-1"></i>Άδεια Οδήγησης / Όχημα</div>
                         <div class="vp-info-value"><?= h($member['driving_license'] ?: '-') ?> <?= $member['vehicle_plate'] ? '/ ' . h($member['vehicle_plate']) : '' ?></div>
+                        <?php if (!empty($member['motorcycle_brand_name'])): ?>
+                        <div class="vp-info-label"><i class="bi bi-bicycle me-1"></i>Μηχανή</div>
+                        <div class="vp-info-value"><?= h($member['motorcycle_brand_name']) ?><?= $member['motorcycle_model_name'] ? ' / ' . h($member['motorcycle_model_name']) : '' ?></div>
+                        <?php endif; ?>
                     </div>
                 </div>
                 
