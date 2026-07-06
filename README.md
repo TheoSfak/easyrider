@@ -4,14 +4,14 @@
 
 The app is built as a plain PHP project without a framework, so it can run on common shared hosting, XAMPP, or a standard Apache/PHP/MySQL production server.
 
-**Version:** 3.81.6  
+**Version:** 3.81.7  
 **Author:** Theodore Sfakianakis  
 **Repository:** https://github.com/TheoSfak/easyrider
 
 ![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?logo=php&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?logo=mysql&logoColor=white)
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white)
-![Version](https://img.shields.io/badge/version-3.81.6-blue)
+![Version](https://img.shields.io/badge/version-3.81.7-blue)
 
 ---
 
@@ -299,6 +299,10 @@ php /path/to/easyride/cron_daily.php
 ---
 
 ## Current Release Highlights
+
+### v3.81.7
+
+- Fix: `dashboard.php`, `profile.php`, and `volunteer-view.php` crashed with a fatal SQL error whenever a club's `mission_types` table has no rows named the (legacy, rescue-team-era) hardcoded attendance-tracking names — the "Παρουσίες Αποστολών" stat now correctly shows 0 instead of crashing the page.
 
 ### v3.81.6
 
