@@ -4,14 +4,14 @@
 
 The app is built as a plain PHP project without a framework, so it can run on common shared hosting, XAMPP, or a standard Apache/PHP/MySQL production server.
 
-**Version:** 3.81.4  
+**Version:** 3.81.5  
 **Author:** Theodore Sfakianakis  
 **Repository:** https://github.com/TheoSfak/easyrider
 
 ![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?logo=php&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?logo=mysql&logoColor=white)
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white)
-![Version](https://img.shields.io/badge/version-3.81.4-blue)
+![Version](https://img.shields.io/badge/version-3.81.5-blue)
 
 ---
 
@@ -299,6 +299,10 @@ php /path/to/easyride/cron_daily.php
 ---
 
 ## Current Release Highlights
+
+### v3.81.5
+
+- Multi-day mission itineraries (phase 2 of 3): the mission page now shows the day-by-day itinerary (route map, timeline, overnight notes) for multi-day rides via day tabs. Ride Mode/live-map day-awareness lands in a follow-up release (phase 3).
 
 ### v3.81.4
 
