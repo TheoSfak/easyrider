@@ -4499,6 +4499,71 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                 }
             },
         ],
+        [
+            'version'     => 78,
+            'description' => 'Add motorcycle brand/model tables and users.motorcycle_brand_id/motorcycle_model_id columns',
+            'up' => function () {
+                dbExecute("
+                    CREATE TABLE IF NOT EXISTS motorcycle_brands (
+                        id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                        name VARCHAR(100) NOT NULL,
+                        is_approved TINYINT(1) NOT NULL DEFAULT 1,
+                        created_by INT UNSIGNED NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE KEY uq_brand_name (name),
+                        CONSTRAINT fk_brand_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                ");
+
+                dbExecute("
+                    CREATE TABLE IF NOT EXISTS motorcycle_models (
+                        id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                        brand_id INT UNSIGNED NOT NULL,
+                        name VARCHAR(100) NOT NULL,
+                        is_approved TINYINT(1) NOT NULL DEFAULT 1,
+                        created_by INT UNSIGNED NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE KEY uq_brand_model (brand_id, name),
+                        CONSTRAINT fk_model_brand FOREIGN KEY (brand_id) REFERENCES motorcycle_brands(id) ON DELETE CASCADE,
+                        CONSTRAINT fk_model_created_by FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+                ");
+
+                $seedBrands = [
+                    'Honda', 'Yamaha', 'Suzuki', 'Kawasaki', 'BMW', 'Ducati', 'KTM',
+                    'Harley-Davidson', 'Triumph', 'Aprilia', 'Piaggio', 'Vespa',
+                    'Benelli', 'Royal Enfield', 'Moto Guzzi', 'Husqvarna', 'MV Agusta',
+                    'CFMoto', 'Kymco', 'SYM',
+                ];
+                foreach ($seedBrands as $brandName) {
+                    $exists = dbFetchValue("SELECT COUNT(*) FROM motorcycle_brands WHERE name = ?", [$brandName]);
+                    if (!$exists) {
+                        dbInsert(
+                            "INSERT INTO motorcycle_brands (name, is_approved, created_by, created_at) VALUES (?, 1, NULL, NOW())",
+                            [$brandName]
+                        );
+                    }
+                }
+
+                $brandColExists = dbFetchValue(
+                    "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+                     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'motorcycle_brand_id'"
+                );
+                if (!$brandColExists) {
+                    dbExecute("ALTER TABLE users ADD COLUMN motorcycle_brand_id INT UNSIGNED NULL AFTER club_registry_number");
+                    dbExecute("ALTER TABLE users ADD CONSTRAINT fk_users_motorcycle_brand FOREIGN KEY (motorcycle_brand_id) REFERENCES motorcycle_brands(id) ON DELETE SET NULL");
+                }
+
+                $modelColExists = dbFetchValue(
+                    "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+                     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'motorcycle_model_id'"
+                );
+                if (!$modelColExists) {
+                    dbExecute("ALTER TABLE users ADD COLUMN motorcycle_model_id INT UNSIGNED NULL AFTER motorcycle_brand_id");
+                    dbExecute("ALTER TABLE users ADD CONSTRAINT fk_users_motorcycle_model FOREIGN KEY (motorcycle_model_id) REFERENCES motorcycle_models(id) ON DELETE SET NULL");
+                }
+            },
+        ],
 
     ];
     // ────────────────────────────────────────────────────────────────────────
