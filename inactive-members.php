@@ -42,6 +42,13 @@ $whereClause = implode(' AND ', $where);
 $total      = dbFetchValue("SELECT COUNT(*) FROM users u WHERE $whereClause", $params);
 $pagination = paginate($total, $page, $perPage);
 
+// Unfiltered count of everyone the bulk GDPR-deletion action would actually affect
+// (that action always targets the full inactive set, ignoring search/role filters)
+$totalInactiveUnfiltered = (int) dbFetchValue(
+    "SELECT COUNT(*) FROM users WHERE is_active = 0 AND deleted_at IS NULL AND role != ? AND id != ?",
+    [ROLE_SYSTEM_ADMIN, $user['id']]
+);
+
 $members = dbFetchAll(
     "SELECT u.*,
             COALESCE(pr_stats.shifts_count, 0) AS shifts_count,
@@ -102,6 +109,40 @@ if (isPost()) {
                 setFlash('error', 'Ο χρήστης δεν βρέθηκε.');
             }
             break;
+
+        case 'bulk_delete_personal_data':
+            // GDPR-compliant personal data deletion for every inactive, non-deleted, non-admin member
+            if (!isSystemAdmin()) {
+                setFlash('error', 'Δεν έχετε δικαίωμα σε αυτή την ενέργεια.');
+                break;
+            }
+            $targets = dbFetchAll(
+                "SELECT id FROM users WHERE is_active = 0 AND deleted_at IS NULL AND role != ? AND id != ?",
+                [ROLE_SYSTEM_ADMIN, $user['id']]
+            );
+            $processed = 0;
+            foreach ($targets as $t) {
+                $targetId = (int) $t['id'];
+                $anonymizedEmail = 'deleted_' . $targetId . '_' . time() . '@deleted.local';
+                db()->beginTransaction();
+                try {
+                    dbExecute(
+                        "UPDATE users SET name = ?, email = ?, phone = NULL, is_active = 0, updated_at = NOW() WHERE id = ?",
+                        ['[Διαγραμμένος Χρήστης]', $anonymizedEmail, $targetId]
+                    );
+                    dbExecute("DELETE FROM member_profiles WHERE user_id = ?", [$targetId]);
+                    dbExecute("DELETE FROM user_skills WHERE user_id = ?", [$targetId]);
+                    dbExecute("DELETE FROM user_achievements WHERE user_id = ?", [$targetId]);
+                    dbExecute("DELETE FROM notifications WHERE user_id = ?", [$targetId]);
+                    logAudit('delete_personal_data', 'users', $targetId, 'GDPR bulk data deletion');
+                    db()->commit();
+                    $processed++;
+                } catch (Exception $e) {
+                    db()->rollBack();
+                }
+            }
+            setFlash('success', "Τα προσωπικά δεδομένα $processed ανενεργών μελών διαγράφηκαν επιτυχώς.");
+            break;
     }
 
     redirect('inactive-members.php?' . http_build_query(array_filter([
@@ -118,10 +159,49 @@ include __DIR__ . '/includes/header.php';
     <h1 class="h3 mb-0">
         <i class="bi bi-person-x me-2 text-secondary"></i>Ανενεργά Μέλη
     </h1>
-    <a href="members.php" class="btn btn-outline-primary">
-        <i class="bi bi-people me-1"></i>Ενεργά Μέλη
-    </a>
+    <div class="d-flex gap-2">
+        <?php if (isSystemAdmin() && $totalInactiveUnfiltered > 0): ?>
+        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#bulkDeleteModal">
+            <i class="bi bi-shield-x me-1"></i>Διαγραφή Δεδομένων Όλων
+        </button>
+        <?php endif; ?>
+        <a href="members.php" class="btn btn-outline-primary">
+            <i class="bi bi-people me-1"></i>Ενεργά Μέλη
+        </a>
+    </div>
 </div>
+
+<?php if (isSystemAdmin() && $totalInactiveUnfiltered > 0): ?>
+<!-- Bulk GDPR Data Deletion Confirmation Modal -->
+<div class="modal fade" id="bulkDeleteModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="post">
+                <?= csrfField() ?>
+                <input type="hidden" name="action" value="bulk_delete_personal_data">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Διαγραφή Δεδομένων Όλων των Ανενεργών Μελών</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-danger mb-3">
+                        <i class="bi bi-shield-x me-1"></i>
+                        <strong>Οριστική ενέργεια!</strong> Αυτό θα ανωνυμοποιήσει το όνομα/email/τηλέφωνο και θα διαγράψει οριστικά το προφίλ, τις δεξιότητες, τα επιτεύγματα και τις ειδοποιήσεις <strong>κάθε</strong> ανενεργού μέλους. Δεν επηρεάζονται οι διαχειριστές συστήματος ούτε ο λογαριασμός σας, ανεξαρτήτως τυχόν φίλτρων αναζήτησης σε αυτή τη σελίδα.
+                    </div>
+                    <p>Θα επηρεαστούν <strong><?= $totalInactiveUnfiltered ?></strong> ανενεργά μέλη συνολικά στη βάση δεδομένων.</p>
+                    <p class="text-danger mb-0"><i class="bi bi-info-circle me-1"></i>Αυτή η ενέργεια δεν μπορεί να αναιρεθεί.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ακύρωση</button>
+                    <button type="submit" class="btn btn-danger" onclick="return confirm('Οριστική διαγραφή δεδομένων για ΟΛΑ (<?= $totalInactiveUnfiltered ?>) τα ανενεργά μέλη; Δεν αναιρείται.');">
+                        <i class="bi bi-shield-x me-1"></i>Διαγραφή Δεδομένων Όλων
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
 
 <!-- Filters -->
 <div class="card mb-4">
@@ -177,7 +257,7 @@ include __DIR__ . '/includes/header.php';
                         <td>
                             <a href="member-view.php?id=<?= $v['id'] ?>" class="text-decoration-none text-dark">
                                 <strong><?= h($v['name']) ?></strong>
-                                <?= memberTypeBadge($v['member_type'] ?? VTYPE_MEMBER) ?>
+                                <?= memberTypeBadge($v['member_type'] ?? VTYPE_RESCUER) ?>
                             </a>
                             <br><small class="text-muted"><?= h($v['email']) ?></small>
                             <?php if ($v['phone']): ?>
