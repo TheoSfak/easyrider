@@ -4408,6 +4408,72 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                 );
             },
         ],
+        [
+            'version'     => 76,
+            'description' => 'Rename volunteer_* tables/columns/indexes to member_* (volunteer to member terminology rename)',
+            'up' => function () {
+                // ── Rename tables (RENAME TABLE auto-updates existing FK references) ──
+                $tableRenames = [
+                    'volunteer_certificates' => 'member_certificates',
+                    'volunteer_documents'    => 'member_documents',
+                    'volunteer_pings'        => 'member_pings',
+                    'volunteer_points'       => 'member_points',
+                    'volunteer_positions'    => 'member_positions',
+                    'volunteer_profiles'     => 'member_profiles',
+                ];
+                foreach ($tableRenames as $old => $new) {
+                    $exists = dbFetchValue(
+                        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+                         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?",
+                        [$old]
+                    );
+                    if ($exists) {
+                        dbExecute("RENAME TABLE `$old` TO `$new`");
+                    }
+                }
+
+                // ── Rename columns (CHANGE COLUMN auto-updates existing FKs on that column) ──
+                $columnRenames = [
+                    ['participation_requests', 'volunteer_id', "`member_id` int(10) unsigned NOT NULL"],
+                    ['shift_swap_requests', 'from_volunteer_id', "`from_member_id` int(10) unsigned NOT NULL"],
+                    ['shift_swap_requests', 'to_volunteer_id', "`to_member_id` int(10) unsigned NOT NULL"],
+                    ['shift_swap_requests', 'to_volunteer_responded_at', "`to_member_responded_at` datetime DEFAULT NULL"],
+                    ['users', 'volunteer_type', "`member_type` enum('TRAINEE_RESCUER','RESCUER') NOT NULL DEFAULT 'RESCUER'"],
+                    ['shifts', 'max_volunteers', "`max_members` int(11) DEFAULT 5"],
+                    ['shifts', 'min_volunteers', "`min_members` int(11) DEFAULT 1"],
+                    ['inventory_bookings', 'volunteer_name', "`member_name` varchar(255) DEFAULT NULL"],
+                    ['inventory_bookings', 'volunteer_phone', "`member_phone` varchar(20) DEFAULT NULL"],
+                    ['inventory_bookings', 'volunteer_email', "`member_email` varchar(255) DEFAULT NULL"],
+                ];
+                foreach ($columnRenames as [$table, $oldCol, $newColDef]) {
+                    $exists = dbFetchValue(
+                        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+                         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND COLUMN_NAME = ?",
+                        [$table, $oldCol]
+                    );
+                    if ($exists) {
+                        dbExecute("ALTER TABLE `$table` CHANGE COLUMN `$oldCol` $newColDef");
+                    }
+                }
+
+                // ── Rename indexes (MariaDB 10.4 has no RENAME INDEX; drop + recreate) ──
+                $indexRenames = [
+                    ['participation_requests', 'idx_participation_volunteer', 'idx_participation_member', 'member_id'],
+                    ['users', 'idx_volunteer_type', 'idx_member_type', 'member_type'],
+                ];
+                foreach ($indexRenames as [$table, $oldIdx, $newIdx, $column]) {
+                    $exists = dbFetchValue(
+                        "SELECT COUNT(*) FROM INFORMATION_SCHEMA.STATISTICS
+                         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND INDEX_NAME = ?",
+                        [$table, $oldIdx]
+                    );
+                    if ($exists) {
+                        dbExecute("ALTER TABLE `$table` DROP INDEX `$oldIdx`");
+                        dbExecute("ALTER TABLE `$table` ADD INDEX `$newIdx` (`$column`)");
+                    }
+                }
+            },
+        ],
 
     ];
     // ────────────────────────────────────────────────────────────────────────
