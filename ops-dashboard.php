@@ -466,6 +466,7 @@ function buildOpsGoogleMapsDirectionsUrl(array $routePoints): string {
 $mapPins = [];
 $routeTimelineMissions = [];
 foreach ($missions as $m) {
+    $m = resolveActiveMissionDayRoute($m);
     $routePoints = json_decode($m['route_points'] ?? '[]', true);
     if (!is_array($routePoints)) {
         $routePoints = [];
@@ -487,6 +488,7 @@ foreach ($missions as $m) {
             'points' => $routePoints,
             'metrics' => rideMissionRouteMetrics($m, $routePoints),
             'directions_url' => buildOpsGoogleMapsDirectionsUrl($routePoints),
+            'day_label' => $m['is_multiday'] ? $m['active_day_label'] : null,
         ];
     }
 
@@ -734,9 +736,14 @@ include __DIR__ . '/includes/header.php';
                     <?php foreach ($routeTimelineMissions as $routeMission): ?>
                     <div class="list-group-item bg-light">
                         <div class="d-flex justify-content-between align-items-center gap-2">
-                            <a href="mission-view.php?id=<?= $routeMission['id'] ?>" class="fw-semibold text-decoration-none route-mission-title">
-                                <?= h($routeMission['title']) ?>
-                            </a>
+                            <div class="d-flex align-items-center gap-2">
+                                <a href="mission-view.php?id=<?= $routeMission['id'] ?>" class="fw-semibold text-decoration-none route-mission-title">
+                                    <?= h($routeMission['title']) ?>
+                                </a>
+                                <?php if ($routeMission['day_label']): ?>
+                                <span class="badge bg-light text-dark border"><?= h($routeMission['day_label']) ?></span>
+                                <?php endif; ?>
+                            </div>
                             <?php if ($routeMission['directions_url']): ?>
                             <a href="<?= h($routeMission['directions_url']) ?>" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:.75rem">
                                 <i class="bi bi-phone me-1"></i>Άνοιγμα στο κινητό
