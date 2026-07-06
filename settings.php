@@ -835,11 +835,54 @@ if (isPost()) {
             setFlash('error', 'Σφάλμα κατά την επαναφορά: ' . h($e->getMessage()));
             redirect('settings.php?tab=reset');
         }
+    } elseif ($action === 'approve_moto_brand') {
+        $brandId = (int) post('brand_id');
+        dbExecute("UPDATE motorcycle_brands SET is_approved = 1 WHERE id = ?", [$brandId]);
+        logAudit('approve', 'motorcycle_brands', $brandId);
+        setFlash('success', 'Η μάρκα εγκρίθηκε.');
+        redirect('settings.php?tab=general');
+    } elseif ($action === 'reject_moto_brand') {
+        $brandId = (int) post('brand_id');
+        dbExecute("DELETE FROM motorcycle_brands WHERE id = ?", [$brandId]);
+        logAudit('reject', 'motorcycle_brands', $brandId);
+        setFlash('success', 'Η μάρκα απορρίφθηκε.');
+        redirect('settings.php?tab=general');
+    } elseif ($action === 'approve_moto_model') {
+        $modelId = (int) post('model_id');
+        dbExecute("UPDATE motorcycle_models SET is_approved = 1 WHERE id = ?", [$modelId]);
+        logAudit('approve', 'motorcycle_models', $modelId);
+        setFlash('success', 'Το μοντέλο εγκρίθηκε.');
+        redirect('settings.php?tab=general');
+    } elseif ($action === 'reject_moto_model') {
+        $modelId = (int) post('model_id');
+        dbExecute("DELETE FROM motorcycle_models WHERE id = ?", [$modelId]);
+        logAudit('reject', 'motorcycle_models', $modelId);
+        setFlash('success', 'Το μοντέλο απορρίφθηκε.');
+        redirect('settings.php?tab=general');
     }
 }
 
 // Refresh notification settings
 $notificationSettings = dbFetchAll("SELECT * FROM notification_settings ORDER BY name");
+
+// Pending motorcycle brands/models for admin approval
+$pendingMotoBrands = dbFetchAll("SELECT id, name, created_at FROM motorcycle_brands WHERE is_approved = 0 ORDER BY created_at ASC");
+foreach ($pendingMotoBrands as &$pb) {
+    $pb['usage_count'] = (int) dbFetchValue("SELECT COUNT(*) FROM users WHERE motorcycle_brand_id = ?", [$pb['id']]);
+}
+unset($pb);
+
+$pendingMotoModels = dbFetchAll(
+    "SELECT m.id, m.name, m.created_at, b.name AS brand_name
+     FROM motorcycle_models m
+     JOIN motorcycle_brands b ON m.brand_id = b.id
+     WHERE m.is_approved = 0
+     ORDER BY m.created_at ASC"
+);
+foreach ($pendingMotoModels as &$pm) {
+    $pm['usage_count'] = (int) dbFetchValue("SELECT COUNT(*) FROM users WHERE motorcycle_model_id = ?", [$pm['id']]);
+}
+unset($pm);
 
 include __DIR__ . '/includes/header.php';
 ?>
@@ -1253,6 +1296,63 @@ include __DIR__ . '/includes/header.php';
         </div>
     </div>
 </form>
+
+<?php if (!empty($pendingMotoBrands) || !empty($pendingMotoModels)): ?>
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-bicycle me-1"></i>Μάρκες/Μοντέλα Μηχανών — Εκκρεμείς Εγκρίσεις</h5>
+    </div>
+    <div class="card-body">
+        <?php foreach ($pendingMotoBrands as $pb): ?>
+            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                <div>
+                    <strong><?= h($pb['name']) ?></strong>
+                    <span class="badge bg-secondary ms-1">Μάρκα</span>
+                    <br><small class="text-muted">Χρησιμοποιείται από <?= $pb['usage_count'] ?> μέλος/μέλη</small>
+                </div>
+                <div>
+                    <form method="post" class="d-inline">
+                        <?= csrfField() ?>
+                        <input type="hidden" name="action" value="approve_moto_brand">
+                        <input type="hidden" name="brand_id" value="<?= $pb['id'] ?>">
+                        <button type="submit" class="btn btn-sm btn-success">Έγκριση</button>
+                    </form>
+                    <form method="post" class="d-inline" onsubmit="return confirm('<?= $pb['usage_count'] > 0 ? 'Χρησιμοποιείται από ' . $pb['usage_count'] . ' μέλος/μέλη — θα αδειάσει το πεδίο τους. ' : '' ?>Απόρριψη της μάρκας <?= h($pb['name']) ?>;');">
+                        <?= csrfField() ?>
+                        <input type="hidden" name="action" value="reject_moto_brand">
+                        <input type="hidden" name="brand_id" value="<?= $pb['id'] ?>">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Απόρριψη</button>
+                    </form>
+                </div>
+            </div>
+        <?php endforeach; ?>
+        <?php foreach ($pendingMotoModels as $pm): ?>
+            <div class="d-flex justify-content-between align-items-center border-bottom py-2">
+                <div>
+                    <strong><?= h($pm['brand_name']) ?> / <?= h($pm['name']) ?></strong>
+                    <span class="badge bg-info ms-1">Μοντέλο</span>
+                    <br><small class="text-muted">Χρησιμοποιείται από <?= $pm['usage_count'] ?> μέλος/μέλη</small>
+                </div>
+                <div>
+                    <form method="post" class="d-inline">
+                        <?= csrfField() ?>
+                        <input type="hidden" name="action" value="approve_moto_model">
+                        <input type="hidden" name="model_id" value="<?= $pm['id'] ?>">
+                        <button type="submit" class="btn btn-sm btn-success">Έγκριση</button>
+                    </form>
+                    <form method="post" class="d-inline" onsubmit="return confirm('<?= $pm['usage_count'] > 0 ? 'Χρησιμοποιείται από ' . $pm['usage_count'] . ' μέλος/μέλη — θα αδειάσει το πεδίο τους. ' : '' ?>Απόρριψη του μοντέλου <?= h($pm['name']) ?>;');">
+                        <?= csrfField() ?>
+                        <input type="hidden" name="action" value="reject_moto_model">
+                        <input type="hidden" name="model_id" value="<?= $pm['id'] ?>">
+                        <button type="submit" class="btn btn-sm btn-outline-danger">Απόρριψη</button>
+                    </form>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    </div>
+</div>
+<?php endif; ?>
+
 <?php endif; ?>
 
 <!-- SMTP Settings Tab -->
