@@ -80,9 +80,9 @@ if (isPost()) {
                 if (!empty($shiftIds)) {
                     $ph = implode(',', array_fill(0, count($shiftIds), '?'));
                     $participants = dbFetchAll(
-                        "SELECT DISTINCT pr.volunteer_id, u.name, u.email
+                        "SELECT DISTINCT pr.member_id, u.name, u.email
                          FROM participation_requests pr
-                         JOIN users u ON pr.volunteer_id = u.id
+                         JOIN users u ON pr.member_id = u.id
                          WHERE pr.shift_id IN ($ph) AND pr.status IN ('PENDING', 'APPROVED')",
                         $shiftIds
                     );
@@ -93,7 +93,7 @@ if (isPost()) {
                     foreach ($participants as $p) {
                         // In-app notification
                         sendNotification(
-                            $p['volunteer_id'],
+                            $p['member_id'],
                             'Ολοκλήρωση Αποστολής: ' . $mission['title'],
                             'Η αποστολή ολοκληρώθηκε επιτυχώς. Μπορείτε να δείτε την αναφορά (debrief) στη σελίδα της αποστολής.'
                         );

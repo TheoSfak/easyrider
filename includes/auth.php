@@ -277,7 +277,7 @@ function registerUser($data) {
             $data['email'],
             $hashedPassword,
             $data['phone'] ?? null,
-            ROLE_VOLUNTEER,
+            ROLE_MEMBER,
             $data['department_id'] ?? null,
             $isActive,
             $approvalStatus,
@@ -286,9 +286,9 @@ function registerUser($data) {
     );
     
     if ($userId) {
-        // Create volunteer profile
+        // Create member profile
         dbInsert(
-            "INSERT INTO volunteer_profiles (user_id, created_at, updated_at) VALUES (?, NOW(), NOW())",
+            "INSERT INTO member_profiles (user_id, created_at, updated_at) VALUES (?, NOW(), NOW())",
             [$userId]
         );
         
@@ -376,7 +376,7 @@ function updatePassword($userId, $currentPassword, $newPassword) {
  *
  * Rules:
  *  - SYSTEM_ADMIN → always true (full access)
- *  - Any user with no custom_role_id → false (plain volunteer, no elevated access)
+ *  - Any user with no custom_role_id → false (plain member, no elevated access)
  *  - User with custom_role_id → check custom_role_permissions table
  *
  * Pages restricted to SYSTEM_ADMIN only (audit, settings, branches, etc.)

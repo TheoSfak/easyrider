@@ -108,7 +108,7 @@ function runSchemaMigrations(): void {
                       UPDATE `inventory_items`
                       SET `status`              = 'booked',
                           `booked_by_user_id`   = NEW.user_id,
-                          `booked_by_name`      = NEW.volunteer_name,
+                          `booked_by_name`      = NEW.member_name,
                           `booking_date`        = NEW.created_at,
                           `expected_return_date`= NEW.expected_return_date
                       WHERE `id` = NEW.item_id
@@ -318,10 +318,10 @@ function runSchemaMigrations(): void {
 
         [
             'version'     => 8,
-            'description' => 'Insert admin_added_volunteer and points_earned email templates and notification settings',
+            'description' => 'Insert admin_added_member and points_earned email templates and notification settings',
             'up' => function () {
-                // admin_added_volunteer email template
-                $existing = dbFetchOne("SELECT id FROM email_templates WHERE code = 'admin_added_volunteer'");
+                // admin_added_member email template
+                $existing = dbFetchOne("SELECT id FROM email_templates WHERE code = 'admin_added_member'");
                 if (!$existing) {
                     $bodyHtml  = '<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">';
                     $bodyHtml .= '<div style="background: #2c3e50; color: white; padding: 20px; text-align: center;">';
@@ -353,7 +353,7 @@ function runSchemaMigrations(): void {
                         "INSERT INTO email_templates (code, name, subject, body_html, description, available_variables)
                          VALUES (?, ?, ?, ?, ?, ?)",
                         [
-                            'admin_added_volunteer',
+                            'admin_added_member',
                             'Προσθήκη από Διαχειριστή',
                             'Ο διαχειριστής σας τοποθέτησε απευθείας σε βάρδια',
                             $bodyHtml,
@@ -398,15 +398,15 @@ function runSchemaMigrations(): void {
                     );
                 }
 
-                // admin_added_volunteer notification setting
-                $ns1 = dbFetchOne("SELECT id FROM notification_settings WHERE code = 'admin_added_volunteer'");
+                // admin_added_member notification setting
+                $ns1 = dbFetchOne("SELECT id FROM notification_settings WHERE code = 'admin_added_member'");
                 if (!$ns1) {
-                    $tmplId = dbFetchValue("SELECT id FROM email_templates WHERE code = 'admin_added_volunteer'");
+                    $tmplId = dbFetchValue("SELECT id FROM email_templates WHERE code = 'admin_added_member'");
                     dbInsert(
                         "INSERT INTO notification_settings (code, name, description, email_enabled, email_template_id)
                          VALUES (?, ?, ?, 1, ?)",
                         [
-                            'admin_added_volunteer',
+                            'admin_added_member',
                             'Προσθήκη από Διαχειριστή',
                             'Όταν ο διαχειριστής προσθέτει εθελοντή απευθείας σε βάρδια',
                             $tmplId,
@@ -598,7 +598,7 @@ function runSchemaMigrations(): void {
                 $html = $outer($hdr('#d97706', '&#9733;', 'Κερδίσατε Πόντους!'), $bdy($inner), $ftr());
                 dbExecute("UPDATE email_templates SET body_html = ?, subject = 'Κερδίσατε {{points}} πόντους!' WHERE code = 'points_earned'", [$html]);
 
-                // ── ADMIN ADDED VOLUNTEER ─────────────────────────────────────────────────
+                // ── ADMIN ADDED MEMBER ─────────────────────────────────────────────────
                 $inner = $greet()
                     . $p('Ο διαχειριστής σας τοποθέτησε <strong>απευθείας</strong> στην παρακάτω βάρδια:')
                     . $card('#1e3a5f', [
@@ -614,7 +614,7 @@ function runSchemaMigrations(): void {
                     . $p('Παρακαλούμε να είστε στην τοποθεσία έγκαιρα.')
                     . $btn('{{login_url}}', 'Σύνδεση στην Πλατφόρμα', '#1e3a5f');
                 $html = $outer($hdr('#1e3a5f', '&#128203;', 'Τοποθέτηση σε Βάρδια'), $bdy($inner), $ftr());
-                dbExecute("UPDATE email_templates SET body_html = ?, subject = 'Τοποθετηθήκατε σε βάρδια - {{mission_title}}' WHERE code = 'admin_added_volunteer'", [$html]);
+                dbExecute("UPDATE email_templates SET body_html = ?, subject = 'Τοποθετηθήκατε σε βάρδια - {{mission_title}}' WHERE code = 'admin_added_member'", [$html]);
 
                 // ── Enable points_earned email ────────────────────────────────────────────
                 dbExecute("UPDATE notification_settings SET email_enabled = 1 WHERE code = 'points_earned'");
@@ -789,7 +789,7 @@ function runSchemaMigrations(): void {
                 $html = $outer($hdr('#d97706', '&#9733;', 'Κερδίσατε Πόντους!'), $bdy($inner), $ftr());
                 dbExecute("UPDATE email_templates SET body_html = ? WHERE code = 'points_earned'", [$html]);
 
-                // ── ADMIN ADDED VOLUNTEER ─────────────────────────────────────────────────
+                // ── ADMIN ADDED MEMBER ─────────────────────────────────────────────────
                 $inner = $greet()
                     . $p('Ο διαχειριστής σας τοποθέτησε <strong>απευθείας</strong> στην παρακάτω βάρδια:')
                     . $card('#1e3a5f', [
@@ -805,7 +805,7 @@ function runSchemaMigrations(): void {
                     . $p('Παρακαλούμε να είστε στην τοποθεσία έγκαιρα.')
                     . $btn('{{login_url}}', 'Σύνδεση στην Πλατφόρμα', '#1e3a5f');
                 $html = $outer($hdr('#1e3a5f', '&#128203;', 'Τοποθέτηση σε Βάρδια'), $bdy($inner), $ftr());
-                dbExecute("UPDATE email_templates SET body_html = ? WHERE code = 'admin_added_volunteer'", [$html]);
+                dbExecute("UPDATE email_templates SET body_html = ? WHERE code = 'admin_added_member'", [$html]);
             },
         ],
 
@@ -876,7 +876,7 @@ function runSchemaMigrations(): void {
 
         [
             'version'     => 12,
-            'description' => 'Add Google Calendar button to participation_approved and admin_added_volunteer emails',
+            'description' => 'Add Google Calendar button to participation_approved and admin_added_member emails',
             'up' => function () {
                 $btn = function (string $url, string $lbl, string $c) : string {
                     return '<div style="text-align:center;margin:28px 0 4px;">'
@@ -901,8 +901,8 @@ function runSchemaMigrations(): void {
                     );
                 }
 
-                // ── admin_added_volunteer ─────────────────────────────────────────────────
-                $current = dbFetchValue("SELECT body_html FROM email_templates WHERE code = 'admin_added_volunteer'");
+                // ── admin_added_member ─────────────────────────────────────────────────
+                $current = dbFetchValue("SELECT body_html FROM email_templates WHERE code = 'admin_added_member'");
                 if ($current) {
                     $updated = str_replace(
                         $btn('{{login_url}}', 'Σύνδεση στην Πλατφόρμα', '#1e3a5f'),
@@ -910,7 +910,7 @@ function runSchemaMigrations(): void {
                         $current
                     );
                     dbExecute(
-                        "UPDATE email_templates SET body_html = ?, available_variables = ? WHERE code = 'admin_added_volunteer'",
+                        "UPDATE email_templates SET body_html = ?, available_variables = ? WHERE code = 'admin_added_member'",
                         [$updated, '{{app_name}}, {{user_name}}, {{mission_title}}, {{shift_date}}, {{shift_time}}, {{location}}, {{admin_notes}}, {{login_url}}, {{gcal_link}}']
                     );
                 }
@@ -919,7 +919,7 @@ function runSchemaMigrations(): void {
 
         [
             'version'     => 13,
-            'description' => 'Add field_status to participation_requests + create volunteer_pings table (GPS live ops)',
+            'description' => 'Add field_status to participation_requests + create member_pings table (GPS live ops)',
             'up' => function () {
                 // Add field_status column
                 $col = dbFetchOne(
@@ -951,15 +951,15 @@ function runSchemaMigrations(): void {
                     );
                 }
 
-                // Create volunteer_pings table
+                // Create member_pings table
                 $table = dbFetchOne(
                     "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
                      WHERE TABLE_SCHEMA = DATABASE()
-                       AND TABLE_NAME = 'volunteer_pings'"
+                       AND TABLE_NAME = 'member_pings'"
                 );
                 if (!$table) {
                     dbExecute(
-                        "CREATE TABLE volunteer_pings (
+                        "CREATE TABLE member_pings (
                             id        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                             user_id   INT UNSIGNED NOT NULL,
                             shift_id  INT UNSIGNED NOT NULL,
@@ -1104,7 +1104,7 @@ function runSchemaMigrations(): void {
 
         [
             'version'     => 18,
-            'description' => 'Certificate expiry tracking — types, volunteer certificates, email template, settings',
+            'description' => 'Certificate expiry tracking — types, member certificates, email template, settings',
             'up' => function () {
                 // 1. certificate_types table
                 $exists = dbFetchOne(
@@ -1134,14 +1134,14 @@ function runSchemaMigrations(): void {
                     ");
                 }
 
-                // 2. volunteer_certificates table
+                // 2. member_certificates table
                 $exists2 = dbFetchOne(
                     "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
-                     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'volunteer_certificates'"
+                     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'member_certificates'"
                 );
                 if (!$exists2) {
                     dbExecute("
-                        CREATE TABLE volunteer_certificates (
+                        CREATE TABLE member_certificates (
                             id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                             user_id INT UNSIGNED NOT NULL,
                             certificate_type_id INT UNSIGNED NOT NULL,
@@ -1159,7 +1159,7 @@ function runSchemaMigrations(): void {
                             UNIQUE KEY uq_user_cert (user_id, certificate_type_id),
                             FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
                             FOREIGN KEY (certificate_type_id) REFERENCES certificate_types(id) ON DELETE RESTRICT,
-                            FOREIGN KEY (document_id) REFERENCES volunteer_documents(id) ON DELETE SET NULL,
+                            FOREIGN KEY (document_id) REFERENCES member_documents(id) ON DELETE SET NULL,
                             FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
                         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
                     ");
@@ -1275,7 +1275,7 @@ function runSchemaMigrations(): void {
 
                 // participation_requests
                 $addIndex('participation_requests', 'idx_pr_shift_status',  'shift_id, status');
-                $addIndex('participation_requests', 'idx_pr_vol_status',    'volunteer_id, status');
+                $addIndex('participation_requests', 'idx_pr_vol_status',    'member_id, status');
 
                 // missions
                 $addIndex('missions', 'idx_missions_status_dept',  'status, department_id');
@@ -1291,9 +1291,9 @@ function runSchemaMigrations(): void {
                 // notifications
                 $addIndex('notifications', 'idx_notifications_user_created', 'user_id, created_at');
 
-                // volunteer_points
-                $addIndex('volunteer_points', 'idx_points_user_date',   'user_id, created_at');
-                $addIndex('volunteer_points', 'idx_points_user_reason', 'user_id, reason');
+                // member_points
+                $addIndex('member_points', 'idx_points_user_date',   'user_id, created_at');
+                $addIndex('member_points', 'idx_points_user_reason', 'user_id, reason');
 
                 // audit_logs
                 $addIndex('audit_logs', 'idx_audit_user_created',    'user_id, created_at');
@@ -1690,7 +1690,7 @@ function runSchemaMigrations(): void {
                     dbExecute("ALTER TABLE users ADD COLUMN profile_photo VARCHAR(255) NULL DEFAULT NULL AFTER phone");
                 }
                 if (!$checkCol('users', 'position_id')) {
-                    dbExecute("ALTER TABLE users ADD COLUMN position_id INT UNSIGNED NULL AFTER volunteer_type");
+                    dbExecute("ALTER TABLE users ADD COLUMN position_id INT UNSIGNED NULL AFTER member_type");
                 }
                 if (!$checkCol('users', 'warehouse_id')) {
                     dbExecute("ALTER TABLE users ADD COLUMN warehouse_id INT UNSIGNED NULL AFTER department_id");
@@ -1720,9 +1720,9 @@ function runSchemaMigrations(): void {
                     dbExecute("ALTER TABLE tasks ADD COLUMN responsible_user_id INT UNSIGNED NULL AFTER created_by");
                 }
 
-                // ── volunteer_documents table ──
-                if (!$tableExists('volunteer_documents')) {
-                    dbExecute("CREATE TABLE volunteer_documents (
+                // ── member_documents table ──
+                if (!$tableExists('member_documents')) {
+                    dbExecute("CREATE TABLE member_documents (
                         id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                         user_id INT UNSIGNED NOT NULL,
                         label VARCHAR(255) NOT NULL,
@@ -1738,9 +1738,9 @@ function runSchemaMigrations(): void {
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
                 }
 
-                // ── volunteer_positions table ──
-                if (!$tableExists('volunteer_positions')) {
-                    dbExecute("CREATE TABLE volunteer_positions (
+                // ── member_positions table ──
+                if (!$tableExists('member_positions')) {
+                    dbExecute("CREATE TABLE member_positions (
                         id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                         name VARCHAR(100) NOT NULL,
                         color VARCHAR(20) DEFAULT 'secondary',
@@ -1751,7 +1751,7 @@ function runSchemaMigrations(): void {
                         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
                     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
-                    dbExecute("INSERT IGNORE INTO volunteer_positions (id, name, color, icon, sort_order) VALUES
+                    dbExecute("INSERT IGNORE INTO member_positions (id, name, color, icon, sort_order) VALUES
                         (1, 'Υπεύθυνος Τμήματος', 'primary', 'bi-person-lines-fill', 1),
                         (2, 'Υπεύθυνος Γραμματείας', 'info', 'bi-envelope-paper', 2),
                         (3, 'Εκπαιδευτής', 'success', 'bi-mortarboard', 3),
@@ -1786,7 +1786,7 @@ function runSchemaMigrations(): void {
                     dbInsert("INSERT INTO settings (setting_key, setting_value) VALUES ('shelf_expiry_reminder_days', '30')");
                 }
 
-                // ── Missing email templates (task-related + mission_needs_volunteers) ──
+                // ── Missing email templates (task-related + mission_needs_members) ──
                 // Helper: wrap content in styled email layout
                 $wrap30 = function($headerBg, $icon, $title, $body) {
                     return '<div style="background:#eef2f7;padding:28px 0 40px;font-family:Helvetica Neue,Arial,sans-serif;"><div style="max-width:600px;margin:0 auto;"><div style="background:'.$headerBg.';padding:30px 40px 26px;border-radius:12px 12px 0 0;text-align:center;">{{logo_html}}<p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">{{app_name}}</p><div style="font-size:36px;line-height:1;margin:0 0 8px;">'.$icon.'</div><h1 style="color:#fff;margin:0;font-size:23px;font-weight:700;line-height:1.3;">'.$title.'</h1></div><div style="background:#fff;padding:36px 40px 40px;border-radius:0 0 12px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.07);">'.$body.'</div><div style="text-align:center;padding:18px 0 0;color:#9ca3af;font-size:12px;line-height:1.9;"><p style="margin:0;"><strong style="color:#6b7280;">{{app_name}}</strong> &bull; Σύστημα Διαχείρισης Εθελοντών</p><p style="margin:0;">Αυτό το μήνυμα στάλθηκε αυτόματα από το σύστημα.</p></div></div></div>';
@@ -1829,7 +1829,7 @@ function runSchemaMigrations(): void {
                      $wrap30('#22c55e', '&#9989;', 'Ολοκλήρωση Υποεργασίας',
                         $greet30.$p30('Ο/Η <strong>{{completed_by}}</strong> ολοκλήρωσε μια υποεργασία στην εργασία "<strong>{{task_title}}</strong>".').$info30('#22c55e', [['Υποεργασία','{{subtask_title}}'],['Εργασία','{{task_title}}']]).$alert30('#f0fdf4','#bbf7d0','#166534','✅ Η υποεργασία έχει σημανθεί ως ολοκληρωμένη.').$p30('Συνδεθείτε στο σύστημα για να δείτε την πρόοδο της εργασίας.').$btn30('#22c55e','Δείτε την Εργασία')),
                      'Αποστέλλεται όταν ολοκληρώνεται υποεργασία', 'user_name, task_title, subtask_title, completed_by'],
-                    ['mission_needs_volunteers', 'Αποστολή Χρειάζεται Εθελοντές', 'Η αποστολή {{mission_title}} χρειάζεται εθελοντές!',
+                    ['mission_needs_members', 'Αποστολή Χρειάζεται Εθελοντές', 'Η αποστολή {{mission_title}} χρειάζεται εθελοντές!',
                      $wrap30('#dc2626', '&#128680;', 'Χρειάζονται Εθελοντές!',
                         $greet30.$p30('Η αποστολή "<strong>{{mission_title}}</strong>" χρειάζεται <strong>επειγόντως</strong> περισσότερους εθελοντές!').$info30('#dc2626', [['Αποστολή','{{mission_title}}'],['Ημερομηνία','{{mission_date}}'],['Θέσεις Ανοιχτές','{{available_spots}}'],['Συνολικές Θέσεις','{{total_spots}}']]).$alert30('#fef2f2','#fecaca','#dc2626','🚨 Η βοήθειά σας χρειάζεται! Κάθε εθελοντής κάνει τη διαφορά.').$p30('Αν ενδιαφέρεστε να συμμετέχετε, παρακαλούμε συνδεθείτε στο σύστημα και κάντε αίτηση συμμετοχής.').$btn30('#dc2626','Δηλώστε Συμμετοχή')),
                      'Αποστέλλεται για αποστολές χωρίς αρκετούς εθελοντές', '{{app_name}}, {{user_name}}, {{mission_title}}, {{mission_description}}, {{mission_url}}'],
@@ -1855,7 +1855,7 @@ function runSchemaMigrations(): void {
                     ['task_deadline_reminder', 'Υπενθύμιση Προθεσμίας', 'Όταν πλησιάζει η προθεσμία εργασίας', 1],
                     ['task_status_changed', 'Αλλαγή Κατάστασης Εργασίας', 'Όταν αλλάζει η κατάσταση εργασίας', 1],
                     ['task_subtask_completed', 'Ολοκλήρωση Υποεργασίας', 'Όταν ολοκληρώνεται υποεργασία', 1],
-                    ['mission_needs_volunteers', 'Αποστολή Χρειάζεται Εθελοντές', 'Όταν αποστολή πλησιάζει χωρίς αρκετούς εθελοντές', 1],
+                    ['mission_needs_members', 'Αποστολή Χρειάζεται Εθελοντές', 'Όταν αποστολή πλησιάζει χωρίς αρκετούς εθελοντές', 1],
                     ['shelf_expiry_reminder', 'Ειδοποίηση Λήξης Υλικών Ραφιού', 'Όταν υπάρχουν ληγμένα ή υπό λήξη υλικά ραφιού', 1],
                 ];
                 foreach ($notifCodes as $n) {
@@ -2123,7 +2123,7 @@ function runSchemaMigrations(): void {
                     'task_subtask_completed' => $wrap('#22c55e', '&#9989;', 'Ολοκλήρωση Υποεργασίας',
                         $greet.$p('Ο/Η <strong>{{completed_by}}</strong> ολοκλήρωσε μια υποεργασία στην εργασία "<strong>{{task_title}}</strong>".').$info('#22c55e', [['Υποεργασία','{{subtask_title}}'],['Εργασία','{{task_title}}']]).$alert('#f0fdf4','#bbf7d0','#166534','✅ Η υποεργασία έχει σημανθεί ως ολοκληρωμένη.').$p('Συνδεθείτε στο σύστημα για να δείτε την πρόοδο της εργασίας.').$btn('#22c55e','Δείτε την Εργασία')),
 
-                    'mission_needs_volunteers' => $wrap('#dc2626', '&#128680;', 'Χρειάζονται Εθελοντές!',
+                    'mission_needs_members' => $wrap('#dc2626', '&#128680;', 'Χρειάζονται Εθελοντές!',
                         $greet.$p('Η αποστολή "<strong>{{mission_title}}</strong>" χρειάζεται <strong>επειγόντως</strong> περισσότερους εθελοντές!').$info('#dc2626', [['Αποστολή','{{mission_title}}'],['Ημερομηνία','{{mission_date}}'],['Θέσεις Ανοιχτές','{{available_spots}}'],['Συνολικές Θέσεις','{{total_spots}}']]).$alert('#fef2f2','#fecaca','#dc2626','🚨 Η βοήθειά σας χρειάζεται! Κάθε εθελοντής κάνει τη διαφορά.').$p('Αν ενδιαφέρεστε να συμμετέχετε, παρακαλούμε συνδεθείτε στο σύστημα και κάντε αίτηση συμμετοχής.').$btn('#dc2626','Δηλώστε Συμμετοχή')),
 
                     'mission_reminder' => $wrap('#fd7e14', '&#128226;', 'Υπενθύμιση Αποστολής',
@@ -2198,7 +2198,7 @@ function runSchemaMigrations(): void {
                         $wrap('#22c55e', '&#9989;', 'Ολοκλήρωση Υποεργασίας',
                             $greet.$p('Ο/Η <strong>{{completed_by}}</strong> ολοκλήρωσε μια υποεργασία στην εργασία "<strong>{{task_title}}</strong>".').$info('#22c55e', [['Υποεργασία','{{subtask_title}}'],['Εργασία','{{task_title}}']]).$alert('#f0fdf4','#bbf7d0','#166534','✅ Η υποεργασία έχει σημανθεί ως ολοκληρωμένη.').$p('Συνδεθείτε στο σύστημα για να δείτε την πρόοδο της εργασίας.').$btn('#22c55e','Δείτε την Εργασία'))],
 
-                    'mission_needs_volunteers' => ['Αποστολή Χρειάζεται Εθελοντές', 'Επείγον: Χρειάζονται Εθελοντές - {{mission_title}}',
+                    'mission_needs_members' => ['Αποστολή Χρειάζεται Εθελοντές', 'Επείγον: Χρειάζονται Εθελοντές - {{mission_title}}',
                         $wrap('#dc2626', '&#128680;', 'Χρειάζονται Εθελοντές!',
                             $greet.$p('Η αποστολή "<strong>{{mission_title}}</strong>" χρειάζεται <strong>επειγόντως</strong> περισσότερους εθελοντές!').$info('#dc2626', [['Αποστολή','{{mission_title}}'],['Ημερομηνία','{{mission_date}}'],['Θέσεις Ανοιχτές','{{available_spots}}'],['Συνολικές Θέσεις','{{total_spots}}']]).$alert('#fef2f2','#fecaca','#dc2626','🚨 Η βοήθειά σας χρειάζεται! Κάθε εθελοντής κάνει τη διαφορά.').$p('Αν ενδιαφέρεστε να συμμετέχετε, παρακαλούμε συνδεθείτε στο σύστημα και κάντε αίτηση συμμετοχής.').$btn('#dc2626','Δηλώστε Συμμετοχή'))],
 
@@ -2335,7 +2335,7 @@ function runSchemaMigrations(): void {
                 $addIndex('users', 'idx_users_deleted_at', 'deleted_at');
                 // leaderboard ORDER BY total_points DESC
                 $addIndex('users', 'idx_users_total_points', 'total_points');
-                // Covering composite for volunteer listings (role + is_active + deleted_at)
+                // Covering composite for member listings (role + is_active + deleted_at)
                 $addIndex('users', 'idx_users_role_active_del', 'role, is_active, deleted_at');
                 // Admin pending-approval queue: WHERE approval_status='PENDING'
                 $addIndex('users', 'idx_users_approval_status', 'approval_status');
@@ -2347,8 +2347,8 @@ function runSchemaMigrations(): void {
                 $addIndex('participation_requests', 'idx_pr_attended', 'attended, shift_id');
                 // points_awarded + attended: "which attended rows haven't got points yet"
                 $addIndex('participation_requests', 'idx_pr_points_attended', 'points_awarded, attended');
-                // Per-volunteer attendance history
-                $addIndex('participation_requests', 'idx_pr_vol_attended', 'volunteer_id, attended');
+                // Per-member attendance history
+                $addIndex('participation_requests', 'idx_pr_vol_attended', 'member_id, attended');
 
                 // ── shifts ──────────────────────────────────────────────────
                 // end_time: past-shift queries (WHERE end_time < NOW()), cron, dashboard
@@ -2356,18 +2356,18 @@ function runSchemaMigrations(): void {
                 // Covering range composite for calendar API date-range scan
                 $addIndex('shifts', 'idx_shifts_time_mission', 'start_time, end_time, mission_id');
 
-                // ── volunteer_certificates ───────────────────────────────────
+                // ── member_certificates ───────────────────────────────────
                 // Cron expiry: WHERE expiry_date BETWEEN ? AND ? AND reminder_sent_30 = 0
-                $addIndex('volunteer_certificates', 'idx_vc_expiry', 'expiry_date');
-                $addIndex('volunteer_certificates', 'idx_vc_expiry_reminder', 'expiry_date, reminder_sent_30, reminder_sent_7');
+                $addIndex('member_certificates', 'idx_vc_expiry', 'expiry_date');
+                $addIndex('member_certificates', 'idx_vc_expiry_reminder', 'expiry_date, reminder_sent_30, reminder_sent_7');
 
                 // ── user_achievements ───────────────────────────────────────
                 // Achievement notification cron: WHERE notified = 0
                 $addIndex('user_achievements', 'idx_ua_notified', 'notified, earned_at');
 
-                // ── volunteer_points ────────────────────────────────────────
+                // ── member_points ────────────────────────────────────────
                 // Covering index for leaderboard SUM: user_id, points, created_at
-                $addIndex('volunteer_points', 'idx_vp_user_points', 'user_id, points, created_at');
+                $addIndex('member_points', 'idx_vp_user_points', 'user_id, points, created_at');
 
                 // ── notifications ───────────────────────────────────────────
                 // Extend to 3-column: user_id + read_at + created_at (unread count + date sort)
@@ -2437,7 +2437,7 @@ function runSchemaMigrations(): void {
 
                 // ── 2. Email templates (safe: ON DUPLICATE KEY touches nothing) ────
                 $tplHtml = [
-                    'complaint_submitted' => '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;"><div style="background:#dc2626;color:white;padding:20px;text-align:center;"><h1>&#9888; Νέο Παράπονο Εθελοντή</h1></div><div style="padding:30px;background:#fff;"><h2>Γεια σας {{admin_name}},</h2><p>Ο/Η εθελοντής <strong>{{volunteer_name}}</strong> υπέβαλε νέο παράπονο.</p><ul><li><strong>Θέμα:</strong> {{complaint_subject}}</li><li><strong>Κατηγορία:</strong> {{complaint_category}}</li><li><strong>Προτεραιότητα:</strong> {{complaint_priority}}</li><li><strong>Αποστολή:</strong> {{mission_title}}</li></ul><p>{{complaint_body}}</p><p style="text-align:center;"><a href="{{complaint_url}}" style="background:#dc2626;color:white;padding:12px 28px;text-decoration:none;border-radius:5px;">Δείτε το Παράπονο</a></p></div><div style="padding:12px;background:#f8f9fa;text-align:center;font-size:12px;color:#666;">{{app_name}}</div></div>',
+                    'complaint_submitted' => '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;"><div style="background:#dc2626;color:white;padding:20px;text-align:center;"><h1>&#9888; Νέο Παράπονο Εθελοντή</h1></div><div style="padding:30px;background:#fff;"><h2>Γεια σας {{admin_name}},</h2><p>Ο/Η εθελοντής <strong>{{member_name}}</strong> υπέβαλε νέο παράπονο.</p><ul><li><strong>Θέμα:</strong> {{complaint_subject}}</li><li><strong>Κατηγορία:</strong> {{complaint_category}}</li><li><strong>Προτεραιότητα:</strong> {{complaint_priority}}</li><li><strong>Αποστολή:</strong> {{mission_title}}</li></ul><p>{{complaint_body}}</p><p style="text-align:center;"><a href="{{complaint_url}}" style="background:#dc2626;color:white;padding:12px 28px;text-decoration:none;border-radius:5px;">Δείτε το Παράπονο</a></p></div><div style="padding:12px;background:#f8f9fa;text-align:center;font-size:12px;color:#666;">{{app_name}}</div></div>',
                     'complaint_response'  => '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;"><div style="background:#16a34a;color:white;padding:20px;text-align:center;"><h1>&#128172; Απάντηση στο Παράπονό σας</h1></div><div style="padding:30px;background:#fff;"><h2>Γεια σας {{user_name}},</h2><p>Λάβαμε το παράπονό σας και σας αποστέλλουμε την απάντησή μας.</p><ul><li><strong>Θέμα:</strong> {{complaint_subject}}</li><li><strong>Νέα Κατάσταση:</strong> {{complaint_status}}</li><li><strong>Απάντηση από:</strong> {{responder_name}}</li></ul><blockquote style="background:#f0fdf4;border-left:4px solid #16a34a;padding:12px 16px;">{{admin_response}}</blockquote><p style="text-align:center;"><a href="{{complaint_url}}" style="background:#16a34a;color:white;padding:12px 28px;text-decoration:none;border-radius:5px;">Δείτε το Παράπονο</a></p></div><div style="padding:12px;background:#f8f9fa;text-align:center;font-size:12px;color:#666;">{{app_name}}</div></div>',
                 ];
                 $tplMeta = [
@@ -2445,7 +2445,7 @@ function runSchemaMigrations(): void {
                         'name'    => 'Νέο Παράπονο (Admin)',
                         'subject' => 'Νέο παράπονο εθελοντή - {{complaint_subject}}',
                         'desc'    => 'Αποστέλλεται στους διαχειριστές όταν υποβάλλεται νέο παράπονο εθελοντή',
-                        'vars'    => '{{app_name}}, {{admin_name}}, {{volunteer_name}}, {{complaint_subject}}, {{complaint_category}}, {{complaint_priority}}, {{complaint_body}}, {{mission_title}}, {{complaint_url}}',
+                        'vars'    => '{{app_name}}, {{admin_name}}, {{member_name}}, {{complaint_subject}}, {{complaint_category}}, {{complaint_priority}}, {{complaint_body}}, {{mission_title}}, {{complaint_url}}',
                     ],
                     'complaint_response'  => [
                         'name'    => 'Απάντηση Παραπόνου',
@@ -2492,25 +2492,25 @@ function runSchemaMigrations(): void {
                     "CREATE TABLE IF NOT EXISTS shift_swap_requests (
                         id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                         participation_id  INT UNSIGNED NOT NULL,
-                        from_volunteer_id INT UNSIGNED NOT NULL,
-                        to_volunteer_id   INT UNSIGNED NOT NULL,
+                        from_member_id INT UNSIGNED NOT NULL,
+                        to_member_id   INT UNSIGNED NOT NULL,
                         shift_id          INT UNSIGNED NOT NULL,
                         message           TEXT NULL,
                         status ENUM('PENDING_RESPONSE','ACCEPTED','DECLINED','APPROVED','REJECTED','CANCELED')
                                NOT NULL DEFAULT 'PENDING_RESPONSE',
-                        to_volunteer_responded_at DATETIME NULL,
+                        to_member_responded_at DATETIME NULL,
                         decided_by INT UNSIGNED NULL,
                         decided_at DATETIME NULL,
                         admin_notes TEXT NULL,
                         created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                         updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                         INDEX idx_ssr_shift        (shift_id),
-                        INDEX idx_ssr_from_vol     (from_volunteer_id),
-                        INDEX idx_ssr_to_vol       (to_volunteer_id),
+                        INDEX idx_ssr_from_vol     (from_member_id),
+                        INDEX idx_ssr_to_vol       (to_member_id),
                         INDEX idx_ssr_status       (status),
                         FOREIGN KEY (participation_id)  REFERENCES participation_requests(id) ON DELETE CASCADE,
-                        FOREIGN KEY (from_volunteer_id) REFERENCES users(id) ON DELETE CASCADE,
-                        FOREIGN KEY (to_volunteer_id)   REFERENCES users(id) ON DELETE CASCADE,
+                        FOREIGN KEY (from_member_id) REFERENCES users(id) ON DELETE CASCADE,
+                        FOREIGN KEY (to_member_id)   REFERENCES users(id) ON DELETE CASCADE,
                         FOREIGN KEY (shift_id)          REFERENCES shifts(id) ON DELETE CASCADE,
                         FOREIGN KEY (decided_by)        REFERENCES users(id) ON DELETE SET NULL
                     )"
@@ -3670,7 +3670,7 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                      WHERE pr.status = ?
                        AND pr.attendance_confirmed_at IS NOT NULL
                        AND pr.attended = 0
-                       AND pr.attendance_confirmed_by = pr.volunteer_id",
+                       AND pr.attendance_confirmed_by = pr.member_id",
                     [PARTICIPATION_APPROVED]
                 );
             },
@@ -3691,7 +3691,7 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                      WHERE pr.status = ?
                        AND pr.attendance_confirmed_at IS NOT NULL
                        AND pr.attendance_confirmed_by IS NOT NULL
-                       AND pr.attendance_confirmed_by != pr.volunteer_id
+                       AND pr.attendance_confirmed_by != pr.member_id
                        AND pr.points_awarded = 0
                        AND pr.updated_at > pr.attendance_confirmed_at
                        AND pr.actual_hours = ROUND(TIMESTAMPDIFF(MINUTE, s.start_time, s.end_time) / 60, 2)
@@ -3715,7 +3715,7 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
 
         [
             'version'     => 56,
-            'description' => 'Add AFM field to volunteer users',
+            'description' => 'Add AFM field to member users',
             'up' => function () {
                 $cols = dbFetchAll("SHOW COLUMNS FROM users LIKE 'afm'");
                 if (empty($cols)) {
@@ -3746,20 +3746,20 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                 dbExecute(
                     "UPDATE users u
                      JOIN (
-                         SELECT pr.volunteer_id,
+                         SELECT pr.member_id,
                                 COALESCE(SUM(vp.points), 0) AS total_points,
                                 COALESCE(SUM(CASE WHEN vp.created_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01') THEN vp.points ELSE 0 END), 0) AS monthly_points
                          FROM participation_requests pr
                          JOIN shifts s ON s.id = pr.shift_id
-                         JOIN volunteer_points vp
-                           ON vp.user_id = pr.volunteer_id
+                         JOIN member_points vp
+                           ON vp.user_id = pr.member_id
                           AND vp.reason = ?
                           AND vp.pointable_type = ?
                           AND vp.pointable_id = s.id
                          WHERE pr.attended = 0
                            AND pr.points_awarded = 1
-                         GROUP BY pr.volunteer_id
-                     ) x ON x.volunteer_id = u.id
+                         GROUP BY pr.member_id
+                     ) x ON x.member_id = u.id
                      SET u.total_points = GREATEST(u.total_points - x.total_points, 0),
                          u.monthly_points = GREATEST(u.monthly_points - x.monthly_points, 0),
                          u.updated_at = NOW()",
@@ -3768,8 +3768,8 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
 
                 dbExecute(
                     "DELETE vp
-                     FROM volunteer_points vp
-                     JOIN participation_requests pr ON pr.volunteer_id = vp.user_id
+                     FROM member_points vp
+                     JOIN participation_requests pr ON pr.member_id = vp.user_id
                      JOIN shifts s ON s.id = pr.shift_id AND s.id = vp.pointable_id
                      WHERE pr.attended = 0
                        AND pr.points_awarded = 1
@@ -3854,7 +3854,7 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
 
         [
             'version'     => 59,
-            'description' => 'Downgrade legacy DEPARTMENT_ADMIN and SHIFT_LEADER users to VOLUNTEER role',
+            'description' => 'Downgrade legacy DEPARTMENT_ADMIN and SHIFT_LEADER users to MEMBER role',
             'up' => function () {
                 dbExecute(
                     "UPDATE users
@@ -3871,7 +3871,7 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                 $validSlugs = [
                     'ops_dashboard', 'attendance_manage',
                     'missions_view', 'missions_manage', 'shifts_manage', 'tasks_manage',
-                    'volunteers_view', 'volunteers_manage', 'inactive_volunteers',
+                    'members_view', 'members_manage', 'inactive_members',
                     'reports',
                     'complaints_view', 'complaints_manage',
                     'training_view', 'training_manage', 'questions_manage',
@@ -4104,7 +4104,7 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                 $table = dbFetchOne(
                     "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
                      WHERE TABLE_SCHEMA = DATABASE()
-                       AND TABLE_NAME = 'volunteer_pings'"
+                       AND TABLE_NAME = 'member_pings'"
                 );
                 if (!$table) {
                     return;
@@ -4113,12 +4113,12 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                 $columns = dbFetchAll(
                     "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
                      WHERE TABLE_SCHEMA = DATABASE()
-                       AND TABLE_NAME = 'volunteer_pings'"
+                       AND TABLE_NAME = 'member_pings'"
                 );
                 $existing = array_flip(array_column($columns, 'COLUMN_NAME'));
                 $addColumn = function (string $name, string $definition) use (&$existing) {
                     if (!isset($existing[$name])) {
-                        dbExecute("ALTER TABLE volunteer_pings ADD COLUMN {$definition}");
+                        dbExecute("ALTER TABLE member_pings ADD COLUMN {$definition}");
                         $existing[$name] = true;
                     }
                 };
@@ -4132,11 +4132,11 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                 $hasIndex = dbFetchOne(
                     "SELECT INDEX_NAME FROM INFORMATION_SCHEMA.STATISTICS
                      WHERE TABLE_SCHEMA = DATABASE()
-                       AND TABLE_NAME = 'volunteer_pings'
+                       AND TABLE_NAME = 'member_pings'
                        AND INDEX_NAME = 'idx_pings_user_time'"
                 );
                 if (!$hasIndex) {
-                    dbExecute("CREATE INDEX idx_pings_user_time ON volunteer_pings(user_id, created_at)");
+                    dbExecute("CREATE INDEX idx_pings_user_time ON member_pings(user_id, created_at)");
                 }
             },
         ],
@@ -4410,16 +4410,16 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
         ],
         [
             'version'     => 76,
-            'description' => 'Rename volunteer_* tables/columns/indexes to member_* (volunteer to member terminology rename)',
+            'description' => 'Rename member_* tables/columns/indexes to member_* (member to member terminology rename)',
             'up' => function () {
                 // ── Rename tables (RENAME TABLE auto-updates existing FK references) ──
                 $tableRenames = [
-                    'volunteer_certificates' => 'member_certificates',
-                    'volunteer_documents'    => 'member_documents',
-                    'volunteer_pings'        => 'member_pings',
-                    'volunteer_points'       => 'member_points',
-                    'volunteer_positions'    => 'member_positions',
-                    'volunteer_profiles'     => 'member_profiles',
+                    'member_certificates' => 'member_certificates',
+                    'member_documents'    => 'member_documents',
+                    'member_pings'        => 'member_pings',
+                    'member_points'       => 'member_points',
+                    'member_positions'    => 'member_positions',
+                    'member_profiles'     => 'member_profiles',
                 ];
                 foreach ($tableRenames as $old => $new) {
                     $exists = dbFetchValue(
@@ -4434,16 +4434,16 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
 
                 // ── Rename columns (CHANGE COLUMN auto-updates existing FKs on that column) ──
                 $columnRenames = [
-                    ['participation_requests', 'volunteer_id', "`member_id` int(10) unsigned NOT NULL"],
-                    ['shift_swap_requests', 'from_volunteer_id', "`from_member_id` int(10) unsigned NOT NULL"],
-                    ['shift_swap_requests', 'to_volunteer_id', "`to_member_id` int(10) unsigned NOT NULL"],
-                    ['shift_swap_requests', 'to_volunteer_responded_at', "`to_member_responded_at` datetime DEFAULT NULL"],
-                    ['users', 'volunteer_type', "`member_type` enum('TRAINEE_RESCUER','RESCUER') NOT NULL DEFAULT 'RESCUER'"],
-                    ['shifts', 'max_volunteers', "`max_members` int(11) DEFAULT 5"],
-                    ['shifts', 'min_volunteers', "`min_members` int(11) DEFAULT 1"],
-                    ['inventory_bookings', 'volunteer_name', "`member_name` varchar(255) DEFAULT NULL"],
-                    ['inventory_bookings', 'volunteer_phone', "`member_phone` varchar(20) DEFAULT NULL"],
-                    ['inventory_bookings', 'volunteer_email', "`member_email` varchar(255) DEFAULT NULL"],
+                    ['participation_requests', 'member_id', "`member_id` int(10) unsigned NOT NULL"],
+                    ['shift_swap_requests', 'from_member_id', "`from_member_id` int(10) unsigned NOT NULL"],
+                    ['shift_swap_requests', 'to_member_id', "`to_member_id` int(10) unsigned NOT NULL"],
+                    ['shift_swap_requests', 'to_member_responded_at', "`to_member_responded_at` datetime DEFAULT NULL"],
+                    ['users', 'member_type', "`member_type` enum('TRAINEE_RESCUER','RESCUER') NOT NULL DEFAULT 'RESCUER'"],
+                    ['shifts', 'max_members', "`max_members` int(11) DEFAULT 5"],
+                    ['shifts', 'min_members', "`min_members` int(11) DEFAULT 1"],
+                    ['inventory_bookings', 'member_name', "`member_name` varchar(255) DEFAULT NULL"],
+                    ['inventory_bookings', 'member_phone', "`member_phone` varchar(20) DEFAULT NULL"],
+                    ['inventory_bookings', 'member_email', "`member_email` varchar(255) DEFAULT NULL"],
                 ];
                 foreach ($columnRenames as [$table, $oldCol, $newColDef]) {
                     $exists = dbFetchValue(
@@ -4458,8 +4458,8 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
 
                 // ── Rename indexes (MariaDB 10.4 has no RENAME INDEX; drop + recreate) ──
                 $indexRenames = [
-                    ['participation_requests', 'idx_participation_volunteer', 'idx_participation_member', 'member_id'],
-                    ['users', 'idx_volunteer_type', 'idx_member_type', 'member_type'],
+                    ['participation_requests', 'idx_participation_member', 'idx_participation_member', 'member_id'],
+                    ['users', 'idx_member_type', 'idx_member_type', 'member_type'],
                 ];
                 foreach ($indexRenames as [$table, $oldIdx, $newIdx, $column]) {
                     $exists = dbFetchValue(

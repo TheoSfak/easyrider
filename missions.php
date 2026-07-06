@@ -130,8 +130,8 @@ $missions = dbFetchAll(
             mt.name as type_name, mt.color as type_color, mt.icon as type_icon,
             m.recurrence_id,
             COUNT(DISTINCT sh.id) as shift_count,
-            COUNT(DISTINCT CASE WHEN pr.status = '" . PARTICIPATION_APPROVED . "' THEN pr.id END) as volunteer_count,
-            (SELECT COALESCE(SUM(s2.max_volunteers), 0) FROM shifts s2 WHERE s2.mission_id = m.id) as max_volunteers
+            COUNT(DISTINCT CASE WHEN pr.status = '" . PARTICIPATION_APPROVED . "' THEN pr.id END) as member_count,
+            (SELECT COALESCE(SUM(s2.max_members), 0) FROM shifts s2 WHERE s2.mission_id = m.id) as max_members
      FROM missions m
      LEFT JOIN users u ON m.created_by = u.id
      LEFT JOIN mission_types mt ON m.mission_type_id = mt.id
@@ -144,7 +144,7 @@ $missions = dbFetchAll(
     $params
 );
 
-// Get mission types for filter (TEP hidden from regular volunteers)
+// Get mission types for filter (TEP hidden from regular members)
 $tepMissionTypeId = getTepMissionTypeId();
 if (canSeeTep()) {
     $missionTypesFilter = dbFetchAll("SELECT id, name FROM mission_types WHERE is_active = 1 ORDER BY sort_order");
@@ -321,15 +321,15 @@ include __DIR__ . '/includes/header.php';
                                     <span class="text-muted"> · <?= formatDateTime($mission['start_datetime'], 'H:i') ?></span>
                                 </td>
                                 <td><span class="badge bg-secondary"><?= $mission['shift_count'] ?></span></td>
-                                <td><span class="badge bg-info"><?= $mission['volunteer_count'] ?></span></td>
+                                <td><span class="badge bg-info"><?= $mission['member_count'] ?></span></td>
                                 <td style="min-width: 140px;">
-                                    <?php if ($mission['status'] === STATUS_OPEN && $mission['max_volunteers'] > 0):
-                                        $vPct = min(100, round(($mission['volunteer_count'] / $mission['max_volunteers']) * 100));
+                                    <?php if ($mission['status'] === STATUS_OPEN && $mission['max_members'] > 0):
+                                        $vPct = min(100, round(($mission['member_count'] / $mission['max_members']) * 100));
                                         $vColor = $vPct >= 100 ? 'success' : ($vPct >= 50 ? 'warning' : 'danger');
                                     ?>
                                         <div class="text-center">
                                             <span class="vol-pill vol-pill-<?= $vColor ?>" style="--fill: <?= $vPct ?>%;">
-                                                <span class="vol-num"><?= $mission['volunteer_count'] ?>/<?= $mission['max_volunteers'] ?></span>
+                                                <span class="vol-num"><?= $mission['member_count'] ?>/<?= $mission['max_members'] ?></span>
                                                 <i class="bi bi-people-fill"></i>
                                             </span>
                                             <div class="vol-label justify-content-center text-<?= $vColor ?>">
@@ -338,7 +338,7 @@ include __DIR__ . '/includes/header.php';
                                                 <?php elseif ($vPct == 0): ?>
                                                     <i class="bi bi-exclamation-triangle-fill"></i> Χρειάζονται μέλη
                                                 <?php else: ?>
-                                                    <i class="bi bi-hourglass-split"></i> Απομένουν <?= $mission['max_volunteers'] - $mission['volunteer_count'] ?>
+                                                    <i class="bi bi-hourglass-split"></i> Απομένουν <?= $mission['max_members'] - $mission['member_count'] ?>
                                                 <?php endif; ?>
                                             </div>
                                         </div>
@@ -439,13 +439,13 @@ include __DIR__ . '/includes/header.php';
                                     <span class="text-muted ms-1"><?= formatDateTime($mission['start_datetime'], 'H:i') ?></span>
                                 </small>
                             </div>
-                            <?php if ($mission['status'] === STATUS_OPEN && $mission['max_volunteers'] > 0):
-                                $mPct = min(100, round(($mission['volunteer_count'] / $mission['max_volunteers']) * 100));
+                            <?php if ($mission['status'] === STATUS_OPEN && $mission['max_members'] > 0):
+                                $mPct = min(100, round(($mission['member_count'] / $mission['max_members']) * 100));
                                 $mColor = $mPct >= 100 ? 'success' : ($mPct >= 50 ? 'warning' : 'danger');
                             ?>
                             <div class="mobile-card-row">
                                 <span class="vol-pill vol-pill-<?= $mColor ?>" style="--fill: <?= $mPct ?>%;">
-                                    <span class="vol-num"><?= $mission['volunteer_count'] ?>/<?= $mission['max_volunteers'] ?></span>
+                                    <span class="vol-num"><?= $mission['member_count'] ?>/<?= $mission['max_members'] ?></span>
                                     <i class="bi bi-people-fill"></i>
                                 </span>
                                 <span class="vol-label d-inline-flex ms-2 text-<?= $mColor ?>">
@@ -454,7 +454,7 @@ include __DIR__ . '/includes/header.php';
                                     <?php elseif ($mPct == 0): ?>
                                         <i class="bi bi-exclamation-triangle-fill"></i> Κενό
                                     <?php else: ?>
-                                        <i class="bi bi-hourglass-split"></i> -<?= $mission['max_volunteers'] - $mission['volunteer_count'] ?>
+                                        <i class="bi bi-hourglass-split"></i> -<?= $mission['max_members'] - $mission['member_count'] ?>
                                     <?php endif; ?>
                                 </span>
                             </div>
@@ -469,7 +469,7 @@ include __DIR__ . '/includes/header.php';
                                 <small>
                                     <span class="badge bg-secondary"><?= $mission['shift_count'] ?></span>
                                     <span class="text-muted ms-1">σκέλη</span>
-                                    <span class="badge bg-info ms-2"><?= $mission['volunteer_count'] ?></span>
+                                    <span class="badge bg-info ms-2"><?= $mission['member_count'] ?></span>
                                     <span class="text-muted ms-1">μέλη</span>
                                 </small>
                             </div>

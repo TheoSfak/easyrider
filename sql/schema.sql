@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS `users` (
     `registry_ggpp` VARCHAR(50) NULL,
     `profile_photo` VARCHAR(255) NULL DEFAULT NULL,
     `role` ENUM('SYSTEM_ADMIN', 'DEPARTMENT_ADMIN', 'SHIFT_LEADER', 'VOLUNTEER') DEFAULT 'VOLUNTEER',
-    `volunteer_type` ENUM('TRAINEE_RESCUER','RESCUER') NOT NULL DEFAULT 'RESCUER',
+    `member_type` ENUM('TRAINEE_RESCUER','RESCUER') NOT NULL DEFAULT 'RESCUER',
     `position_id` INT UNSIGNED NULL,
     `cohort_year` YEAR NULL COMMENT 'Χρονιά σειράς δοκίμων διασωστών',
     `department_id` INT UNSIGNED NULL,
@@ -63,9 +63,9 @@ CREATE TABLE IF NOT EXISTS `users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================
--- VOLUNTEER PROFILES TABLE
+-- MEMBER PROFILES TABLE
 -- =============================================
-CREATE TABLE IF NOT EXISTS `volunteer_profiles` (
+CREATE TABLE IF NOT EXISTS `member_profiles` (
     `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `user_id` INT UNSIGNED NOT NULL UNIQUE,
     `bio` TEXT NULL,
@@ -249,8 +249,8 @@ CREATE TABLE IF NOT EXISTS `shifts` (
     `mission_id` INT UNSIGNED NOT NULL,
     `start_time` DATETIME NOT NULL,
     `end_time` DATETIME NOT NULL,
-    `max_volunteers` INT DEFAULT 5,
-    `min_volunteers` INT DEFAULT 1,
+    `max_members` INT DEFAULT 5,
+    `min_members` INT DEFAULT 1,
     `notes` TEXT NULL,
     `qr_token` VARCHAR(64) NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -267,7 +267,7 @@ CREATE TABLE IF NOT EXISTS `shifts` (
 CREATE TABLE IF NOT EXISTS `participation_requests` (
     `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `shift_id` INT UNSIGNED NOT NULL,
-    `volunteer_id` INT UNSIGNED NOT NULL,
+    `member_id` INT UNSIGNED NOT NULL,
     `status` ENUM('PENDING', 'APPROVED', 'REJECTED', 'CANCELED_BY_USER', 'CANCELED_BY_ADMIN') DEFAULT 'PENDING',
     `notes` TEXT NULL,
     `rejection_reason` TEXT NULL,
@@ -286,12 +286,12 @@ CREATE TABLE IF NOT EXISTS `participation_requests` (
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (`shift_id`) REFERENCES `shifts`(`id`) ON DELETE CASCADE,
-    FOREIGN KEY (`volunteer_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+    FOREIGN KEY (`member_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`decided_by`) REFERENCES `users`(`id`) ON DELETE SET NULL,
     FOREIGN KEY (`attendance_confirmed_by`) REFERENCES `users`(`id`) ON DELETE SET NULL,
-    UNIQUE KEY `unique_participation` (`shift_id`, `volunteer_id`),
+    UNIQUE KEY `unique_participation` (`shift_id`, `member_id`),
     INDEX `idx_participation_status` (`status`),
-    INDEX `idx_participation_volunteer` (`volunteer_id`)
+    INDEX `idx_participation_member` (`member_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================
@@ -324,9 +324,9 @@ CREATE TABLE IF NOT EXISTS `user_achievements` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================
--- VOLUNTEER POINTS TABLE
+-- MEMBER POINTS TABLE
 -- =============================================
-CREATE TABLE IF NOT EXISTS `volunteer_points` (
+CREATE TABLE IF NOT EXISTS `member_points` (
     `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `user_id` INT UNSIGNED NOT NULL,
     `points` INT NOT NULL,
@@ -452,9 +452,9 @@ CREATE TABLE IF NOT EXISTS `user_notification_preferences` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================
--- VOLUNTEER DOCUMENTS TABLE
+-- MEMBER DOCUMENTS TABLE
 -- =============================================
-CREATE TABLE IF NOT EXISTS `volunteer_documents` (
+CREATE TABLE IF NOT EXISTS `member_documents` (
     `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `user_id` INT UNSIGNED NOT NULL,
     `label` VARCHAR(255) NOT NULL,
@@ -470,9 +470,9 @@ CREATE TABLE IF NOT EXISTS `volunteer_documents` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================
--- VOLUNTEER POSITIONS TABLE
+-- MEMBER POSITIONS TABLE
 -- =============================================
-CREATE TABLE IF NOT EXISTS `volunteer_positions` (
+CREATE TABLE IF NOT EXISTS `member_positions` (
     `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `name` VARCHAR(100) NOT NULL,
     `color` VARCHAR(20) DEFAULT 'secondary',
@@ -523,9 +523,9 @@ CREATE TABLE IF NOT EXISTS `certificate_types` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================
--- VOLUNTEER CERTIFICATES TABLE
+-- MEMBER CERTIFICATES TABLE
 -- =============================================
-CREATE TABLE IF NOT EXISTS `volunteer_certificates` (
+CREATE TABLE IF NOT EXISTS `member_certificates` (
     `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `user_id` INT UNSIGNED NOT NULL,
     `certificate_type_id` INT UNSIGNED NOT NULL,
@@ -543,7 +543,7 @@ CREATE TABLE IF NOT EXISTS `volunteer_certificates` (
     UNIQUE KEY `uq_user_cert` (`user_id`, `certificate_type_id`),
     FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
     FOREIGN KEY (`certificate_type_id`) REFERENCES `certificate_types`(`id`) ON DELETE RESTRICT,
-    FOREIGN KEY (`document_id`) REFERENCES `volunteer_documents`(`id`) ON DELETE SET NULL,
+    FOREIGN KEY (`document_id`) REFERENCES `member_documents`(`id`) ON DELETE SET NULL,
     FOREIGN KEY (`created_by`) REFERENCES `users`(`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -810,7 +810,7 @@ INSERT INTO `email_templates` (`code`, `name`, `subject`, `body_html`, `descript
 'Αποστέλλεται όταν ο εθελοντής κερδίζει πόντους',
 '{{app_name}}, {{user_name}}, {{points}}, {{mission_title}}, {{shift_date}}, {{total_points}}'),
 
-('admin_added_volunteer', 'Προσθήκη από Διαχειριστή', 'Ο διαχειριστής σας τοποθέτησε απευθείας σε βάρδια',
+('admin_added_member', 'Προσθήκη από Διαχειριστή', 'Ο διαχειριστής σας τοποθέτησε απευθείας σε βάρδια',
 '<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
     <div style="background: #2c3e50; color: white; padding: 20px; text-align: center;">
         <h1>📋 Τοποθέτηση σε Βάρδια</h1>
@@ -881,7 +881,7 @@ INSERT INTO `email_templates` (`code`, `name`, `subject`, `body_html`, `descript
 'Αποστέλλεται όταν ολοκληρώνεται υποεργασία',
 'user_name, task_title, subtask_title, completed_by'),
 
-('mission_needs_volunteers', 'Αποστολή Χρειάζεται Εθελοντές', 'Η αποστολή {{mission_title}} χρειάζεται εθελοντές!',
+('mission_needs_members', 'Αποστολή Χρειάζεται Εθελοντές', 'Η αποστολή {{mission_title}} χρειάζεται εθελοντές!',
 '<div style="background:#eef2f7;padding:28px 0 40px;font-family:Helvetica Neue,Arial,sans-serif;"><div style="max-width:600px;margin:0 auto;"><div style="background:#dc2626;padding:30px 40px 26px;border-radius:12px 12px 0 0;text-align:center;">{{logo_html}}<p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">{{app_name}}</p><div style="font-size:36px;line-height:1;margin:0 0 8px;">&#128680;</div><h1 style="color:#fff;margin:0;font-size:23px;font-weight:700;line-height:1.3;">Χρειάζονται Εθελοντές!</h1></div><div style="background:#fff;padding:36px 40px 40px;border-radius:0 0 12px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.07);"><h2 style="color:#1f2937;font-size:18px;font-weight:700;margin:0 0 14px;">Γεια σας {{user_name}},</h2><p style="color:#4b5563;line-height:1.65;font-size:15px;margin:0 0 14px;">Η αποστολή "<strong>{{mission_title}}</strong>" χρειάζεται <strong>επειγόντως</strong> περισσότερους εθελοντές!</p><div style="background:#f9fafb;border-left:4px solid #dc2626;padding:2px 20px;border-radius:0 8px 8px 0;margin:20px 0;"><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Αποστολή:</span><span style="color:#111827;font-weight:600;">{{mission_title}}</span></div><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Ημερομηνία:</span><span style="color:#111827;font-weight:600;">{{mission_date}}</span></div><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Θέσεις Ανοιχτές:</span><span style="color:#111827;font-weight:600;">{{available_spots}}</span></div><div style="padding:7px 0;font-size:14px;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Συνολικές Θέσεις:</span><span style="color:#111827;font-weight:600;">{{total_spots}}</span></div></div><div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:14px 20px;margin:20px 0;"><p style="color:#dc2626;font-size:14px;font-weight:600;margin:0;">🚨 Η βοήθειά σας χρειάζεται! Κάθε εθελοντής κάνει τη διαφορά.</p></div><p style="color:#4b5563;line-height:1.65;font-size:15px;margin:0 0 14px;">Αν ενδιαφέρεστε να συμμετέχετε, παρακαλούμε συνδεθείτε στο σύστημα και κάντε αίτηση συμμετοχής.</p><div style="text-align:center;margin:28px 0 4px;"><a href="{{login_url}}" style="background:#dc2626;color:#ffffff;text-decoration:none;padding:13px 38px;border-radius:8px;font-size:15px;font-weight:700;display:inline-block;letter-spacing:0.3px;">Δηλώστε Συμμετοχή</a></div></div><div style="text-align:center;padding:18px 0 0;color:#9ca3af;font-size:12px;line-height:1.9;"><p style="margin:0;"><strong style="color:#6b7280;">{{app_name}}</strong> &bull; Σύστημα Διαχείρισης Εθελοντών</p><p style="margin:0;">Αυτό το μήνυμα στάλθηκε αυτόματα από το σύστημα.</p></div></div></div>',
 'Αποστέλλεται όταν μια αποστολή πλησιάζει και δεν έχει αρκετούς εθελοντές',
 '{{app_name}}, {{user_name}}, {{mission_title}}, {{mission_description}}, {{mission_url}}'),
@@ -897,9 +897,9 @@ INSERT INTO `email_templates` (`code`, `name`, `subject`, `body_html`, `descript
 '{{app_name}}, {{user_name}}, {{mission_title}}, {{mission_description}}, {{mission_url}}'),
 
 ('complaint_submitted', 'Νέο Παράπονο (Admin)', 'Νέο παράπονο εθελοντή - {{complaint_subject}}',
-'<div style="background:#eef2f7;padding:28px 0 40px;font-family:Helvetica Neue,Arial,sans-serif;"><div style="max-width:600px;margin:0 auto;"><div style="background:#dc2626;padding:30px 40px 26px;border-radius:12px 12px 0 0;text-align:center;">{{logo_html}}<p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">{{app_name}}</p><div style="font-size:36px;line-height:1;margin:0 0 8px;">&#9888;&#65039;</div><h1 style="color:#fff;margin:0;font-size:23px;font-weight:700;line-height:1.3;">Νέο Παράπονο Εθελοντή</h1></div><div style="background:#fff;padding:36px 40px 40px;border-radius:0 0 12px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.07);"><h2 style="color:#1f2937;font-size:18px;font-weight:700;margin:0 0 14px;">Γεια σας {{admin_name}},</h2><p style="color:#4b5563;line-height:1.65;font-size:15px;margin:0 0 14px;">Ο/Η εθελοντής <strong>{{volunteer_name}}</strong> υπέβαλε νέο παράπονο και χρειάζεται εξέταση.</p><div style="background:#f9fafb;border-left:4px solid #dc2626;padding:2px 20px;border-radius:0 8px 8px 0;margin:20px 0;"><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Εθελοντής:</span><span style="color:#111827;font-weight:600;">{{volunteer_name}}</span></div><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Θέμα:</span><span style="color:#111827;font-weight:600;">{{complaint_subject}}</span></div><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Κατηγορία:</span><span style="color:#111827;font-weight:600;">{{complaint_category}}</span></div><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Προτεραιότητα:</span><span style="color:#111827;font-weight:600;">{{complaint_priority}}</span></div><div style="padding:7px 0;font-size:14px;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Σχετική Αποστολή:</span><span style="color:#111827;font-weight:600;">{{mission_title}}</span></div></div><div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:16px 20px;margin:20px 0;"><p style="color:#6b7280;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;">Κείμενο Παραπόνου:</p><p style="color:#1f2937;font-size:14px;line-height:1.65;margin:0;">{{complaint_body}}</p></div><div style="text-align:center;margin:28px 0 4px;"><a href="{{complaint_url}}" style="background:#dc2626;color:#ffffff;text-decoration:none;padding:13px 38px;border-radius:8px;font-size:15px;font-weight:700;display:inline-block;letter-spacing:0.3px;">Δείτε το Παράπονο</a></div></div><div style="text-align:center;padding:18px 0 0;color:#9ca3af;font-size:12px;line-height:1.9;"><p style="margin:0;"><strong style="color:#6b7280;">{{app_name}}</strong> &bull; Σύστημα Διαχείρισης Εθελοντών</p><p style="margin:0;">Αυτό το μήνυμα στάλθηκε αυτόματα από το σύστημα.</p></div></div></div>',
+'<div style="background:#eef2f7;padding:28px 0 40px;font-family:Helvetica Neue,Arial,sans-serif;"><div style="max-width:600px;margin:0 auto;"><div style="background:#dc2626;padding:30px 40px 26px;border-radius:12px 12px 0 0;text-align:center;">{{logo_html}}<p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">{{app_name}}</p><div style="font-size:36px;line-height:1;margin:0 0 8px;">&#9888;&#65039;</div><h1 style="color:#fff;margin:0;font-size:23px;font-weight:700;line-height:1.3;">Νέο Παράπονο Εθελοντή</h1></div><div style="background:#fff;padding:36px 40px 40px;border-radius:0 0 12px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.07);"><h2 style="color:#1f2937;font-size:18px;font-weight:700;margin:0 0 14px;">Γεια σας {{admin_name}},</h2><p style="color:#4b5563;line-height:1.65;font-size:15px;margin:0 0 14px;">Ο/Η εθελοντής <strong>{{member_name}}</strong> υπέβαλε νέο παράπονο και χρειάζεται εξέταση.</p><div style="background:#f9fafb;border-left:4px solid #dc2626;padding:2px 20px;border-radius:0 8px 8px 0;margin:20px 0;"><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Εθελοντής:</span><span style="color:#111827;font-weight:600;">{{member_name}}</span></div><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Θέμα:</span><span style="color:#111827;font-weight:600;">{{complaint_subject}}</span></div><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Κατηγορία:</span><span style="color:#111827;font-weight:600;">{{complaint_category}}</span></div><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Προτεραιότητα:</span><span style="color:#111827;font-weight:600;">{{complaint_priority}}</span></div><div style="padding:7px 0;font-size:14px;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Σχετική Αποστολή:</span><span style="color:#111827;font-weight:600;">{{mission_title}}</span></div></div><div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:16px 20px;margin:20px 0;"><p style="color:#6b7280;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;">Κείμενο Παραπόνου:</p><p style="color:#1f2937;font-size:14px;line-height:1.65;margin:0;">{{complaint_body}}</p></div><div style="text-align:center;margin:28px 0 4px;"><a href="{{complaint_url}}" style="background:#dc2626;color:#ffffff;text-decoration:none;padding:13px 38px;border-radius:8px;font-size:15px;font-weight:700;display:inline-block;letter-spacing:0.3px;">Δείτε το Παράπονο</a></div></div><div style="text-align:center;padding:18px 0 0;color:#9ca3af;font-size:12px;line-height:1.9;"><p style="margin:0;"><strong style="color:#6b7280;">{{app_name}}</strong> &bull; Σύστημα Διαχείρισης Εθελοντών</p><p style="margin:0;">Αυτό το μήνυμα στάλθηκε αυτόματα από το σύστημα.</p></div></div></div>',
 'Αποστέλλεται στους διαχειριστές όταν υποβάλλεται νέο παράπονο εθελοντή',
-'{{app_name}}, {{admin_name}}, {{volunteer_name}}, {{complaint_subject}}, {{complaint_category}}, {{complaint_priority}}, {{complaint_body}}, {{mission_title}}, {{complaint_url}}'),
+'{{app_name}}, {{admin_name}}, {{member_name}}, {{complaint_subject}}, {{complaint_category}}, {{complaint_priority}}, {{complaint_body}}, {{mission_title}}, {{complaint_url}}'),
 
 ('complaint_response', 'Απάντηση Παραπόνου', 'Απάντηση στο παράπονό σας: {{complaint_subject}}',
 '<div style="background:#eef2f7;padding:28px 0 40px;font-family:Helvetica Neue,Arial,sans-serif;"><div style="max-width:600px;margin:0 auto;"><div style="background:#16a34a;padding:30px 40px 26px;border-radius:12px 12px 0 0;text-align:center;">{{logo_html}}<p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">{{app_name}}</p><div style="font-size:36px;line-height:1;margin:0 0 8px;">&#128172;</div><h1 style="color:#fff;margin:0;font-size:23px;font-weight:700;line-height:1.3;">Απάντηση στο Παράπονό σας</h1></div><div style="background:#fff;padding:36px 40px 40px;border-radius:0 0 12px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.07);"><h2 style="color:#1f2937;font-size:18px;font-weight:700;margin:0 0 14px;">Γεια σας {{user_name}},</h2><p style="color:#4b5563;line-height:1.65;font-size:15px;margin:0 0 14px;">Η διοίκηση εξέτασε το παράπονό σας και σας στέλνει την παρακάτω απάντηση.</p><div style="background:#f9fafb;border-left:4px solid #16a34a;padding:2px 20px;border-radius:0 8px 8px 0;margin:20px 0;"><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Θέμα Παραπόνου:</span><span style="color:#111827;font-weight:600;">{{complaint_subject}}</span></div><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Νέα Κατάσταση:</span><span style="color:#111827;font-weight:600;">{{complaint_status}}</span></div><div style="padding:7px 0;font-size:14px;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Απάντηση από:</span><span style="color:#111827;font-weight:600;">{{responder_name}}</span></div></div><div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px 20px;margin:20px 0;"><p style="color:#6b7280;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;">Απάντηση Διοίκησης:</p><p style="color:#1f2937;font-size:14px;line-height:1.65;margin:0;">{{admin_response}}</p></div><div style="text-align:center;margin:28px 0 4px;"><a href="{{complaint_url}}" style="background:#16a34a;color:#ffffff;text-decoration:none;padding:13px 38px;border-radius:8px;font-size:15px;font-weight:700;display:inline-block;letter-spacing:0.3px;">Δείτε το Παράπονο</a></div></div><div style="text-align:center;padding:18px 0 0;color:#9ca3af;font-size:12px;line-height:1.9;"><p style="margin:0;"><strong style="color:#6b7280;">{{app_name}}</strong> &bull; Σύστημα Διαχείρισης Εθελοντών</p><p style="margin:0;">Αυτό το μήνυμα στάλθηκε αυτόματα από το σύστημα.</p></div></div></div>',
@@ -916,14 +916,14 @@ INSERT INTO `notification_settings` (`code`, `name`, `description`, `email_enabl
 ('shift_canceled', 'Ακύρωση Βάρδιας', 'Όταν ακυρώνεται βάρδια', 1, (SELECT id FROM email_templates WHERE code = 'shift_canceled')),
 ('points_earned', 'Κέρδος Πόντων', 'Όταν ο εθελοντής κερδίζει πόντους', 0, (SELECT id FROM email_templates WHERE code = 'points_earned')),
 ('welcome', 'Καλωσόρισμα', 'Μετά την εγγραφή νέου χρήστη', 1, (SELECT id FROM email_templates WHERE code = 'welcome')),
-('admin_added_volunteer', 'Προσθήκη από Διαχειριστή', 'Όταν ο διαχειριστής προσθέτει εθελοντή απευθείας σε βάρδια', 1, (SELECT id FROM email_templates WHERE code = 'admin_added_volunteer')),
+('admin_added_member', 'Προσθήκη από Διαχειριστή', 'Όταν ο διαχειριστής προσθέτει εθελοντή απευθείας σε βάρδια', 1, (SELECT id FROM email_templates WHERE code = 'admin_added_member')),
 ('certificate_expiry_reminder', 'Υπενθύμιση Λήξης Πιστοποιητικού', 'Όταν πλησιάζει η λήξη ενός πιστοποιητικού του εθελοντή', 1, (SELECT id FROM email_templates WHERE code = 'certificate_expiry_reminder')),
 ('task_assigned', 'Ανάθεση Εργασίας', 'Όταν ανατίθεται μια εργασία σε εθελοντή', 1, (SELECT id FROM email_templates WHERE code = 'task_assigned')),
 ('task_comment', 'Σχόλιο σε Εργασία', 'Όταν προστίθεται σχόλιο σε εργασία', 1, (SELECT id FROM email_templates WHERE code = 'task_comment')),
 ('task_deadline_reminder', 'Υπενθύμιση Προθεσμίας', 'Όταν πλησιάζει η προθεσμία εργασίας (24h πριν)', 1, (SELECT id FROM email_templates WHERE code = 'task_deadline_reminder')),
 ('task_status_changed', 'Αλλαγή Κατάστασης Εργασίας', 'Όταν αλλάζει η κατάσταση μιας εργασίας', 1, (SELECT id FROM email_templates WHERE code = 'task_status_changed')),
 ('task_subtask_completed', 'Ολοκλήρωση Υποεργασίας', 'Όταν ολοκληρώνεται μια υποεργασία', 1, (SELECT id FROM email_templates WHERE code = 'task_subtask_completed')),
-('mission_needs_volunteers', 'Αποστολή Χρειάζεται Εθελοντές', 'Όταν μια αποστολή πλησιάζει και δεν έχει αρκετούς εθελοντές', 1, (SELECT id FROM email_templates WHERE code = 'mission_needs_volunteers')),
+('mission_needs_members', 'Αποστολή Χρειάζεται Εθελοντές', 'Όταν μια αποστολή πλησιάζει και δεν έχει αρκετούς εθελοντές', 1, (SELECT id FROM email_templates WHERE code = 'mission_needs_members')),
 ('shelf_expiry_reminder', 'Ειδοποίηση Λήξης Υλικών Ραφιού', 'Όταν υπάρχουν ληγμένα ή υπό λήξη υλικά ραφιού', 1, (SELECT id FROM email_templates WHERE code = 'shelf_expiry_reminder')),
 ('mission_reminder', 'Υπενθύμιση Αποστολής', 'Όταν στέλνεται υπενθύμιση για ανοιχτή αποστολή', 1, (SELECT id FROM email_templates WHERE code = 'mission_reminder')),
 ('complaint_submitted', 'Νέο Παράπονο (Admin)', 'Ειδοποίηση διαχειριστή όταν υποβάλλεται νέο παράπονο', 1, (SELECT id FROM email_templates WHERE code = 'complaint_submitted')),
@@ -1007,8 +1007,8 @@ INSERT INTO `settings` (`setting_key`, `setting_value`) VALUES
 ('shelf_expiry_reminder_days', '30')
 ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value);
 
--- Default volunteer positions
-INSERT INTO `volunteer_positions` (`id`, `name`, `color`, `icon`, `sort_order`) VALUES
+-- Default member positions
+INSERT INTO `member_positions` (`id`, `name`, `color`, `icon`, `sort_order`) VALUES
 (1, 'Υπεύθυνος Τμήματος',   'primary', 'bi-person-lines-fill', 1),
 (2, 'Υπεύθυνος Γραμματείας','info',    'bi-envelope-paper',    2),
 (3, 'Εκπαιδευτής',          'success', 'bi-mortarboard',       3),
@@ -1353,9 +1353,9 @@ CREATE TABLE IF NOT EXISTS `email_logs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- =============================================
--- VOLUNTEER GPS PINGS
+-- MEMBER GPS PINGS
 -- =============================================
-CREATE TABLE IF NOT EXISTS `volunteer_pings` (
+CREATE TABLE IF NOT EXISTS `member_pings` (
     `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `user_id` INT UNSIGNED NOT NULL,
     `shift_id` INT UNSIGNED NOT NULL,
@@ -1521,9 +1521,9 @@ CREATE TABLE IF NOT EXISTS `inventory_bookings` (
     `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     `item_id` INT UNSIGNED NOT NULL,
     `user_id` INT UNSIGNED NOT NULL,
-    `volunteer_name` VARCHAR(255) NULL,
-    `volunteer_phone` VARCHAR(20) NULL,
-    `volunteer_email` VARCHAR(255) NULL,
+    `member_name` VARCHAR(255) NULL,
+    `member_phone` VARCHAR(20) NULL,
+    `member_email` VARCHAR(255) NULL,
     `mission_location` VARCHAR(500) NULL,
     `booking_type` ENUM('single','bulk') DEFAULT 'single',
     `expected_return_date` DATE NULL,

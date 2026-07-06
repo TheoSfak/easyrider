@@ -1,39 +1,39 @@
 <?php
 /**
- * VolunteerOps - Volunteer Document Download
- * Serves volunteer documents securely (admins only)
+ * VolunteerOps - Member Document Download
+ * Serves member documents securely (admins only)
  */
 
 require_once __DIR__ . '/bootstrap.php';
-requirePermission('volunteers_view');
+requirePermission('members_view');
 
 $docId      = (int) get('id');
-$volunteerId = (int) get('volunteer');
+$memberId = (int) get('member');
 
-if (!$docId || !$volunteerId) {
+if (!$docId || !$memberId) {
     setFlash('error', 'Μη έγκυρο αίτημα.');
-    redirect('volunteers.php');
+    redirect('members.php');
 }
 
 $doc = dbFetchOne(
-    "SELECT * FROM volunteer_documents WHERE id = ? AND user_id = ?",
-    [$docId, $volunteerId]
+    "SELECT * FROM member_documents WHERE id = ? AND user_id = ?",
+    [$docId, $memberId]
 );
 
 if (!$doc) {
     setFlash('error', 'Το αρχείο δεν βρέθηκε.');
-    redirect('volunteer-view.php?id=' . $volunteerId);
+    redirect('member-view.php?id=' . $memberId);
 }
 
-$filePath = __DIR__ . '/uploads/volunteer-docs/' . $doc['stored_name'];
+$filePath = __DIR__ . '/uploads/member-docs/' . $doc['stored_name'];
 
 if (!file_exists($filePath)) {
     setFlash('error', 'Το αρχείο δεν βρέθηκε στο σύστημα.');
-    redirect('volunteer-view.php?id=' . $volunteerId);
+    redirect('member-view.php?id=' . $memberId);
 }
 
 // Log the access
-logAudit('download_document', 'volunteer_documents', $docId, $doc['label']);
+logAudit('download_document', 'member_documents', $docId, $doc['label']);
 
 // Serve the file
 $safeName = preg_replace('/[^\w\s\-.]/', '', $doc['original_name']);

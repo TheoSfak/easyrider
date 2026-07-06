@@ -7,7 +7,7 @@
  * GET params (same as api-shifts-calendar.php):
  *   department_id    int   (optional, admin-only)
  *   mission_type_id  int   (optional)
- *   mine             1/0   (optional, default 1 for volunteers / 0 for admins)
+ *   mine             1/0   (optional, default 1 for members / 0 for admins)
  *   range_days       int   (optional, how many days ahead, default 90)
  */
 
@@ -38,7 +38,7 @@ $params = [$now, $rangeEnd];
 if (!isAdmin()) {
     $where[]  = "(m.status IN (?,?,?)
                    OR EXISTS (SELECT 1 FROM participation_requests pr2
-                              WHERE pr2.shift_id = s.id AND pr2.volunteer_id = ?))";
+                              WHERE pr2.shift_id = s.id AND pr2.member_id = ?))";
     $params[] = STATUS_OPEN;
     $params[] = STATUS_CLOSED;
     $params[] = STATUS_COMPLETED;
@@ -63,7 +63,7 @@ if ($missionTypeId) {
 
 if ($mineOnly) {
     $where[]  = "EXISTS (SELECT 1 FROM participation_requests pr_mine
-                         WHERE pr_mine.shift_id = s.id AND pr_mine.volunteer_id = ?)";
+                         WHERE pr_mine.shift_id = s.id AND pr_mine.member_id = ?)";
     $params[] = $userId;
 }
 
@@ -82,7 +82,7 @@ $shifts = dbFetchAll(
          mt.name       AS type_name,
          d.name        AS dept_name,
          COALESCE(pr_app.cnt, 0) AS approved_count,
-         s.max_volunteers
+         s.max_members
      FROM shifts s
      JOIN missions m  ON s.mission_id = m.id
      LEFT JOIN mission_types mt  ON m.mission_type_id = mt.id
@@ -181,7 +181,7 @@ foreach ($shifts as $s) {
     $desc  = $s['mission_title'];
     if ($s['type_name'])  $desc .= "\nΤύπος: " . $s['type_name'];
     if ($s['dept_name'])  $desc .= "\nΤμήμα: " . $s['dept_name'];
-    $desc .= "\nΕθελοντές: " . $s['approved_count'] . '/' . $s['max_volunteers'];
+    $desc .= "\nΕθελοντές: " . $s['approved_count'] . '/' . $s['max_members'];
     if ($s['notes'])      $desc .= "\nΣημειώσεις: " . $s['notes'];
     $desc .= "\n\nΛεπτομέρειες: " . (isset($_SERVER['HTTP_HOST'])
         ? 'http' . ((!empty($_SERVER['HTTPS'])) ? 's' : '') . '://' . $_SERVER['HTTP_HOST']

@@ -18,12 +18,12 @@ if (!$prId) {
 
 // Verify participation belongs to current user, is APPROVED, shift is in the future
 $participation = dbFetchOne(
-    "SELECT pr.*, s.start_time, s.end_time, s.mission_id, s.max_volunteers,
+    "SELECT pr.*, s.start_time, s.end_time, s.mission_id, s.max_members,
             m.title as mission_title, m.location, m.status as mission_status
      FROM participation_requests pr
      JOIN shifts s ON pr.shift_id = s.id
      JOIN missions m ON s.mission_id = m.id
-     WHERE pr.id = ? AND pr.volunteer_id = ? AND pr.status = ?",
+     WHERE pr.id = ? AND pr.member_id = ? AND pr.status = ?",
     [$prId, $user['id'], PARTICIPATION_APPROVED]
 );
 
@@ -51,17 +51,17 @@ if ($existingSwap) {
 // Handle POST — submit swap request
 if (isPost()) {
     verifyCsrf();
-    $toVolunteerId = (int) post('to_volunteer_id');
+    $toMemberId = (int) post('to_member_id');
     $message       = trim(post('message', ''));
 
-    if (!$toVolunteerId) {
+    if (!$toMemberId) {
         setFlash('error', 'Παρακαλώ επιλέξτε εθελοντή.');
         redirect('shift-swap.php?participation_id=' . $prId);
     }
 
     $replacement = dbFetchOne(
         "SELECT id, name, email FROM users WHERE id = ? AND is_active = 1 AND deleted_at IS NULL AND id != ?",
-        [$toVolunteerId, $user['id']]
+        [$toMemberId, $user['id']]
     );
 
     if (!$replacement) {
@@ -71,8 +71,8 @@ if (isPost()) {
 
     // Verify they're not already in this shift
     $alreadyIn = dbFetchValue(
-        "SELECT COUNT(*) FROM participation_requests WHERE shift_id = ? AND volunteer_id = ? AND status IN (?,?)",
-        [$participation['shift_id'], $toVolunteerId, PARTICIPATION_PENDING, PARTICIPATION_APPROVED]
+        "SELECT COUNT(*) FROM participation_requests WHERE shift_id = ? AND member_id = ? AND status IN (?,?)",
+        [$participation['shift_id'], $toMemberId, PARTICIPATION_PENDING, PARTICIPATION_APPROVED]
     );
 
     if ($alreadyIn) {
@@ -83,9 +83,9 @@ if (isPost()) {
     // Create swap request
     $swapId = dbInsert(
         "INSERT INTO shift_swap_requests 
-         (participation_id, from_volunteer_id, to_volunteer_id, shift_id, message, status, created_at, updated_at)
+         (participation_id, from_member_id, to_member_id, shift_id, message, status, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())",
-        [$prId, $user['id'], $toVolunteerId, $participation['shift_id'], $message ?: null, SWAP_PENDING_RESPONSE]
+        [$prId, $user['id'], $toMemberId, $participation['shift_id'], $message ?: null, SWAP_PENDING_RESPONSE]
     );
 
     logAudit('swap_requested', 'shift_swap_requests', $swapId);
@@ -96,7 +96,7 @@ if (isPost()) {
     $basePath   = dirname($_SERVER['SCRIPT_NAME'] ?? '/volunteerops');
     $actionUrl  = rtrim($proto . '://' . $host . $basePath, '/') . '/my-participations.php';
 
-    // Email to replacement volunteer
+    // Email to replacement member
     if (!empty($replacement['email']) && isNotificationEnabled('shift_swap_requested')) {
         sendNotificationEmail('shift_swap_requested', $replacement['email'], [
             'user_name'      => $replacement['name'],
@@ -110,9 +110,9 @@ if (isPost()) {
         ]);
     }
 
-    // In-app notification to replacement volunteer
+    // In-app notification to replacement member
     sendNotification(
-        $toVolunteerId,
+        $toMemberId,
         'Αίτημα Αντικατάστασης',
         'Ο/Η ' . $user['name'] . ' σας ζητά να τον/την αντικαταστήσετε στη βάρδια: ' .
         $participation['mission_title'] . ' (' . formatDateTime($participation['start_time']) . ')'
@@ -122,15 +122,15 @@ if (isPost()) {
     redirect('my-participations.php');
 }
 
-// Eligible volunteers: active, not already in the shift, not current user
-$eligibleVolunteers = dbFetchAll(
+// Eligible members: active, not already in the shift, not current user
+$eligibleMembers = dbFetchAll(
     "SELECT u.id, u.name
      FROM users u
      WHERE u.is_active = 1
        AND u.deleted_at IS NULL
        AND u.id != ?
        AND u.id NOT IN (
-           SELECT volunteer_id FROM participation_requests
+           SELECT member_id FROM participation_requests
            WHERE shift_id = ? AND status IN (?,?)
        )
      ORDER BY u.name ASC",
@@ -188,7 +188,7 @@ include __DIR__ . '/includes/header.php';
         <h5 class="mb-0" style="color:#6a1b9a"><i class="bi bi-person-fill-gear me-2"></i>Επιλογή Αντικαταστάτη</h5>
     </div>
     <div class="card-body">
-        <?php if (empty($eligibleVolunteers)): ?>
+        <?php if (empty($eligibleMembers)): ?>
             <div class="alert alert-warning">
                 <i class="bi bi-exclamation-triangle me-1"></i>
                 Δεν υπάρχουν διαθέσιμοι εθελοντές για αντικατάσταση σε αυτή τη βάρδια.
@@ -203,10 +203,10 @@ include __DIR__ . '/includes/header.php';
         <form method="post">
             <?= csrfField() ?>
             <div class="mb-3">
-                <label for="to_volunteer_id" class="form-label fw-semibold">Εθελοντής αντικατάστασης <span class="text-danger">*</span></label>
-                <select name="to_volunteer_id" id="to_volunteer_id" class="form-select" required>
+                <label for="to_member_id" class="form-label fw-semibold">Εθελοντής αντικατάστασης <span class="text-danger">*</span></label>
+                <select name="to_member_id" id="to_member_id" class="form-select" required>
                     <option value="">— Επιλέξτε εθελοντή —</option>
-                    <?php foreach ($eligibleVolunteers as $v): ?>
+                    <?php foreach ($eligibleMembers as $v): ?>
                         <option value="<?= $v['id'] ?>"><?= h($v['name']) ?></option>
                     <?php endforeach; ?>
                 </select>

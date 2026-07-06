@@ -112,9 +112,9 @@ if (isPost()) {
         `id` INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
         `item_id` INT UNSIGNED NOT NULL,
         `user_id` INT UNSIGNED NOT NULL,
-        `volunteer_name` VARCHAR(255) NULL,
-        `volunteer_phone` VARCHAR(20) NULL,
-        `volunteer_email` VARCHAR(255) NULL,
+        `member_name` VARCHAR(255) NULL,
+        `member_phone` VARCHAR(20) NULL,
+        `member_email` VARCHAR(255) NULL,
         `mission_location` VARCHAR(500) NULL,
         `booking_type` ENUM('single','bulk') DEFAULT 'single',
         `expected_return_date` DATE NULL,
@@ -229,7 +229,7 @@ BEGIN
         UPDATE `inventory_items`
         SET `status` = 'booked',
             `booked_by_user_id` = NEW.user_id,
-            `booked_by_name` = NEW.volunteer_name,
+            `booked_by_name` = NEW.member_name,
             `booking_date` = NEW.created_at,
             `expected_return_date` = NEW.expected_return_date
         WHERE `id` = NEW.item_id;

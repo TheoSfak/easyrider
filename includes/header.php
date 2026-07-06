@@ -874,26 +874,26 @@ if (isLoggedIn()) {
             <?php endif; ?>
             <?php endif; ?>
             
-            <?php if (isSystemAdmin() || hasPagePermission('volunteers_manage') || hasPagePermission('volunteers_view') || hasPagePermission('inactive_volunteers') || hasPagePermission('positions_manage') || hasPagePermission('complaints_view') || hasPagePermission('complaints_manage')): ?>
+            <?php if (isSystemAdmin() || hasPagePermission('members_manage') || hasPagePermission('members_view') || hasPagePermission('inactive_members') || hasPagePermission('positions_manage') || hasPagePermission('complaints_view') || hasPagePermission('complaints_manage')): ?>
             <div class="sidebar-section">Διοίκηση</div>
             
-            <?php if (isSystemAdmin() || hasPagePermission('volunteers_manage') || hasPagePermission('volunteers_view')): ?>
+            <?php if (isSystemAdmin() || hasPagePermission('members_manage') || hasPagePermission('members_view')): ?>
             <li class="nav-item">
-                <a class="nav-link <?= $currentPage === 'volunteers' ? 'active' : '' ?>" href="volunteers.php">
+                <a class="nav-link <?= $currentPage === 'members' ? 'active' : '' ?>" href="members.php">
                     <i class="bi bi-people"></i> Μέλη
                 </a>
             </li>
             <?php endif; ?>
-            <?php if (isSystemAdmin() || hasPagePermission('inactive_volunteers')): ?>
+            <?php if (isSystemAdmin() || hasPagePermission('inactive_members')): ?>
             <li class="nav-item">
-                <a class="nav-link <?= $currentPage === 'inactive-volunteers' ? 'active' : '' ?>" href="inactive-volunteers.php">
+                <a class="nav-link <?= $currentPage === 'inactive-members' ? 'active' : '' ?>" href="inactive-members.php">
                     <i class="bi bi-person-x"></i> Ανενεργά Μέλη
                 </a>
             </li>
             <?php endif; ?>
             <?php if (isSystemAdmin() || hasPagePermission('positions_manage')): ?>
             <li class="nav-item">
-                <a class="nav-link <?= $currentPage === 'volunteer-positions' ? 'active' : '' ?>" href="volunteer-positions.php">
+                <a class="nav-link <?= $currentPage === 'member-positions' ? 'active' : '' ?>" href="member-positions.php">
                     <i class="bi bi-person-badge"></i> Ρόλοι Μελών
                 </a>
             </li>
@@ -1136,7 +1136,7 @@ if (isLoggedIn()) {
                             <i class="bi bi-person-circle me-1 flex-shrink-0"></i>
                         <?php endif; ?>
                         <span class="user-name-text d-none d-sm-inline"><?= h($currentUser['name'] ?? 'Χρήστης') ?></span>
-                        <span class="user-type-badge d-none d-md-inline"><?= volunteerTypeBadge($currentUser['volunteer_type'] ?? VTYPE_RESCUER) ?></span>
+                        <span class="user-type-badge d-none d-md-inline"><?= memberTypeBadge($currentUser['member_type'] ?? VTYPE_RESCUER) ?></span>
                     </button>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown" style="right: 0; left: auto;">
                         <li><a class="dropdown-item" href="profile.php"><i class="bi bi-person me-2"></i>Το Προφίλ μου</a></li>

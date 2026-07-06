@@ -22,7 +22,7 @@ $tab = get('tab', 'all'); // 'all' or 'missing'
 // ─── Export CSV ────────────────────────────────────────────────────────────────
 if (get('export') === 'csv') {
     $csvRows = dbFetchAll("
-        SELECT u.name as volunteer_name, u.email, ct.name as certificate_type,
+        SELECT u.name as member_name, u.email, ct.name as certificate_type,
                vc.issue_date, vc.expiry_date, vc.issuing_body, vc.certificate_number,
                CASE
                    WHEN vc.expiry_date IS NULL THEN 'Αόριστη'
@@ -30,7 +30,7 @@ if (get('export') === 'csv') {
                    WHEN vc.expiry_date <= DATE_ADD(CURDATE(), INTERVAL 30 DAY) THEN 'Λήγει σύντομα'
                    ELSE 'Ενεργό'
                END as status
-        FROM volunteer_certificates vc
+        FROM member_certificates vc
         JOIN users u ON vc.user_id = u.id
         JOIN certificate_types ct ON vc.certificate_type_id = ct.id
         WHERE u.is_active = 1
@@ -44,7 +44,7 @@ if (get('export') === 'csv') {
     fputcsv($out, ['Εθελοντής', 'Email', 'Τύπος', 'Ημ. Έκδοσης', 'Ημ. Λήξης', 'Φορέας', 'Αρ. Πιστοποιητικού', 'Κατάσταση']);
     foreach ($csvRows as $row) {
         fputcsv($out, [
-            $row['volunteer_name'], $row['email'], $row['certificate_type'],
+            $row['member_name'], $row['email'], $row['certificate_type'],
             $row['issue_date'], $row['expiry_date'] ?? '', $row['issuing_body'] ?? '',
             $row['certificate_number'] ?? '', $row['status']
         ]);
@@ -54,10 +54,10 @@ if (get('export') === 'csv') {
 }
 
 // ─── Stats ─────────────────────────────────────────────────────────────────────
-$statsTotal = dbFetchValue("SELECT COUNT(*) FROM volunteer_certificates vc JOIN users u ON vc.user_id = u.id WHERE u.is_active = 1");
-$statsActive = dbFetchValue("SELECT COUNT(*) FROM volunteer_certificates vc JOIN users u ON vc.user_id = u.id WHERE u.is_active = 1 AND (vc.expiry_date IS NULL OR vc.expiry_date > CURDATE())");
-$statsExpiring = dbFetchValue("SELECT COUNT(*) FROM volunteer_certificates vc JOIN users u ON vc.user_id = u.id WHERE u.is_active = 1 AND vc.expiry_date IS NOT NULL AND vc.expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)");
-$statsExpired = dbFetchValue("SELECT COUNT(*) FROM volunteer_certificates vc JOIN users u ON vc.user_id = u.id WHERE u.is_active = 1 AND vc.expiry_date IS NOT NULL AND vc.expiry_date < CURDATE()");
+$statsTotal = dbFetchValue("SELECT COUNT(*) FROM member_certificates vc JOIN users u ON vc.user_id = u.id WHERE u.is_active = 1");
+$statsActive = dbFetchValue("SELECT COUNT(*) FROM member_certificates vc JOIN users u ON vc.user_id = u.id WHERE u.is_active = 1 AND (vc.expiry_date IS NULL OR vc.expiry_date > CURDATE())");
+$statsExpiring = dbFetchValue("SELECT COUNT(*) FROM member_certificates vc JOIN users u ON vc.user_id = u.id WHERE u.is_active = 1 AND vc.expiry_date IS NOT NULL AND vc.expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 30 DAY)");
+$statsExpired = dbFetchValue("SELECT COUNT(*) FROM member_certificates vc JOIN users u ON vc.user_id = u.id WHERE u.is_active = 1 AND vc.expiry_date IS NOT NULL AND vc.expiry_date < CURDATE()");
 
 // ─── Certificate Types for filter ──────────────────────────────────────────────
 $certTypes = dbFetchAll("SELECT * FROM certificate_types WHERE is_active = 1 ORDER BY name");
@@ -80,7 +80,7 @@ if ($tab === 'missing') {
             "SELECT ct.id as type_id, u.id, u.name, u.email
              FROM certificate_types ct
              CROSS JOIN users u
-             LEFT JOIN volunteer_certificates vc ON vc.user_id = u.id AND vc.certificate_type_id = ct.id
+             LEFT JOIN member_certificates vc ON vc.user_id = u.id AND vc.certificate_type_id = ct.id
              WHERE ct.id IN ($placeholders) AND u.is_active = 1 AND vc.id IS NULL $searchWhere
              ORDER BY ct.name, u.name",
             array_merge($rtIds, $searchParams)
@@ -90,8 +90,8 @@ if ($tab === 'missing') {
         foreach ($allMissing as $row) {
             $grouped[$row['type_id']][] = $row;
         }
-        foreach ($grouped as $typeId => $volunteers) {
-            $missingData[] = ['type' => $rtMap[$typeId], 'volunteers' => $volunteers];
+        foreach ($grouped as $typeId => $members) {
+            $missingData[] = ['type' => $rtMap[$typeId], 'members' => $members];
         }
     }
 } else {
@@ -121,7 +121,7 @@ if ($tab === 'missing') {
 
     // Pagination
     $totalRows = dbFetchValue(
-        "SELECT COUNT(*) FROM volunteer_certificates vc
+        "SELECT COUNT(*) FROM member_certificates vc
          JOIN users u ON vc.user_id = u.id
          JOIN certificate_types ct ON vc.certificate_type_id = ct.id
          WHERE {$where}",
@@ -130,9 +130,9 @@ if ($tab === 'missing') {
     $pagination = paginate($totalRows, (int) get('page', 1), 25);
 
     $certificates = dbFetchAll(
-        "SELECT vc.*, u.name as volunteer_name, u.email as volunteer_email,
+        "SELECT vc.*, u.name as member_name, u.email as member_email,
                 ct.name as type_name, ct.is_required
-         FROM volunteer_certificates vc
+         FROM member_certificates vc
          JOIN users u ON vc.user_id = u.id
          JOIN certificate_types ct ON vc.certificate_type_id = ct.id
          WHERE {$where}
@@ -221,7 +221,7 @@ include __DIR__ . '/includes/header.php';
             $missingCount = (int)dbFetchValue(
                 "SELECT COUNT(*) FROM certificate_types ct
                  CROSS JOIN users u
-                 LEFT JOIN volunteer_certificates vc ON vc.user_id = u.id AND vc.certificate_type_id = ct.id
+                 LEFT JOIN member_certificates vc ON vc.user_id = u.id AND vc.certificate_type_id = ct.id
                  WHERE ct.is_required = 1 AND ct.is_active = 1 AND u.is_active = 1 AND vc.id IS NULL"
             );
             if ($missingCount > 0):
@@ -260,7 +260,7 @@ include __DIR__ . '/includes/header.php';
         <div class="card-header d-flex align-items-center gap-2">
             <i class="bi bi-exclamation-circle text-danger"></i>
             <strong><?= h($md['type']['name']) ?></strong>
-            <span class="badge bg-danger"><?= count($md['volunteers']) ?> ελλείποντα</span>
+            <span class="badge bg-danger"><?= count($md['members']) ?> ελλείποντα</span>
         </div>
         <div class="table-responsive">
             <table class="table table-sm table-hover align-middle mb-0">
@@ -272,14 +272,14 @@ include __DIR__ . '/includes/header.php';
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($md['volunteers'] as $v): ?>
+                    <?php foreach ($md['members'] as $v): ?>
                     <tr>
                         <td>
-                            <a href="volunteer-view.php?id=<?= $v['id'] ?>#certificates"><?= h($v['name']) ?></a>
+                            <a href="member-view.php?id=<?= $v['id'] ?>#certificates"><?= h($v['name']) ?></a>
                         </td>
                         <td class="text-muted small"><?= h($v['email']) ?></td>
                         <td class="text-end pe-3">
-                            <a href="volunteer-view.php?id=<?= $v['id'] ?>#certificates" class="btn btn-sm btn-outline-primary">
+                            <a href="member-view.php?id=<?= $v['id'] ?>#certificates" class="btn btn-sm btn-outline-primary">
                                 <i class="bi bi-plus-circle me-1"></i>Προσθήκη
                             </a>
                         </td>
@@ -369,7 +369,7 @@ include __DIR__ . '/includes/header.php';
                     ?>
                     <tr class="<?= $rowClass ?>">
                         <td>
-                            <a href="volunteer-view.php?id=<?= $cert['user_id'] ?>"><?= h($cert['volunteer_name']) ?></a>
+                            <a href="member-view.php?id=<?= $cert['user_id'] ?>"><?= h($cert['member_name']) ?></a>
                         </td>
                         <td class="fw-semibold">
                             <?php if ($cert['is_required']): ?>
@@ -382,14 +382,14 @@ include __DIR__ . '/includes/header.php';
                         <td><?= $certBadge ?></td>
                         <td class="text-muted small"><?= h($cert['issuing_body'] ?? '—') ?></td>
                         <td class="text-end pe-3">
-                            <a href="volunteer-view.php?id=<?= $cert['user_id'] ?>#certificates" class="btn btn-sm btn-outline-primary me-1" title="Προβολή">
+                            <a href="member-view.php?id=<?= $cert['user_id'] ?>#certificates" class="btn btn-sm btn-outline-primary me-1" title="Προβολή">
                                 <i class="bi bi-eye"></i>
                             </a>
                             <?php if ($cert['expiry_date']):
                                 $gcDate = date('Ymd', strtotime($cert['expiry_date']));
                                 $gcDateEnd = date('Ymd', strtotime($cert['expiry_date'] . ' +1 day'));
-                                $gcTitle = urlencode('Λήξη Πιστοποιητικού: ' . $cert['type_name'] . ' – ' . $cert['volunteer_name']);
-                                $gcDetails = urlencode('Εθελοντής: ' . $cert['volunteer_name'] . '\nΤύπος Πιστοποιητικού: ' . $cert['type_name']);
+                                $gcTitle = urlencode('Λήξη Πιστοποιητικού: ' . $cert['type_name'] . ' – ' . $cert['member_name']);
+                                $gcDetails = urlencode('Εθελοντής: ' . $cert['member_name'] . '\nΤύπος Πιστοποιητικού: ' . $cert['type_name']);
                                 $gcUrl = "https://calendar.google.com/calendar/render?action=TEMPLATE&text={$gcTitle}&dates={$gcDate}/{$gcDateEnd}&details={$gcDetails}";
                             ?>
                             <a href="<?= $gcUrl ?>" target="_blank" class="btn btn-sm btn-outline-success" title="Προσθήκη στο Google Calendar">

@@ -290,7 +290,7 @@ function checkRequirement($name, $check, $hint = '') {
         
         <div style="text-align: center; color: #666;">
             <p><strong>VolunteerOps v2.0</strong> - Performance Optimized</p>
-            <p><small>GitHub: <a href="https://github.com/TheoSfak/volunteer-ops" target="_blank">TheoSfak/volunteer-ops</a></small></p>
+            <p><small>GitHub: <a href="https://github.com/TheoSfak/member-ops" target="_blank">TheoSfak/member-ops</a></small></p>
         </div>
     </div>
 </body>

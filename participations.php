@@ -26,7 +26,7 @@ $params = [];
 
 // Non-admins see only their own participations
 if (!$isAdmin && !$isShiftLeader) {
-    $where[] = "pr.volunteer_id = ?";
+    $where[] = "pr.member_id = ?";
     $params[] = $currentUser['id'];
 }
 
@@ -55,7 +55,7 @@ try {
                  FROM participation_requests pr
                  JOIN shifts s ON pr.shift_id = s.id
                  JOIN missions m ON s.mission_id = m.id
-                 JOIN users u ON pr.volunteer_id = u.id
+                 JOIN users u ON pr.member_id = u.id
                  $whereClause";
     $total = dbFetchValue($countSql, $params);
 } catch (Exception $e) {
@@ -72,12 +72,12 @@ try {
                    TIME(s.start_time) as shift_start_time, 
                    TIME(s.end_time) as shift_end_time,
                    m.id as mission_id, m.title as mission_title,
-                   u.name as volunteer_name, u.email as volunteer_email,
+                   u.name as member_name, u.email as member_email,
                    decided.name as decided_by_name
             FROM participation_requests pr
             JOIN shifts s ON pr.shift_id = s.id
             JOIN missions m ON s.mission_id = m.id
-            JOIN users u ON pr.volunteer_id = u.id
+            JOIN users u ON pr.member_id = u.id
             LEFT JOIN users decided ON pr.decided_by = decided.id
             $whereClause
             ORDER BY pr.created_at DESC
@@ -128,7 +128,7 @@ if (isPost() && ($isAdmin || $isShiftLeader)) {
                         if ($rejectionReason) {
                             $message .= ' Αιτιολογία: ' . $rejectionReason;
                         }
-                        sendNotification($participation['volunteer_id'], 'Ενημέρωση Συμμετοχής', $message);
+                        sendNotification($participation['member_id'], 'Ενημέρωση Συμμετοχής', $message);
                     }
                     
                     logAudit($bulkAction, 'participation_requests', $participationId, $participation['status'] . ' -> ' . $newStatus);
@@ -171,7 +171,7 @@ if (isPost() && ($isAdmin || $isShiftLeader)) {
                 if ($rejectionReason) {
                     $message .= ' Αιτιολογία: ' . $rejectionReason;
                 }
-                sendNotification($participation['volunteer_id'], 'Ενημέρωση Συμμετοχής', $message);
+                sendNotification($participation['member_id'], 'Ενημέρωση Συμμετοχής', $message);
             }
             
             logAudit($action, 'participation_requests', $participationId, $participation['status'] . ' -> ' . $newStatus);
@@ -299,16 +299,16 @@ include __DIR__ . '/includes/header.php';
                                 <td>
                                     <?php if ($p['status'] === 'PENDING'): ?>
                                         <input type="checkbox" class="form-check-input participation-checkbox" 
-                                               value="<?= $p['id'] ?>" data-volunteer="<?= h($p['volunteer_name']) ?>">
+                                               value="<?= $p['id'] ?>" data-member="<?= h($p['member_name']) ?>">
                                     <?php endif; ?>
                                 </td>
                             <?php endif; ?>
                             <?php if ($isAdmin || $isShiftLeader): ?>
                                 <td>
-                                    <a href="volunteer-view.php?id=<?= $p['volunteer_id'] ?>">
-                                        <?= h($p['volunteer_name']) ?>
+                                    <a href="member-view.php?id=<?= $p['member_id'] ?>">
+                                        <?= h($p['member_name']) ?>
                                     </a>
-                                    <br><small class="text-muted"><?= h($p['volunteer_email']) ?></small>
+                                    <br><small class="text-muted"><?= h($p['member_email']) ?></small>
                                 </td>
                             <?php endif; ?>
                             <td>
@@ -360,7 +360,7 @@ include __DIR__ . '/includes/header.php';
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                                                     </div>
                                                     <div class="modal-body">
-                                                        <p>Απόρριψη συμμετοχής για: <strong><?= h($p['volunteer_name']) ?></strong></p>
+                                                        <p>Απόρριψη συμμετοχής για: <strong><?= h($p['member_name']) ?></strong></p>
                                                         <div class="mb-3">
                                                             <label class="form-label">Αιτιολογία (προαιρετικά)</label>
                                                             <textarea class="form-control" name="rejection_reason" rows="3"></textarea>
@@ -374,7 +374,7 @@ include __DIR__ . '/includes/header.php';
                                             </div>
                                         </div>
                                     </div>
-                                <?php elseif ($p['status'] === 'PENDING' && $p['volunteer_id'] == $currentUser['id']): ?>
+                                <?php elseif ($p['status'] === 'PENDING' && $p['member_id'] == $currentUser['id']): ?>
                                     <form method="post" action="mission-view.php?id=<?= $p['mission_id'] ?>" 
                                           onsubmit="return confirm('Ακύρωση της αίτησης συμμετοχής;')">
                                         <?= csrfField() ?>
@@ -485,7 +485,7 @@ function showBulkApproveModal() {
     
     document.getElementById('approveCount').textContent = selected.length;
     const list = document.getElementById('approveList');
-    list.innerHTML = selected.map(p => `<li><i class="bi bi-person text-success me-2"></i>${p.volunteer}</li>`).join('');
+    list.innerHTML = selected.map(p => `<li><i class="bi bi-person text-success me-2"></i>${p.member}</li>`).join('');
     
     // Add hidden inputs
     const form = document.getElementById('bulkApproveForm');
@@ -511,7 +511,7 @@ function showBulkRejectModal() {
     
     document.getElementById('rejectCount').textContent = selected.length;
     const list = document.getElementById('rejectList');
-    list.innerHTML = selected.map(p => `<li><i class="bi bi-person text-danger me-2"></i>${p.volunteer}</li>`).join('');
+    list.innerHTML = selected.map(p => `<li><i class="bi bi-person text-danger me-2"></i>${p.member}</li>`).join('');
     
     // Add hidden inputs
     const form = document.getElementById('bulkRejectForm');
@@ -533,7 +533,7 @@ function getSelectedParticipations() {
     document.querySelectorAll('.participation-checkbox:checked').forEach(cb => {
         selected.push({
             id: cb.value,
-            volunteer: cb.dataset.volunteer
+            member: cb.dataset.member
         });
     });
     return selected;

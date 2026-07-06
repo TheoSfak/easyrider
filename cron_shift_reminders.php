@@ -48,7 +48,7 @@ foreach ($shifts as $shift) {
     $participants = dbFetchAll(
         "SELECT u.*, pr.id as participation_id 
          FROM users u 
-         INNER JOIN participation_requests pr ON u.id = pr.volunteer_id 
+         INNER JOIN participation_requests pr ON u.id = pr.member_id 
          WHERE pr.shift_id = ? 
          AND pr.status = ?",
         [$shift['id'], PARTICIPATION_APPROVED]

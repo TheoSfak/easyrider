@@ -21,7 +21,7 @@ class VolunteerOpsFullTester {
     // Test data IDs for cleanup
     private $testMissionId = null;
     private $testShiftId = null;
-    private $testVolunteerId = null;
+    private $testMemberId = null;
     private $testDepartmentId = null;
     
     public function __construct() {
@@ -156,7 +156,7 @@ class VolunteerOpsFullTester {
         $this->testDashboard();
         $this->testMissionsCRUD();
         $this->testShiftsCRUD();
-        $this->testVolunteerManagement();
+        $this->testMemberManagement();
         $this->testParticipationWorkflow();
         $this->testMissionLifecycleAndAttendance();  // NEW: Close, Attendance, Complete
         $this->testAttendanceAndPoints();
@@ -164,7 +164,7 @@ class VolunteerOpsFullTester {
         $this->testLeaderboardAndAchievements();
         $this->testReportsAndAudit();
         $this->testExportSystem();  // NEW: Export System (CSV exports)
-        $this->testImportSystem();  // NEW: Import System (Volunteer CSV import)
+        $this->testImportSystem();  // NEW: Import System (Member CSV import)
         $this->testUpdateSystem();  // NEW: Update & Backup System
         $this->testNotesAndParticipations();  // NEW: Notes system & My Participations
         $this->testProfileAndSettings();
@@ -445,7 +445,7 @@ class VolunteerOpsFullTester {
             return;
         }
         
-        // CREATE SUBMIT - shifts table only has: mission_id, start_time, end_time, max/min_volunteers, notes
+        // CREATE SUBMIT - shifts table only has: mission_id, start_time, end_time, max/min_members, notes
         $shiftDate = date('Y-m-d', strtotime('+1 day'));
         $response = $this->httpPost('/shift-form.php?mission_id=' . $this->testMissionId, [
             'csrf_token' => $csrf,
@@ -454,8 +454,8 @@ class VolunteerOpsFullTester {
             'start_time_hour' => '09:00',
             'end_date' => $shiftDate,
             'end_time_hour' => '17:00',
-            'min_volunteers' => 2,
-            'max_volunteers' => 10,
+            'min_members' => 2,
+            'max_members' => 10,
             'notes' => 'Test shift notes'
         ]);
         
@@ -496,58 +496,58 @@ class VolunteerOpsFullTester {
     }
     
     // ========================================
-    // 6. VOLUNTEER MANAGEMENT
+    // 6. MEMBER MANAGEMENT
     // ========================================
     
-    private function testVolunteerManagement() {
-        $this->section('Volunteer Management');
+    private function testMemberManagement() {
+        $this->section('Member Management');
         
         // LIST
-        $response = $this->httpGet('/volunteers.php');
+        $response = $this->httpGet('/members.php');
         if ($response['success'] && strpos($response['body'], 'Εθελοντές') !== false) {
-            $this->pass('Volunteers list loads');
+            $this->pass('Members list loads');
         } else {
-            $this->fail('Volunteers list loads');
+            $this->fail('Members list loads');
         }
         
         // Check list has data
         if (strpos($response['body'], '<table') !== false) {
-            $this->pass('Volunteers table rendered');
+            $this->pass('Members table rendered');
         } else {
-            $this->fail('Volunteers table rendered');
+            $this->fail('Members table rendered');
         }
         
-        // VIEW existing volunteer
-        $response = $this->httpGet('/volunteer-view.php?id=2');
+        // VIEW existing member
+        $response = $this->httpGet('/member-view.php?id=2');
         if ($response['success'] && !$this->hasPhpError($response['body'])) {
-            $this->pass('Volunteer view works');
+            $this->pass('Member view works');
         } else {
-            $this->fail('Volunteer view works', 'PHP error or HTTP failure');
+            $this->fail('Member view works', 'PHP error or HTTP failure');
         }
         
         // EDIT FORM
-        $response = $this->httpGet('/volunteer-form.php?id=2');
+        $response = $this->httpGet('/member-form.php?id=2');
         if ($response['success'] && strpos($response['body'], 'form') !== false) {
-            $this->pass('Volunteer edit form loads');
+            $this->pass('Member edit form loads');
         } else {
-            $this->fail('Volunteer edit form loads');
+            $this->fail('Member edit form loads');
         }
         
         // CREATE FORM
-        $response = $this->httpGet('/volunteer-form.php');
+        $response = $this->httpGet('/member-form.php');
         if ($response['success'] && strpos($response['body'], 'form') !== false) {
-            $this->pass('Volunteer create form loads');
+            $this->pass('Member create form loads');
             $csrf = $this->extractCsrfToken($response['body']);
         } else {
-            $this->fail('Volunteer create form loads');
+            $this->fail('Member create form loads');
             return;
         }
         
-        // CREATE NEW VOLUNTEER
-        $testEmail = 'test_volunteer_' . time() . '@test.com';
-        $response = $this->httpPost('/volunteer-form.php', [
+        // CREATE NEW MEMBER
+        $testEmail = 'test_member_' . time() . '@test.com';
+        $response = $this->httpPost('/member-form.php', [
             'csrf_token' => $csrf,
-            'name' => 'Test Volunteer',
+            'name' => 'Test Member',
             'email' => $testEmail,
             'phone' => '6900000000',
             'password' => 'testpass123',
@@ -557,28 +557,28 @@ class VolunteerOpsFullTester {
         ]);
         
         // Verify creation
-        $list = $this->httpGet('/volunteers.php');
-        if (strpos($list['body'], $testEmail) !== false || strpos($list['body'], 'Test Volunteer') !== false) {
-            $this->pass('Volunteer created');
+        $list = $this->httpGet('/members.php');
+        if (strpos($list['body'], $testEmail) !== false || strpos($list['body'], 'Test Member') !== false) {
+            $this->pass('Member created');
             // Find ID
-            if (preg_match('/volunteer-view\.php\?id=(\d+)[^>]*>.*?Test/s', $list['body'], $m)) {
-                $this->testVolunteerId = $m[1];
+            if (preg_match('/member-view\.php\?id=(\d+)[^>]*>.*?Test/s', $list['body'], $m)) {
+                $this->testMemberId = $m[1];
             }
         } else {
             // Check if email already exists error
             if (strpos($response['body'], 'υπάρχει') !== false) {
-                $this->skip('Volunteer created', 'Email already exists');
+                $this->skip('Member created', 'Email already exists');
             } else {
-                $this->fail('Volunteer created');
+                $this->fail('Member created');
             }
         }
         
         // FILTER
-        $response = $this->httpGet('/volunteers.php?role=VOLUNTEER');
+        $response = $this->httpGet('/members.php?role=MEMBER');
         if ($response['success']) {
-            $this->pass('Volunteers filter works');
+            $this->pass('Members filter works');
         } else {
-            $this->fail('Volunteers filter works');
+            $this->fail('Members filter works');
         }
     }
     
@@ -594,34 +594,34 @@ class VolunteerOpsFullTester {
             return;
         }
         
-        // Add volunteer to shift
+        // Add member to shift
         $response = $this->httpGet('/shift-view.php?id=' . $this->testShiftId);
         $csrf = $this->extractCsrfToken($response['body']);
         
-        // First, find a volunteer ID from volunteers list
-        $volunteers = $this->httpGet('/volunteers.php');
-        $volunteerId = 7; // Default fallback
-        if (preg_match('/volunteer-view\.php\?id=(\d+)/', $volunteers['body'], $m)) {
-            $volunteerId = $m[1]; // Use first volunteer found
+        // First, find a member ID from members list
+        $members = $this->httpGet('/members.php');
+        $memberId = 7; // Default fallback
+        if (preg_match('/member-view\.php\?id=(\d+)/', $members['body'], $m)) {
+            $memberId = $m[1]; // Use first member found
         }
         
         $response = $this->httpPost('/shift-view.php?id=' . $this->testShiftId, [
             'csrf_token' => $csrf,
-            'action' => 'add_volunteer',
-            'volunteer_id' => $volunteerId,
+            'action' => 'add_member',
+            'member_id' => $memberId,
             'admin_notes' => 'Added by automated test'
         ]);
         
-        // The add_volunteer action automatically sets status to APPROVED
+        // The add_member action automatically sets status to APPROVED
         $view = $this->httpGet('/shift-view.php?id=' . $this->testShiftId);
         if (strpos($response['body'], 'προστέθηκε') !== false ||
             strpos($response['body'], 'ήδη') !== false ||  // Already registered is also OK
             strpos($view['body'], 'APPROVED') !== false ||
             strpos($view['body'], 'Εγκεκριμένη') !== false ||
-            preg_match('/volunteer-view\.php\?id=\d+/', $view['body'])) {
-            $this->pass('Add volunteer to shift');
+            preg_match('/member-view\.php\?id=\d+/', $view['body'])) {
+            $this->pass('Add member to shift');
         } else {
-            $this->fail('Add volunteer to shift');
+            $this->fail('Add member to shift');
         }
         
         // Approve participation
@@ -718,9 +718,9 @@ class VolunteerOpsFullTester {
         
         $view = $this->httpGet('/shift-view.php?id=19');
         if (strpos($view['body'], '6') !== false || $response['success']) {
-            $this->pass('Update volunteer hours');
+            $this->pass('Update member hours');
         } else {
-            $this->fail('Update volunteer hours');
+            $this->fail('Update member hours');
         }
         
         // TEST 4: Complete Mission (CLOSED → COMPLETED)
@@ -933,7 +933,7 @@ class VolunteerOpsFullTester {
         // TEST EXPORT ENDPOINTS EXIST
         $exportFiles = [
             'exports/export-missions.php',
-            'exports/export-volunteers.php',
+            'exports/export-members.php',
             'exports/export-participations.php',
             'exports/export-statistics.php'
         ];
@@ -955,12 +955,12 @@ class VolunteerOpsFullTester {
             $this->fail('Export button in missions page');
         }
         
-        $volunteersPage = $this->httpGet('/volunteers.php');
-        if (strpos($volunteersPage['body'], 'export-volunteers.php') !== false || 
-            strpos($volunteersPage['body'], 'Εξαγωγή') !== false) {
-            $this->pass('Export button in volunteers page');
+        $membersPage = $this->httpGet('/members.php');
+        if (strpos($membersPage['body'], 'export-members.php') !== false || 
+            strpos($membersPage['body'], 'Εξαγωγή') !== false) {
+            $this->pass('Export button in members page');
         } else {
-            $this->fail('Export button in volunteers page');
+            $this->fail('Export button in members page');
         }
     }
     
@@ -972,7 +972,7 @@ class VolunteerOpsFullTester {
         $this->section('Import System (CSV)');
         
         // TEST IMPORT WIZARD PAGE LOADS (Step 1)
-        $response = $this->httpGet('/exports/import-volunteers.php');
+        $response = $this->httpGet('/exports/import-members.php');
         if ($response['success'] && !$this->hasPhpError($response['body'])) {
             $this->pass('Import wizard page loads');
         } else {
@@ -988,7 +988,7 @@ class VolunteerOpsFullTester {
         }
         
         // Check for template download link
-        if (strpos($response['body'], 'volunteers_template.csv') !== false || 
+        if (strpos($response['body'], 'members_template.csv') !== false || 
             strpos($response['body'], 'Κατέβασμα Υποδείγματος') !== false) {
             $this->pass('Template download link present');
         } else {
@@ -996,7 +996,7 @@ class VolunteerOpsFullTester {
         }
         
         // TEST TEMPLATE FILE EXISTS
-        $templateResponse = $this->httpGet('/exports/templates/volunteers_template.csv');
+        $templateResponse = $this->httpGet('/exports/templates/members_template.csv');
         if ($templateResponse['success'] && $templateResponse['code'] == 200) {
             $this->pass('Template CSV file exists');
             
@@ -1023,18 +1023,18 @@ class VolunteerOpsFullTester {
         }
         
         // TEST IMPORT BUTTON IN UI
-        $volunteersPage = $this->httpGet('/volunteers.php');
-        if (strpos($volunteersPage['body'], 'import-volunteers.php') !== false || 
-            strpos($volunteersPage['body'], 'Εισαγωγή') !== false) {
-            $this->pass('Import button in volunteers page');
+        $membersPage = $this->httpGet('/members.php');
+        if (strpos($membersPage['body'], 'import-members.php') !== false || 
+            strpos($membersPage['body'], 'Εισαγωγή') !== false) {
+            $this->pass('Import button in members page');
         } else {
-            $this->fail('Import button in volunteers page');
+            $this->fail('Import button in members page');
         }
         
         // TEST IMPORT WITH VALID CSV (Simulated - Step 2)
         // Create minimal test CSV content
         $testCsv = "\xEF\xBB\xBF" . "Όνομα,Email,Τηλέφωνο,Τμήμα ID,Ρόλος\n";
-        $testCsv .= "Test Import User," . time() . "@test.com,6900000000,1,ROLE_VOLUNTEER\n";
+        $testCsv .= "Test Import User," . time() . "@test.com,6900000000,1,ROLE_MEMBER\n";
         
         // Save to temp file
         $tempFile = sys_get_temp_dir() . '/test_import_' . time() . '.csv';
@@ -1062,16 +1062,16 @@ class VolunteerOpsFullTester {
                 $this->fail('parseCsvFile function exists');
             }
             
-            if (strpos($importContent, 'function validateVolunteerData') !== false) {
-                $this->pass('validateVolunteerData function exists');
+            if (strpos($importContent, 'function validateMemberData') !== false) {
+                $this->pass('validateMemberData function exists');
             } else {
-                $this->fail('validateVolunteerData function exists');
+                $this->fail('validateMemberData function exists');
             }
             
-            if (strpos($importContent, 'function importVolunteersFromCsv') !== false) {
-                $this->pass('importVolunteersFromCsv function exists');
+            if (strpos($importContent, 'function importMembersFromCsv') !== false) {
+                $this->pass('importMembersFromCsv function exists');
             } else {
-                $this->fail('importVolunteersFromCsv function exists');
+                $this->fail('importMembersFromCsv function exists');
             }
         } else {
             $this->fail('Import helper functions file exists');
@@ -1085,7 +1085,7 @@ class VolunteerOpsFullTester {
             
             $expectedFunctions = [
                 'exportMissionsToCsv',
-                'exportVolunteersToCsv',
+                'exportMembersToCsv',
                 'exportParticipationsToCsv',
                 'exportStatisticsToCsv'
             ];
@@ -1260,11 +1260,11 @@ class VolunteerOpsFullTester {
                 $this->skip('Apply modal present in mission-view', 'No open shifts');
             }
             
-            // Check volunteer_notes field
-            if (strpos($response['body'], 'volunteer_notes') !== false) {
-                $this->pass('Volunteer notes field in apply form');
+            // Check member_notes field
+            if (strpos($response['body'], 'member_notes') !== false) {
+                $this->pass('Member notes field in apply form');
             } else {
-                $this->skip('Volunteer notes field in apply form', 'Modal may not be rendered');
+                $this->skip('Member notes field in apply form', 'Modal may not be rendered');
             }
         } else {
             $this->skip('Apply modal check', 'No missions found');
@@ -1298,12 +1298,12 @@ class VolunteerOpsFullTester {
                 $this->skip('Admin notes editing', 'No participants');
             }
             
-            // Check volunteer notes display
+            // Check member notes display
             if (strpos($response['body'], 'bi-quote') !== false ||
                 strpos($response['body'], 'notes') !== false) {
-                $this->pass('Volunteer notes display in shift-view');
+                $this->pass('Member notes display in shift-view');
             } else {
-                $this->pass('Volunteer notes display ready');
+                $this->pass('Member notes display ready');
             }
         } else {
             // Get any shift
@@ -1489,13 +1489,13 @@ class VolunteerOpsFullTester {
             $this->fail('Invalid shift ID handled');
         }
         
-        // Invalid volunteer ID
-        $response = $this->httpGet('/volunteer-view.php?id=99999');
+        // Invalid member ID
+        $response = $this->httpGet('/member-view.php?id=99999');
         if ($response['code'] == 404 || strpos($response['body'], 'δεν βρέθηκε') !== false ||
-            strpos($response['finalUrl'], 'volunteers.php') !== false) {
-            $this->pass('Invalid volunteer ID handled');
+            strpos($response['finalUrl'], 'members.php') !== false) {
+            $this->pass('Invalid member ID handled');
         } else {
-            $this->fail('Invalid volunteer ID handled');
+            $this->fail('Invalid member ID handled');
         }
         
         // Missing required parameter - should redirect to missions.php
@@ -1723,9 +1723,9 @@ class VolunteerOpsFullTester {
             }
         }
         
-        // Note about test volunteer
-        if ($this->testVolunteerId) {
-            $this->skip('Test volunteer deleted', 'Manual cleanup recommended');
+        // Note about test member
+        if ($this->testMemberId) {
+            $this->skip('Test member deleted', 'Manual cleanup recommended');
         }
     }
     

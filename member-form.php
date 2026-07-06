@@ -4,33 +4,33 @@
  */
 
 require_once __DIR__ . '/bootstrap.php';
-requirePermission('volunteers_manage');
+requirePermission('members_manage');
 
 $id = (int) get('id');
-$volunteer = null;
+$member = null;
 $pageTitle = 'Νέο Μέλος';
 $currentUser = getCurrentUser();
 
 if ($id) {
-    $volunteer = dbFetchOne("SELECT * FROM users WHERE id = ?", [$id]);
-    if (!$volunteer) {
+    $member = dbFetchOne("SELECT * FROM users WHERE id = ?", [$id]);
+    if (!$member) {
         setFlash('error', 'Το μέλος δεν βρέθηκε.');
-        redirect('volunteers.php');
+        redirect('members.php');
     }
     // Department admins can only edit users in their own department
     if ($currentUser['role'] === ROLE_DEPARTMENT_ADMIN && 
-        $volunteer['department_id'] != $currentUser['department_id']) {
+        $member['department_id'] != $currentUser['department_id']) {
         setFlash('error', 'Δεν έχετε δικαίωμα επεξεργασίας αυτού του μέλους.');
-        redirect('volunteers.php');
+        redirect('members.php');
     }
-    $pageTitle = 'Επεξεργασία: ' . $volunteer['name'];
+    $pageTitle = 'Επεξεργασία: ' . $member['name'];
 }
 
-// Load extended profile (volunteer_profiles table)
-$profile = $id ? dbFetchOne("SELECT * FROM volunteer_profiles WHERE user_id = ?", [$id]) : null;
+// Load extended profile (member_profiles table)
+$profile = $id ? dbFetchOne("SELECT * FROM member_profiles WHERE user_id = ?", [$id]) : null;
 
-// Get volunteer positions
-$volunteerPositions = dbFetchAll("SELECT id, name, color, icon FROM volunteer_positions WHERE is_active = 1 ORDER BY sort_order ASC, name ASC");
+// Get member positions
+$memberPositions = dbFetchAll("SELECT id, name, color, icon FROM member_positions WHERE is_active = 1 ORDER BY sort_order ASC, name ASC");
 
 // Get custom roles for assignment dropdown
 $customRoles = [];
@@ -49,7 +49,7 @@ if (isPost()) {
         'name' => post('name'),
         'email' => post('email'),
         'phone' => post('phone'),
-        'role' => post('role', ROLE_VOLUNTEER),
+        'role' => post('role', ROLE_MEMBER),
         'department_id' => null,
         'warehouse_id' => null,
         'is_active' => isset($_POST['is_active']) ? 1 : 0,
@@ -68,7 +68,7 @@ if (isPost()) {
         'custom_role_id' => post('custom_role_id') ?: null,
     ];
 
-    // Validate custom_role_id — only allowed for VOLUNTEER role
+    // Validate custom_role_id — only allowed for MEMBER role
     if ($data['custom_role_id'] !== null) {
         if ($data['role'] === ROLE_SYSTEM_ADMIN) {
             $data['custom_role_id'] = null; // system admins never have a custom role
@@ -111,27 +111,27 @@ if (isPost()) {
     
     // Password for new users — use raw $_POST to preserve whitespace
     $password = $_POST['password'] ?? '';
-    if (!$volunteer && empty($password)) {
+    if (!$member && empty($password)) {
         $errors[] = 'Ο κωδικός είναι υποχρεωτικός για νέους χρήστες.';
-    } elseif (!$volunteer && strlen($password) < 6) {
+    } elseif (!$member && strlen($password) < 6) {
         $errors[] = 'Ο κωδικός πρέπει να έχει τουλάχιστον 6 χαρακτήρες.';
     }
     
     if (empty($errors)) {
         try {
-        $volunteerType = post('volunteer_type', VTYPE_RESCUER);
-        if (!in_array($volunteerType, [VTYPE_TRAINEE, VTYPE_RESCUER])) {
-            $volunteerType = VTYPE_RESCUER;
+        $memberType = post('member_type', VTYPE_RESCUER);
+        if (!in_array($memberType, [VTYPE_TRAINEE, VTYPE_RESCUER])) {
+            $memberType = VTYPE_RESCUER;
         }
         
         $cohortYear = post('cohort_year') ? post('cohort_year') : null;
         
-        if ($volunteer) {
+        if ($member) {
             // Update
             dbExecute(
                 "UPDATE users SET 
                  name = ?, email = ?, phone = ?, role = ?, custom_role_id = ?, department_id = ?, warehouse_id = ?, is_active = ?,
-                 volunteer_type = ?, cohort_year = ?, position_id = ?,
+                 member_type = ?, cohort_year = ?, position_id = ?,
                  id_card = ?, afm = ?, amka = ?, driving_license = ?, vehicle_plate = ?,
                  pants_size = ?, shirt_size = ?, blouse_size = ?, fleece_size = ?,
                  registry_epidrasis = ?, registry_ggpp = ?, updated_at = NOW()
@@ -139,7 +139,7 @@ if (isPost()) {
                 [
                     $data['name'], $data['email'], $data['phone'],
                     $data['role'], $data['custom_role_id'], $data['department_id'], $data['warehouse_id'], $data['is_active'],
-                    $volunteerType, $cohortYear, $data['position_id'],
+                    $memberType, $cohortYear, $data['position_id'],
                     $data['id_card'], $data['afm'], $data['amka'], $data['driving_license'], $data['vehicle_plate'],
                     $data['pants_size'], $data['shirt_size'], $data['blouse_size'], $data['fleece_size'],
                     $data['registry_epidrasis'], $data['registry_ggpp'], $id
@@ -160,14 +160,14 @@ if (isPost()) {
             // Create
             $id = dbInsert(
                 "INSERT INTO users 
-                 (name, email, password, phone, role, custom_role_id, department_id, warehouse_id, is_active, volunteer_type, cohort_year, position_id,
+                 (name, email, password, phone, role, custom_role_id, department_id, warehouse_id, is_active, member_type, cohort_year, position_id,
                   id_card, afm, amka, driving_license, vehicle_plate, pants_size, shirt_size, blouse_size, fleece_size,
                   registry_epidrasis, registry_ggpp, total_points, created_at, updated_at)
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW(), NOW())",
                 [
                     $data['name'], $data['email'], password_hash($password, PASSWORD_DEFAULT),
                     $data['phone'], $data['role'], $data['custom_role_id'], $data['department_id'], $data['warehouse_id'], $data['is_active'],
-                    $volunteerType, $cohortYear, $data['position_id'],
+                    $memberType, $cohortYear, $data['position_id'],
                     $data['id_card'], $data['afm'], $data['amka'], $data['driving_license'], $data['vehicle_plate'],
                     $data['pants_size'], $data['shirt_size'], $data['blouse_size'], $data['fleece_size'],
                     $data['registry_epidrasis'], $data['registry_ggpp']
@@ -177,7 +177,7 @@ if (isPost()) {
             setFlash('success', 'Το μέλος δημιουργήθηκε.');
         }
         
-        // Upsert volunteer_profiles (bio, address, emergency contact, availability, etc.)
+        // Upsert member_profiles (bio, address, emergency contact, availability, etc.)
         $profileFields = [
             'bio'                     => post('bio'),
             'address'                 => post('address'),
@@ -191,10 +191,10 @@ if (isPost()) {
             'available_nights'        => isset($_POST['available_nights']) ? 1 : 0,
             'has_first_aid'           => isset($_POST['has_first_aid']) ? 1 : 0,
         ];
-        $existingProfile = dbFetchOne("SELECT id FROM volunteer_profiles WHERE user_id = ?", [$id]);
+        $existingProfile = dbFetchOne("SELECT id FROM member_profiles WHERE user_id = ?", [$id]);
         if ($existingProfile) {
             dbExecute(
-                "UPDATE volunteer_profiles SET 
+                "UPDATE member_profiles SET 
                  bio=?, address=?, city=?, postal_code=?,
                  emergency_contact_name=?, emergency_contact_phone=?, blood_type=?,
                  available_weekdays=?, available_weekends=?, available_nights=?, has_first_aid=?,
@@ -203,7 +203,7 @@ if (isPost()) {
             );
         } else {
             dbInsert(
-                "INSERT INTO volunteer_profiles 
+                "INSERT INTO member_profiles 
                  (user_id, bio, address, city, postal_code,
                   emergency_contact_name, emergency_contact_phone, blood_type,
                   available_weekdays, available_weekends, available_nights, has_first_aid,
@@ -213,25 +213,25 @@ if (isPost()) {
             );
         }
         
-        redirect('volunteer-view.php?id=' . $id);
+        redirect('member-view.php?id=' . $id);
         } catch (Exception $e) {
-            error_log('Volunteer form error: ' . $e->getMessage());
+            error_log('Member form error: ' . $e->getMessage());
             setFlash('error', 'Παρουσιάστηκε σφάλμα κατά την αποθήκευση. Παρακαλώ δοκιμάστε ξανά.');
-            redirect('volunteers.php');
+            redirect('members.php');
         }
     }
 }
 
 // Form values
-$form = $volunteer ?: [
+$form = $member ?: [
     'name' => '',
     'email' => '',
     'phone' => '',
-    'role' => ROLE_VOLUNTEER,
+    'role' => ROLE_MEMBER,
     'department_id' => null,
     'warehouse_id' => null,
     'is_active' => 1,
-    'volunteer_type' => VTYPE_RESCUER,
+    'member_type' => VTYPE_RESCUER,
     'cohort_year' => null,
     'position_id' => null,
     'id_card' => '',
@@ -253,7 +253,7 @@ include __DIR__ . '/includes/header.php';
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0"><?= h($pageTitle) ?></h1>
-    <a href="volunteers.php" class="btn btn-outline-secondary">
+    <a href="members.php" class="btn btn-outline-secondary">
         <i class="bi bi-arrow-left me-1"></i>Πίσω
     </a>
 </div>
@@ -290,8 +290,8 @@ include __DIR__ . '/includes/header.php';
                     <input type="tel" class="form-control" name="phone" value="<?= h($form['phone']) ?>">
                 </div>
                 <div class="col-md-6 mb-3">
-                    <label class="form-label">Κωδικός <?= $volunteer ? '(αφήστε κενό για να διατηρηθεί)' : '*' ?></label>
-                    <input type="password" class="form-control" name="password" minlength="6" <?= $volunteer ? '' : 'required' ?>>
+                    <label class="form-label">Κωδικός <?= $member ? '(αφήστε κενό για να διατηρηθεί)' : '*' ?></label>
+                    <input type="password" class="form-control" name="password" minlength="6" <?= $member ? '' : 'required' ?>>
                 </div>
             </div>
             
@@ -314,17 +314,17 @@ include __DIR__ . '/includes/header.php';
                 </div>
                 <div class="col-md-6 mb-3">
                     <label class="form-label">Τύπος Μέλους</label>
-                    <select class="form-select" name="volunteer_type">
-                        <?php foreach (VOLUNTEER_TYPE_LABELS as $vt => $vtLabel): ?>
-                            <option value="<?= $vt ?>" <?= ($form['volunteer_type'] ?? VTYPE_RESCUER) === $vt ? 'selected' : '' ?>>>
-                                <?= (VOLUNTEER_TYPE_ICONS[$vt] ?? '') . ' ' . $vtLabel ?>
+                    <select class="form-select" name="member_type">
+                        <?php foreach (MEMBER_TYPE_LABELS as $vt => $vtLabel): ?>
+                            <option value="<?= $vt ?>" <?= ($form['member_type'] ?? VTYPE_RESCUER) === $vt ? 'selected' : '' ?>>>
+                                <?= (MEMBER_TYPE_ICONS[$vt] ?? '') . ' ' . $vtLabel ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
                 </div>
             </div>
 
-            <?php if (!empty($customRoles) && ($form['role'] ?? ROLE_VOLUNTEER) !== ROLE_SYSTEM_ADMIN): ?>
+            <?php if (!empty($customRoles) && ($form['role'] ?? ROLE_MEMBER) !== ROLE_SYSTEM_ADMIN): ?>
             <div class="row" id="customRoleRow">
                 <div class="col-md-6 mb-3">
                     <label class="form-label">
@@ -355,13 +355,13 @@ include __DIR__ . '/includes/header.php';
                     <label class="form-label"><i class="bi bi-person-badge me-1"></i>Θέση / Ρόλος στην Οργάνωση</label>
                     <select class="form-select" name="position_id">
                         <option value="">— Χωρίς θέση —</option>
-                        <?php foreach ($volunteerPositions as $pos): ?>
+                        <?php foreach ($memberPositions as $pos): ?>
                             <option value="<?= $pos['id'] ?>" <?= ($form['position_id'] ?? '') == $pos['id'] ? 'selected' : '' ?>>
                                 <?= h($pos['name']) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
-                    <small class="text-muted">Οργανωτικός ρόλος εντός του σώματος. <a href="volunteer-positions.php" target="_blank">Διαχείριση θέσεων</a></small>
+                    <small class="text-muted">Οργανωτικός ρόλος εντός του σώματος. <a href="member-positions.php" target="_blank">Διαχείριση θέσεων</a></small>
                 </div>
             </div>
             
@@ -540,7 +540,7 @@ include __DIR__ . '/includes/header.php';
             <button type="submit" class="btn btn-primary">
                 <i class="bi bi-check-lg me-1"></i>Αποθήκευση
             </button>
-            <a href="volunteers.php" class="btn btn-outline-secondary">Ακύρωση</a>
+            <a href="members.php" class="btn btn-outline-secondary">Ακύρωση</a>
         </form>
     </div>
 </div>

@@ -489,7 +489,7 @@ include __DIR__ . '/includes/header.php';
                         <?php foreach ($results as $result): ?>
                             <tr>
                                 <td>
-                                    <a href="volunteer-view.php?id=<?= $result['user_id'] ?>">
+                                    <a href="member-view.php?id=<?= $result['user_id'] ?>">
                                         <?= h($result['user_name']) ?>
                                     </a>
                                 </td>

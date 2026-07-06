@@ -184,10 +184,10 @@ function runHealthChecks() {
         'task_assignments', 'task_comments', 'tasks', 'training_categories', 'training_exam_questions',
         'training_exams', 'training_materials', 'training_quiz_questions', 'training_quizzes',
         'training_user_progress', 'user_achievements', 'user_answers', 'user_notification_preferences',
-        'user_skills', 'users', 'volunteer_certificates', 'volunteer_documents', 'volunteer_pings',
-        'volunteer_points', 'volunteer_positions',
+        'user_skills', 'users', 'member_certificates', 'member_documents', 'member_pings',
+        'member_points', 'member_positions',
         // additional tables
-        'complaints', 'migrations', 'volunteer_profiles',
+        'complaints', 'migrations', 'member_profiles',
     ];
     
     try {
@@ -267,8 +267,8 @@ function runHealthChecks() {
         $integrity[] = ['label' => 'Ορφανές βάρδιες (mission deleted)', 'value' => $orphanShifts,
                         'status' => $orphanShifts === 0 ? 'ok' : 'warning', 'detail' => $orphanShifts > 0 ? 'Χρειάζεται καθαρισμός' : ''];
         
-        // Orphan volunteer_points
-        $orphanPoints = (int) dbFetchValue("SELECT COUNT(*) FROM volunteer_points vp LEFT JOIN users u ON vp.user_id = u.id WHERE u.id IS NULL");
+        // Orphan member_points
+        $orphanPoints = (int) dbFetchValue("SELECT COUNT(*) FROM member_points vp LEFT JOIN users u ON vp.user_id = u.id WHERE u.id IS NULL");
         $integrity[] = ['label' => 'Ορφανοί πόντοι (user deleted)', 'value' => $orphanPoints,
                         'status' => $orphanPoints === 0 ? 'ok' : 'warning', 'detail' => $orphanPoints > 0 ? 'Χρειάζεται καθαρισμός' : ''];
         
@@ -740,8 +740,8 @@ if (isPost()) {
         $fixed += dbExecute("DELETE pr FROM participation_requests pr LEFT JOIN shifts s ON pr.shift_id = s.id WHERE s.id IS NULL");
         // Orphan shifts (mission deleted)
         $fixed += dbExecute("DELETE sh FROM shifts sh LEFT JOIN missions m ON sh.mission_id = m.id WHERE m.id IS NULL");
-        // Orphan volunteer_points (user deleted)
-        $fixed += dbExecute("DELETE vp FROM volunteer_points vp LEFT JOIN users u ON vp.user_id = u.id WHERE u.id IS NULL");
+        // Orphan member_points (user deleted)
+        $fixed += dbExecute("DELETE vp FROM member_points vp LEFT JOIN users u ON vp.user_id = u.id WHERE u.id IS NULL");
         // Orphan notifications (user deleted)
         $fixed += dbExecute("DELETE n FROM notifications n LEFT JOIN users u ON n.user_id = u.id WHERE u.id IS NULL");
         // Orphan user_achievements (user deleted)
@@ -811,7 +811,7 @@ if (isPost()) {
             dbExecute("DELETE FROM missions");
 
             // Legacy gamification data
-            dbExecute("DELETE FROM volunteer_points");
+            dbExecute("DELETE FROM member_points");
             dbExecute("DELETE FROM user_achievements");
             dbExecute("UPDATE users SET total_points = 0, monthly_points = 0");
 

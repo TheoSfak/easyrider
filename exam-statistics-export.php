@@ -58,7 +58,7 @@ $quizWhere = !empty($quizFilters) ? ' AND ' . implode(' AND ', $quizFilters) : '
 // Build query with filters injected inside each subquery
 $query = "
     SELECT 
-        u.name as volunteer_name,
+        u.name as member_name,
         YEAR(u.created_at) as cohort_year,
         'Διαγώνισμα' as type,
         te.title as exam_title,
@@ -82,7 +82,7 @@ if ($filterType === 'quizzes') {
     // Only quizzes
     $query = "
         SELECT 
-            u.name as volunteer_name,
+            u.name as member_name,
             YEAR(u.created_at) as cohort_year,
             'Κουίζ' as type,
             tq.title as exam_title,
@@ -106,7 +106,7 @@ if ($filterType === 'quizzes') {
     $query .= "
     UNION ALL
     SELECT 
-        u.name as volunteer_name,
+        u.name as member_name,
         YEAR(u.created_at) as cohort_year,
         'Κουίζ' as type,
         tq.title as exam_title,
@@ -162,7 +162,7 @@ fputcsv($output, [
 // Output data rows
 foreach ($results as $row) {
     fputcsv($output, [
-        $row['volunteer_name'],
+        $row['member_name'],
         $row['cohort_year'] ?? 'Χωρίς Χρονιά',
         $row['type'],
         $row['exam_title'],

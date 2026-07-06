@@ -1,7 +1,7 @@
 <?php
 /**
  * Import Helper Functions
- * CSV import utilities for volunteers — all fields
+ * CSV import utilities for members — all fields
  */
 
 if (!defined('VOLUNTEEROPS')) {
@@ -73,9 +73,9 @@ function _col(array $row, string $key): ?string {
  * Validate one CSV row.
  * Required columns: Όνομα, Email, Τμήμα ID, Ρόλος
  */
-function validateVolunteerData(array $row, int $rowNumber): array {
+function validateMemberData(array $row, int $rowNumber): array {
     $errors = [];
-    $validRoles = [ROLE_VOLUNTEER, ROLE_SYSTEM_ADMIN];
+    $validRoles = [ROLE_MEMBER, ROLE_SYSTEM_ADMIN];
     $validTypes = ['VOLUNTEER', 'TRAINEE_RESCUER', 'RESCUER'];
 
     if (empty($row['Όνομα'])) {
@@ -123,16 +123,16 @@ function validateVolunteerData(array $row, int $rowNumber): array {
 }
 
 /**
- * Import volunteers from CSV rows.
- * Inserts into users + volunteer_profiles.
+ * Import members from CSV rows.
+ * Inserts into users + member_profiles.
  */
-function importVolunteersFromCsv(array $rows, bool $dryRun = false): array {
+function importMembersFromCsv(array $rows, bool $dryRun = false): array {
     $results = ['success' => 0, 'skipped' => 0, 'failed' => 0, 'errors' => [], 'passwords' => []];
 
     foreach ($rows as $index => $row) {
         $rowNumber = $index + 2;
 
-        $errors = validateVolunteerData($row, $rowNumber);
+        $errors = validateMemberData($row, $rowNumber);
         if (!empty($errors)) {
             $results['failed']++;
             $results['errors'] = array_merge($results['errors'], $errors);
@@ -163,7 +163,7 @@ function importVolunteersFromCsv(array $rows, bool $dryRun = false): array {
         $deptId           = (int) trim($row['Τμήμα ID']);
         $role             = trim($row['Ρόλος']);
         $rawType          = _col($row, 'Τύπος Εθελοντή');
-        $volunteerType    = ($rawType && $rawType !== '0') ? $rawType : 'VOLUNTEER';
+        $memberType    = ($rawType && $rawType !== '0') ? $rawType : 'VOLUNTEER';
         $idCard           = _col($row, 'Ταυτότητα');
         $afm              = _col($row, 'ΑΦΜ');
         $amka             = _col($row, 'ΑΜΚΑ');
@@ -176,7 +176,7 @@ function importVolunteersFromCsv(array $rows, bool $dryRun = false): array {
         $regEpidrasis     = _col($row, 'Μητρώο Επίδρασης');
         $regGgpp          = _col($row, 'Μητρώο ΓΓΠΠ');
 
-        // ── volunteer_profiles row ──
+        // ── member_profiles row ──
         $address              = _col($row, 'Διεύθυνση');
         $city                 = _col($row, 'Πόλη');
         $postalCode           = _col($row, 'ΤΚ');
@@ -194,25 +194,25 @@ function importVolunteersFromCsv(array $rows, bool $dryRun = false): array {
         try {
             $userId = dbInsert(
                 "INSERT INTO users
-                    (name, email, phone, password, role, volunteer_type, department_id,
+                    (name, email, phone, password, role, member_type, department_id,
                      id_card, afm, amka, driving_license, vehicle_plate,
                      pants_size, shirt_size, blouse_size, fleece_size,
                      registry_epidrasis, registry_ggpp,
                      is_active, created_at, updated_at)
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), NOW())",
-                [$name, $email, $phone, $hashedPassword, $role, $volunteerType, $deptId,
+                [$name, $email, $phone, $hashedPassword, $role, $memberType, $deptId,
                  $idCard, $afm, $amka, $drivingLicense, $vehiclePlate,
                  $pantsSize, $shirtSize, $blouseSize, $fleeceSize,
                  $regEpidrasis, $regGgpp]
             );
 
             if ($userId) {
-                // Create volunteer_profiles record only if any profile field present
+                // Create member_profiles record only if any profile field present
                 $hasProfile = ($address || $city || $postalCode || $emergencyName ||
                                $emergencyPhone || $bloodType || $bio || $medicalNotes);
                 if ($hasProfile) {
                     dbInsert(
-                        "INSERT INTO volunteer_profiles
+                        "INSERT INTO member_profiles
                             (user_id, address, city, postal_code,
                              emergency_contact_name, emergency_contact_phone,
                              blood_type, bio, medical_notes,

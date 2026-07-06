@@ -13,4 +13,4 @@ if ($currentUser['role'] === ROLE_DEPARTMENT_ADMIN) {
     $filters['department_id'] = $currentUser['department_id'];
 }
 
-exportVolunteersToCsv($filters);
+exportMembersToCsv($filters);

@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Volunteer Activity Report (Printable / Save as PDF)
+ * VolunteerOps - Member Activity Report (Printable / Save as PDF)
  */
 require_once __DIR__ . '/bootstrap.php';
 requireLogin();
@@ -10,22 +10,22 @@ if (!$id) {
     redirect('dashboard.php');
 }
 
-// Access control: volunteers can only see their own report
+// Access control: members can only see their own report
 if (!isAdmin() && !hasRole(ROLE_SHIFT_LEADER) && (int)getCurrentUserId() !== $id) {
     setFlash('error', 'Δεν έχετε πρόσβαση σε αυτή την αναφορά.');
     redirect('dashboard.php');
 }
 
-// ── Volunteer info ────────────────────────────────────────────────────────────
-$volunteer = dbFetchOne(
+// ── Member info ────────────────────────────────────────────────────────────
+$member = dbFetchOne(
     "SELECT u.*
      FROM users u
      WHERE u.id = ?",
     [$id]
 );
-if (!$volunteer) {
+if (!$member) {
     setFlash('error', 'Ο εθελοντής δεν βρέθηκε.');
-    redirect('volunteers.php');
+    redirect('members.php');
 }
 
 // ── Attended shifts (full detail) ────────────────────────────────────────────
@@ -36,7 +36,7 @@ $attendedShifts = dbFetchAll(
      FROM participation_requests pr
      JOIN shifts s ON pr.shift_id = s.id
      JOIN missions m ON s.mission_id = m.id
-     WHERE pr.volunteer_id = ?
+     WHERE pr.member_id = ?
        AND pr.attended = 1
      ORDER BY s.start_time DESC",
     [$id]
@@ -49,7 +49,7 @@ $monthlyBreakdown = dbFetchAll(
             COALESCE(SUM(pr.actual_hours), 0) AS total_hours
      FROM participation_requests pr
      JOIN shifts s ON pr.shift_id = s.id
-     WHERE pr.volunteer_id = ?
+     WHERE pr.member_id = ?
        AND pr.attended = 1
      GROUP BY YEAR(s.start_time), MONTH(s.start_time)
      ORDER BY yr DESC, mo DESC",
@@ -69,7 +69,7 @@ $achievements = dbFetchAll(
 // ── Totals ────────────────────────────────────────────────────────────────────
 $totalHours  = array_sum(array_column($attendedShifts, 'actual_hours'));
 $totalShifts = count($attendedShifts);
-$totalPoints = (int) $volunteer['total_points'];
+$totalPoints = (int) $member['total_points'];
 $totalAchievements = count($achievements);
 
 // ── Organization logo ─────────────────────────────────────────────────────────
@@ -94,7 +94,7 @@ $greekMonths = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Αναφορά Εθελοντή — <?= h($volunteer['name']) ?></title>
+    <title>Αναφορά Εθελοντή — <?= h($member['name']) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -196,7 +196,7 @@ $greekMonths = [
         <i class="bi bi-printer me-1"></i>Εκτύπωση / Αποθήκευση ως PDF
     </button>
     <?php if (isAdmin() || hasRole(ROLE_SHIFT_LEADER)): ?>
-        <a href="volunteer-view.php?id=<?= $id ?>" class="btn btn-outline-secondary btn-sm">
+        <a href="member-view.php?id=<?= $id ?>" class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-arrow-left me-1"></i>Πίσω στο Προφίλ
         </a>
     <?php else: ?>
@@ -220,11 +220,11 @@ $greekMonths = [
                     <img src="<?= h($logoUrl) ?>" alt="<?= h($appName) ?>" class="report-logo d-block">
                 <?php endif; ?>
                 <div class="org-name"><?= h($appName) ?></div>
-                <h1><?= h($volunteer['name']) ?></h1>
+                <h1><?= h($member['name']) ?></h1>
                 <div class="subtitle">
-                    <i class="bi bi-envelope me-1"></i><?= h($volunteer['email']) ?>
-                    <?php if ($volunteer['phone']): ?>
-                        &nbsp;&bull;&nbsp;<i class="bi bi-telephone me-1"></i><?php if ($volunteer['phone']): ?><a href="tel:<?= h($volunteer['phone']) ?>"><?= h($volunteer['phone']) ?></a><?php else: ?>-<?php endif; ?>
+                    <i class="bi bi-envelope me-1"></i><?= h($member['email']) ?>
+                    <?php if ($member['phone']): ?>
+                        &nbsp;&bull;&nbsp;<i class="bi bi-telephone me-1"></i><?php if ($member['phone']): ?><a href="tel:<?= h($member['phone']) ?>"><?= h($member['phone']) ?></a><?php else: ?>-<?php endif; ?>
                     <?php endif; ?>
                 </div>
             </div>

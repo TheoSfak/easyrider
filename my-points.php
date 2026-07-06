@@ -19,7 +19,7 @@ $perPage = 20;
 
 // Get points history
 $total = dbFetchValue(
-    "SELECT COUNT(*) FROM volunteer_points WHERE user_id = ?",
+    "SELECT COUNT(*) FROM member_points WHERE user_id = ?",
     [$user['id']]
 );
 $pagination = paginate($total, $page, $perPage);
@@ -29,7 +29,7 @@ $pointsHistory = dbFetchAll(
             CASE WHEN vp.pointable_type = 'App\\\\Models\\\\Shift' THEN m.title ELSE NULL END as shift_title,
             CASE WHEN vp.pointable_type = 'App\\\\Models\\\\Shift' THEN s.start_time ELSE NULL END as start_time,
             CASE WHEN vp.pointable_type = 'App\\\\Models\\\\Shift' THEN m.title ELSE NULL END as mission_title
-     FROM volunteer_points vp
+     FROM member_points vp
      LEFT JOIN shifts s ON vp.pointable_type = 'App\\\\Models\\\\Shift' AND vp.pointable_id = s.id
      LEFT JOIN missions m ON s.mission_id = m.id
      WHERE vp.user_id = ?
@@ -41,7 +41,7 @@ $pointsHistory = dbFetchAll(
 // Get monthly breakdown
 $monthlyPoints = dbFetchAll(
     "SELECT DATE_FORMAT(created_at, '%Y-%m') as month, SUM(points) as total
-     FROM volunteer_points
+     FROM member_points
      WHERE user_id = ?
      GROUP BY month
      ORDER BY month DESC
@@ -55,17 +55,17 @@ $rank = dbFetchValue(
     [$user['total_points']]
 );
 
-$totalVolunteers = dbFetchValue("SELECT COUNT(*) FROM users WHERE is_active = 1");
+$totalMembers = dbFetchValue("SELECT COUNT(*) FROM users WHERE is_active = 1");
 
 // Stats
 $thisMonth = dbFetchValue(
-    "SELECT COALESCE(SUM(points), 0) FROM volunteer_points 
+    "SELECT COALESCE(SUM(points), 0) FROM member_points 
      WHERE user_id = ? AND created_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01')",
     [$user['id']]
 );
 
 $thisYear = dbFetchValue(
-    "SELECT COALESCE(SUM(points), 0) FROM volunteer_points 
+    "SELECT COALESCE(SUM(points), 0) FROM member_points 
      WHERE user_id = ? AND YEAR(created_at) = YEAR(CURDATE())",
     [$user['id']]
 );
@@ -96,7 +96,7 @@ include __DIR__ . '/includes/header.php';
         <div class="card stats-card primary">
             <div class="card-body text-center">
                 <h2 class="mb-0">#<?= $rank ?></h2>
-                <small class="text-muted">Κατάταξη (από <?= $totalVolunteers ?>)</small>
+                <small class="text-muted">Κατάταξη (από <?= $totalMembers ?>)</small>
             </div>
         </div>
     </div>

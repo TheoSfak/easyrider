@@ -97,7 +97,7 @@ function getRideParticipation(int $missionId, int $userId, ?int $shiftId = null)
          FROM participation_requests pr
          JOIN shifts s ON s.id = pr.shift_id
          WHERE s.mission_id = ?
-           AND pr.volunteer_id = ?
+           AND pr.member_id = ?
            AND pr.status = ?
            {$shiftFilter}
          ORDER BY
@@ -616,7 +616,7 @@ function buildRideDebriefSuggestion(int $missionId): array {
                         COUNT(DISTINCT user_id) as riders,
                         MIN(created_at) as first_ping,
                         MAX(created_at) as last_ping
-                 FROM volunteer_pings
+                 FROM member_pings
                  WHERE shift_id IN ($placeholders)",
                 $shiftIds
             );
@@ -710,7 +710,7 @@ function getRideReadinessSummary(int $missionId): array {
 
     $placeholders = implode(',', array_fill(0, count($shiftIds), '?'));
     $participants = dbFetchAll(
-        "SELECT DISTINCT pr.volunteer_id
+        "SELECT DISTINCT pr.member_id
          FROM participation_requests pr
          WHERE pr.shift_id IN ($placeholders)
            AND pr.status = ?",
@@ -724,7 +724,7 @@ function getRideReadinessSummary(int $missionId): array {
     try {
         $pingRows = dbFetchAll(
             "SELECT vp.user_id, MAX(vp.created_at) as last_ping
-             FROM volunteer_pings vp
+             FROM member_pings vp
              WHERE vp.shift_id IN ($placeholders)
              GROUP BY vp.user_id",
             $shiftIds
@@ -734,7 +734,7 @@ function getRideReadinessSummary(int $missionId): array {
             $lastByUser[(int)$row['user_id']] = $row['last_ping'];
         }
         foreach ($participants as $participant) {
-            $uid = (int)$participant['volunteer_id'];
+            $uid = (int)$participant['member_id'];
             if (empty($lastByUser[$uid])) {
                 $summary['not_started']++;
                 continue;

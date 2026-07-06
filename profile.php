@@ -9,13 +9,13 @@ requireLogin();
 $pageTitle = 'Το Προφίλ μου';
 $user = getCurrentUser();
 
-// Get volunteer profile
-$profile = dbFetchOne("SELECT * FROM volunteer_profiles WHERE user_id = ?", [$user['id']]);
+// Get member profile
+$profile = dbFetchOne("SELECT * FROM member_profiles WHERE user_id = ?", [$user['id']]);
 
 // Get stats
 $stats = [
     'total_shifts' => dbFetchValue(
-        "SELECT COUNT(*) FROM participation_requests WHERE volunteer_id = ? AND status = '" . PARTICIPATION_APPROVED . "'",
+        "SELECT COUNT(*) FROM participation_requests WHERE member_id = ? AND status = '" . PARTICIPATION_APPROVED . "'",
         [$user['id']]
     ),
     'total_hours' => dbFetchValue(
@@ -25,7 +25,7 @@ $stats = [
         ), 0)
         FROM participation_requests pr
         JOIN shifts s ON pr.shift_id = s.id
-        WHERE pr.volunteer_id = ? AND pr.status = '" . PARTICIPATION_APPROVED . "' AND pr.attended = 1",
+        WHERE pr.member_id = ? AND pr.status = '" . PARTICIPATION_APPROVED . "' AND pr.attended = 1",
         [$user['id']]
     ),
     'achievements' => (getSetting('achievements_enabled', '1') === '1') ? dbFetchValue(
@@ -46,7 +46,7 @@ if (empty($attTypeIds)) {
          FROM participation_requests pr
          JOIN shifts s ON pr.shift_id = s.id
          JOIN missions m ON s.mission_id = m.id
-         WHERE pr.volunteer_id = ? AND pr.attended = 1
+         WHERE pr.member_id = ? AND pr.attended = 1
          AND YEAR(m.start_datetime) = ?
          AND m.mission_type_id IN ($attPlaceholders)",
         array_merge([$user['id'], $currentYear], $attTypeIds)
@@ -70,7 +70,7 @@ if (isTraineeRescuer()) {
         FROM participation_requests pr
         JOIN shifts s ON pr.shift_id = s.id
         JOIN missions m ON s.mission_id = m.id
-        WHERE pr.volunteer_id = ? AND pr.status = ? AND pr.attended = 1
+        WHERE pr.member_id = ? AND pr.status = ? AND pr.attended = 1
           AND m.mission_type_id = ?",
         [$user['id'], PARTICIPATION_APPROVED, getTepMissionTypeId()]
     );
@@ -83,13 +83,13 @@ $eduMissions = 0;
 $eduGoal = (int) getSetting('prereq_edu_attendance_goal', '2');
 $eduPct = 0;
 $eduColor = 'danger';
-if (($user['volunteer_type'] ?? '') === VTYPE_RESCUER) {
+if (($user['member_type'] ?? '') === VTYPE_RESCUER) {
     $eduMissions = (int) dbFetchValue(
         "SELECT COUNT(DISTINCT m.id)
          FROM participation_requests pr
          JOIN shifts s ON pr.shift_id = s.id
          JOIN missions m ON s.mission_id = m.id
-         WHERE pr.volunteer_id = ? AND pr.attended = 1
+         WHERE pr.member_id = ? AND pr.attended = 1
            AND YEAR(m.start_datetime) = ?
            AND m.mission_type_id = ?",
         [$user['id'], $currentYear, getEduMissionTypeId()]
@@ -151,7 +151,7 @@ if (isPost()) {
                 
                 if ($profile) {
                     dbExecute(
-                        "UPDATE volunteer_profiles SET 
+                        "UPDATE member_profiles SET 
                          bio = ?, address = ?, city = ?, postal_code = ?,
                          emergency_contact_name = ?, emergency_contact_phone = ?,
                          blood_type = ?, available_weekdays = ?, available_weekends = ?,
@@ -162,7 +162,7 @@ if (isPost()) {
                     );
                 } else {
                     dbInsert(
-                        "INSERT INTO volunteer_profiles 
+                        "INSERT INTO member_profiles 
                          (user_id, bio, address, city, postal_code, emergency_contact_name,
                           emergency_contact_phone, blood_type, available_weekdays, available_weekends,
                           available_nights, has_driving_license, has_first_aid, created_at, updated_at)
@@ -176,7 +176,7 @@ if (isPost()) {
                 
                 // Refresh data
                 $user = dbFetchOne("SELECT * FROM users WHERE id = ?", [$user['id']]);
-                $profile = dbFetchOne("SELECT * FROM volunteer_profiles WHERE user_id = ?", [$user['id']]);
+                $profile = dbFetchOne("SELECT * FROM member_profiles WHERE user_id = ?", [$user['id']]);
             }
             break;
             
@@ -391,9 +391,9 @@ include __DIR__ . '/includes/header.php';
             </div>
             <div class="mt-1">
                 <?= roleBadge($user['role']) ?>
-                <?= volunteerTypeBadge($user['volunteer_type'] ?? VTYPE_RESCUER) ?>
+                <?= memberTypeBadge($user['member_type'] ?? VTYPE_RESCUER) ?>
                 <span class="badge bg-light text-dark ms-1" style="font-size:.72rem"><i class="bi bi-calendar3 me-1"></i>Μέλος από <?= formatDate($user['created_at']) ?></span>
-                <a href="volunteer-report.php?id=<?= $user['id'] ?>" target="_blank" class="badge bg-info text-white ms-1 text-decoration-none" style="font-size:.72rem"><i class="bi bi-file-earmark-text me-1"></i>Αναφορά</a>
+                <a href="member-report.php?id=<?= $user['id'] ?>" target="_blank" class="badge bg-info text-white ms-1 text-decoration-none" style="font-size:.72rem"><i class="bi bi-file-earmark-text me-1"></i>Αναφορά</a>
             </div>
         </div>
     </div>
@@ -477,7 +477,7 @@ include __DIR__ . '/includes/header.php';
 </div>
 <?php endif; ?>
 
-<?php if (($user['volunteer_type'] ?? '') === VTYPE_RESCUER): ?>
+<?php if (($user['member_type'] ?? '') === VTYPE_RESCUER): ?>
 <!-- Εκπαιδευτικές Αποστολές Progress Bar (only for rescuers) -->
 <div class="card pp-card mb-4" style="border-left: 4px solid var(--bs-<?= $eduColor ?>)">
     <div class="card-body py-3">
@@ -900,7 +900,7 @@ include __DIR__ . '/includes/header.php';
             <div class="card-body text-center py-4">
                 <div class="mb-2" style="font-size:2.5rem;opacity:.7"><i class="bi bi-shield-check"></i></div>
                 <?= roleBadge($user['role']) ?>
-                <?= volunteerTypeBadge($user['volunteer_type'] ?? VTYPE_RESCUER) ?>
+                <?= memberTypeBadge($user['member_type'] ?? VTYPE_RESCUER) ?>
                 <p class="text-muted mt-2 mb-0 small">
                     Μέλος από <?= formatDate($user['created_at']) ?>
                 </p>

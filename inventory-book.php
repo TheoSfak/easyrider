@@ -1,7 +1,7 @@
 ﻿<?php
 /**
  * VolunteerOps - Inventory Booking (Checkout / Return)
- * Allows booking an item to a volunteer / returning it.
+ * Allows booking an item to a member / returning it.
  */
 
 require_once __DIR__ . '/bootstrap.php';
@@ -169,14 +169,14 @@ if (isAdmin()) {
         LIMIT 50
     ");
 } else {
-    // Volunteers see only their own
+    // Members see only their own
     $activeBookings = getUserActiveBookings(getCurrentUserId());
 }
 
-// Get volunteers list for admin booking
-$volunteers = [];
+// Get members list for admin booking
+$members = [];
 if (isAdmin()) {
-    $volunteers = dbFetchAll("SELECT id, name, email FROM users WHERE is_active = 1 ORDER BY name");
+    $members = dbFetchAll("SELECT id, name, email FROM users WHERE is_active = 1 ORDER BY name");
 }
 
 include __DIR__ . '/includes/header.php';
@@ -273,12 +273,12 @@ include __DIR__ . '/includes/header.php';
                         <input type="hidden" name="action" value="book_kit">
                         <input type="hidden" name="kit_id" value="<?= $preselectedKit['id'] ?>">
 
-                        <?php if (isAdmin() && !empty($volunteers)): ?>
+                        <?php if (isAdmin() && !empty($members)): ?>
                         <div class="mb-3">
                             <label class="form-label">Εθελοντής *</label>
                             <select class="form-select" name="user_id" required>
                                 <option value="">-- Επιλέξτε εθελοντή --</option>
-                                <?php foreach ($volunteers as $vol): ?>
+                                <?php foreach ($members as $vol): ?>
                                     <option value="<?= $vol['id'] ?>" <?= $vol['id'] == getCurrentUserId() ? 'selected' : '' ?>>
                                         <?= h($vol['name']) ?> (<?= h($vol['email']) ?>)
                                     </option>
@@ -383,12 +383,12 @@ include __DIR__ . '/includes/header.php';
                             </select>
                         </div>
 
-                        <?php if (isAdmin() && !empty($volunteers)): ?>
+                        <?php if (isAdmin() && !empty($members)): ?>
                         <div class="mb-3">
                             <label class="form-label">Εθελοντής *</label>
                             <select class="form-select" name="user_id" required>
                                 <option value="">-- Επιλέξτε εθελοντή --</option>
-                                <?php foreach ($volunteers as $vol): ?>
+                                <?php foreach ($members as $vol): ?>
                                     <option value="<?= $vol['id'] ?>" <?= $vol['id'] == getCurrentUserId() ? 'selected' : '' ?>>
                                         <?= h($vol['name']) ?> (<?= h($vol['email']) ?>)
                                     </option>
@@ -448,7 +448,7 @@ include __DIR__ . '/includes/header.php';
                                         <br>
                                         <small class="text-muted">
                                             <code><?= h($ab['barcode']) ?></code> — 
-                                            <?= h($ab['volunteer_name'] ?? $ab['user_name'] ?? '') ?>
+                                            <?= h($ab['member_name'] ?? $ab['user_name'] ?? '') ?>
                                         </small>
                                     </div>
                                     <span class="badge bg-<?= $overdueInfo['status_class'] ?>">

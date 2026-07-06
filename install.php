@@ -345,7 +345,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 /**
- * Install demo data - volunteers, departments, missions, shifts
+ * Install demo data - members, departments, missions, shifts
  */
 function installDemoData(PDO $pdo) {
     logDebug('Δημιουργία demo departments...');
@@ -367,9 +367,9 @@ function installDemoData(PDO $pdo) {
     }
     logDebug(count($departments) . ' τμήματα δημιουργήθηκαν', 'success');
     
-    // Demo Volunteers
+    // Demo Members
     logDebug('Δημιουργία demo εθελοντών...');
-    $volunteers = [
+    $members = [
         ['name' => 'Μαρία Παπαδοπούλου', 'email' => 'maria.p@example.gr', 'phone' => '6971234567'],
         ['name' => 'Γιώργος Νικολάου', 'email' => 'giorgos.n@example.gr', 'phone' => '6972345678'],
         ['name' => 'Ελένη Κωνσταντίνου', 'email' => 'eleni.k@example.gr', 'phone' => '6973456789'],
@@ -380,14 +380,14 @@ function installDemoData(PDO $pdo) {
         ['name' => 'Νίκος Παναγιώτου', 'email' => 'nikos.p@example.gr', 'phone' => '6978901234'],
     ];
     
-    $volunteerIds = [];
+    $memberIds = [];
     $hashedPass = password_hash('demo123', PASSWORD_DEFAULT);
     $stmt = $pdo->prepare("INSERT INTO users (name, email, phone, password, role, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, 'VOLUNTEER', 1, NOW(), NOW()) ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id)");
-    foreach ($volunteers as $vol) {
+    foreach ($members as $vol) {
         $stmt->execute([$vol['name'], $vol['email'], $vol['phone'], $hashedPass]);
-        $volunteerIds[] = $pdo->lastInsertId() ?: $pdo->query("SELECT id FROM users WHERE email = " . $pdo->quote($vol['email']))->fetchColumn();
+        $memberIds[] = $pdo->lastInsertId() ?: $pdo->query("SELECT id FROM users WHERE email = " . $pdo->quote($vol['email']))->fetchColumn();
     }
-    logDebug(count($volunteers) . ' εθελοντές δημιουργήθηκαν (κωδικός: demo123)', 'success');
+    logDebug(count($members) . ' εθελοντές δημιουργήθηκαν (κωδικός: demo123)', 'success');
     
     // Demo Shift Leader
     $stmt = $pdo->prepare("INSERT INTO users (name, email, phone, password, role, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, 'SHIFT_LEADER', 1, NOW(), NOW()) ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id)");
@@ -479,7 +479,7 @@ function installDemoData(PDO $pdo) {
         $shiftsForMission = rand(1, 2);
         for ($i = 0; $i < $shiftsForMission; $i++) {
             $startHour = 9 + ($i * 4);
-            $stmt = $pdo->prepare("INSERT INTO shifts (mission_id, start_time, end_time, max_volunteers, min_volunteers, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())");
+            $stmt = $pdo->prepare("INSERT INTO shifts (mission_id, start_time, end_time, max_members, min_members, notes, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())");
             $stmt->execute([
                 $missionId,
                 date('Y-m-d', strtotime("+$idx days")) . " {$startHour}:00:00",
@@ -500,14 +500,14 @@ function installDemoData(PDO $pdo) {
     $statuses = ['PENDING', 'APPROVED', 'APPROVED', 'APPROVED']; // More approved than pending
     
     foreach ($shiftIds as $shiftId) {
-        // 2-4 volunteers per shift
-        $numVolunteers = rand(2, 4);
-        $selectedVolunteers = array_rand(array_flip($volunteerIds), min($numVolunteers, count($volunteerIds)));
-        if (!is_array($selectedVolunteers)) $selectedVolunteers = [$selectedVolunteers];
+        // 2-4 members per shift
+        $numMembers = rand(2, 4);
+        $selectedMembers = array_rand(array_flip($memberIds), min($numMembers, count($memberIds)));
+        if (!is_array($selectedMembers)) $selectedMembers = [$selectedMembers];
         
-        foreach ($selectedVolunteers as $volId) {
+        foreach ($selectedMembers as $volId) {
             $status = $statuses[array_rand($statuses)];
-            $stmt = $pdo->prepare("INSERT INTO participation_requests (shift_id, volunteer_id, status, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW()) ON DUPLICATE KEY UPDATE status = status");
+            $stmt = $pdo->prepare("INSERT INTO participation_requests (shift_id, member_id, status, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW()) ON DUPLICATE KEY UPDATE status = status");
             $stmt->execute([$shiftId, $volId, $status]);
             $participationCount++;
         }
@@ -516,9 +516,9 @@ function installDemoData(PDO $pdo) {
     
     // Demo Points for completed mission
     logDebug('Δημιουργία demo πόντων...');
-    foreach (array_slice($volunteerIds, 0, 4) as $volId) {
+    foreach (array_slice($memberIds, 0, 4) as $volId) {
         $points = rand(50, 200);
-        $stmt = $pdo->prepare("INSERT INTO volunteer_points (volunteer_id, points, source_type, source_id, description, created_at) VALUES (?, ?, 'mission', ?, ?, NOW()) ON DUPLICATE KEY UPDATE points = points");
+        $stmt = $pdo->prepare("INSERT INTO member_points (member_id, points, source_type, source_id, description, created_at) VALUES (?, ?, 'mission', ?, ?, NOW()) ON DUPLICATE KEY UPDATE points = points");
         $stmt->execute([$volId, $points, $missionIds[5] ?? 1, 'Συμμετοχή σε αποστολή']);
         
         // Update user total points
@@ -759,7 +759,7 @@ if (!empty($_SESSION['debug_log'])) {
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Database Name</label>
-                        <input type="text" class="form-control" name="db_name" value="volunteer_ops" required>
+                        <input type="text" class="form-control" name="db_name" value="member_ops" required>
                         <div class="form-text">Η βάση θα δημιουργηθεί αυτόματα αν δεν υπάρχει.</div>
                     </div>
                     <div class="mb-3">

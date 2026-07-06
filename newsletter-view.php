@@ -162,7 +162,7 @@ $nl = dbFetchOne("
 // Decode roles filter for display
 $filterRoles   = !empty($nl['filter_roles']) ? json_decode($nl['filter_roles'], true) : [];
 $roleLabels    = [
-    ROLE_VOLUNTEER        => 'Μέλη',
+    ROLE_MEMBER        => 'Μέλη',
     ROLE_SHIFT_LEADER     => 'Road Captains',
     ROLE_SYSTEM_ADMIN     => 'Διαχ. Συστήματος',
 ];

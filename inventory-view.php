@@ -234,7 +234,7 @@ include __DIR__ . '/includes/header.php';
                 <div class="row g-3">
                     <div class="col-md-4">
                         <strong class="text-muted d-block mb-1">Εθελοντής</strong>
-                        <?= h($activeBooking['volunteer_name']) ?>
+                        <?= h($activeBooking['member_name']) ?>
                         <?php if ($activeBooking['user_phone']): ?>
                             <br><small><i class="bi bi-telephone"></i> <?= h($activeBooking['user_phone']) ?></small>
                         <?php endif; ?>
@@ -310,7 +310,7 @@ include __DIR__ . '/includes/header.php';
                             <tbody>
                                 <?php foreach ($bookings as $booking): ?>
                                     <tr>
-                                        <td><?= h($booking['volunteer_name'] ?? $booking['user_name']) ?></td>
+                                        <td><?= h($booking['member_name'] ?? $booking['user_name']) ?></td>
                                         <td><small><?= formatDateTime($booking['created_at']) ?></small></td>
                                         <td><small><?= h($booking['mission_location'] ?? '—') ?></small></td>
                                         <td><?= bookingStatusBadge($booking['status']) ?></td>

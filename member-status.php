@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Volunteer Field Status Endpoint
+ * VolunteerOps - Member Field Status Endpoint
  * Εθελοντής ενημερώνει κατάσταση: Σε Κίνηση / Επί Τόπου / Χρειάζεται Βοήθεια.
  * AJAX POST only.
  */
@@ -37,7 +37,7 @@ $pr = dbFetchOne(
      FROM participation_requests pr
      JOIN shifts s ON pr.shift_id = s.id
      JOIN missions m ON s.mission_id = m.id
-     WHERE pr.id = ? AND pr.volunteer_id = ? AND pr.status = '" . PARTICIPATION_APPROVED . "'",
+     WHERE pr.id = ? AND pr.member_id = ? AND pr.status = '" . PARTICIPATION_APPROVED . "'",
     [$prId, $userId]
 );
 
@@ -70,7 +70,7 @@ if ($status === 'needs_help') {
     );
     $leaders = dbFetchAll(
         "SELECT DISTINCT u.id FROM users u
-         JOIN participation_requests pr2 ON pr2.volunteer_id = u.id
+         JOIN participation_requests pr2 ON pr2.member_id = u.id
          JOIN shifts s ON pr2.shift_id = s.id
          WHERE s.mission_id = ? AND u.role = '" . ROLE_SHIFT_LEADER . "' AND u.is_active = 1 AND pr2.status = '" . PARTICIPATION_APPROVED . "'",
         [$pr['mission_id']]

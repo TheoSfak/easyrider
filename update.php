@@ -897,9 +897,9 @@ if (isPost()) {
                         dbExecute("ALTER TABLE participation_requests ADD COLUMN field_status_updated_at TIMESTAMP NULL DEFAULT NULL");
                         updateLog('  + field_status_updated_at column added');
                     }
-                    $vpTable = dbFetchOne("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='volunteer_pings'");
+                    $vpTable = dbFetchOne("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='member_pings'");
                     if (!$vpTable) {
-                        dbExecute("CREATE TABLE volunteer_pings (
+                        dbExecute("CREATE TABLE member_pings (
                             id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
                             user_id     INT UNSIGNED NOT NULL,
                             shift_id    INT UNSIGNED NOT NULL,
@@ -911,7 +911,7 @@ if (isPost()) {
                             INDEX idx_pings_shift_time (shift_id, created_at),
                             INDEX idx_pings_user_shift (user_id, shift_id)
                         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-                        updateLog('  + volunteer_pings table created');
+                        updateLog('  + member_pings table created');
                     }
                     // Update schema version to 13 if lower
                     $curVer = (int) dbFetchValue("SELECT setting_value FROM settings WHERE setting_key='db_schema_version'");

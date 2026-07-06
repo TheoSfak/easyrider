@@ -58,7 +58,7 @@ if ($period === 'all') {
          FROM users u
          LEFT JOIN departments d ON u.department_id = d.id
          $achJoin
-         LEFT JOIN participation_requests pr ON pr.volunteer_id = u.id AND pr.attended = 1
+         LEFT JOIN participation_requests pr ON pr.member_id = u.id AND pr.attended = 1
          WHERE $whereClause
          GROUP BY u.id
          ORDER BY u.total_points DESC, u.name ASC
@@ -66,7 +66,7 @@ if ($period === 'all') {
         $params
     );
 } else {
-    // Calculate from volunteer_points table
+    // Calculate from member_points table
     $whereClause = 'u.is_active = 1 AND u.deleted_at IS NULL';
     if ($departmentId) {
         $whereClause .= " AND u.department_id = ?";
@@ -76,7 +76,7 @@ if ($period === 'all') {
     $total = dbFetchValue(
         "SELECT COUNT(DISTINCT u.id) 
          FROM users u 
-         JOIN volunteer_points vp ON u.id = vp.user_id 
+         JOIN member_points vp ON u.id = vp.user_id 
          WHERE $whereClause $periodFilter",
         $params
     );
@@ -92,7 +92,7 @@ if ($period === 'all') {
                 COUNT(DISTINCT CASE WHEN vp.pointable_type = 'App\\\\Models\\\\Shift' THEN vp.pointable_id END) as shifts_count
          FROM users u
          LEFT JOIN departments d ON u.department_id = d.id
-         LEFT JOIN volunteer_points vp ON u.id = vp.user_id $periodFilter
+         LEFT JOIN member_points vp ON u.id = vp.user_id $periodFilter
          $achJoin2
          WHERE $whereClause
          GROUP BY u.id

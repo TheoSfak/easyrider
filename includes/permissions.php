@@ -3,13 +3,13 @@
  * EasyRide - Custom Role Permission Map
  * Fine-grained page permissions for custom roles.
  * SYSTEM_ADMIN always has full access regardless of this map.
- * Applies only to VOLUNTEER-base users with a custom_role_id.
+ * Applies only to MEMBER-base users with a custom_role_id.
  *
  * Implication rules:
  *   missions_manage   → implies missions_view
  *   complaints_manage → implies complaints_view
  *   citizens_manage   → implies citizens_view
- *   volunteers_manage → implies volunteers_view
+ *   members_manage → implies members_view
  */
 
 if (!defined('VOLUNTEEROPS')) {
@@ -33,9 +33,9 @@ function getPermissionMap(): array {
             ['slug' => 'tasks_manage',       'label' => 'Διαχείριση Εργασιών',                 'icon' => 'bi-list-task',        'description' => 'Δημιουργία & ανάθεση εργασιών'],
         ],
         'Μέλη' => [
-            ['slug' => 'volunteers_view',    'label' => 'Προβολή Προφίλ Μελών',                'icon' => 'bi-person-badge',     'description' => 'Ανάγνωση προφίλ & εγγράφων'],
-            ['slug' => 'volunteers_manage',  'label' => 'Διαχείριση Μελών',                    'icon' => 'bi-people',           'description' => 'Πλήρης λίστα, δημιουργία, επεξεργασία μελών'],
-            ['slug' => 'inactive_volunteers','label' => 'Ανενεργά Μέλη',                       'icon' => 'bi-person-x',         'description' => 'Προβολή & ενεργοποίηση ανενεργών μελών'],
+            ['slug' => 'members_view',    'label' => 'Προβολή Προφίλ Μελών',                'icon' => 'bi-person-badge',     'description' => 'Ανάγνωση προφίλ & εγγράφων'],
+            ['slug' => 'members_manage',  'label' => 'Διαχείριση Μελών',                    'icon' => 'bi-people',           'description' => 'Πλήρης λίστα, δημιουργία, επεξεργασία μελών'],
+            ['slug' => 'inactive_members','label' => 'Ανενεργά Μέλη',                       'icon' => 'bi-person-x',         'description' => 'Προβολή & ενεργοποίηση ανενεργών μελών'],
             ['slug' => 'complaints_view',    'label' => 'Παράπονα (Προβολή)',                  'icon' => 'bi-chat-left-dots',   'description' => 'Βλέπει παράπονα'],
             ['slug' => 'complaints_manage',  'label' => 'Παράπονα (Διαχείριση)',               'icon' => 'bi-chat-left-text',   'description' => 'Αλλαγή κατάστασης, ανάθεση, απάντηση σε παράπονα'],
         ],
@@ -71,7 +71,7 @@ function getImpliedSlugs(): array {
         'missions_view'   => 'missions_manage',
         'complaints_view' => 'complaints_manage',
         'citizens_view'   => 'citizens_manage',
-        'volunteers_view' => 'volunteers_manage',
+        'members_view' => 'members_manage',
     ];
 }
 

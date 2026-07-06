@@ -1,7 +1,7 @@
 <?php
 /**
  * Export Helper Functions
- * CSV export utilities for missions, volunteers, participations, and statistics
+ * CSV export utilities for missions, members, participations, and statistics
  */
 
 // Prevent direct access
@@ -61,7 +61,7 @@ function exportMissionsToCsv($filters = []) {
                 m.created_at,
                 (SELECT COUNT(*) FROM shifts WHERE mission_id = m.id) AS shift_count,
                 (SELECT COUNT(*) FROM shifts s JOIN participation_requests pr ON pr.shift_id = s.id
-                 WHERE s.mission_id = m.id AND pr.status = 'APPROVED') AS volunteer_count
+                 WHERE s.mission_id = m.id AND pr.status = 'APPROVED') AS member_count
             FROM missions m
             LEFT JOIN departments d ON m.department_id = d.id
             LEFT JOIN mission_types mt ON m.mission_type_id = mt.id
@@ -117,7 +117,7 @@ function exportMissionsToCsv($filters = []) {
             $GLOBALS['STATUS_LABELS'][$mission['status']] ?? $mission['status'],
             $mission['responsible_name'] ?? '',
             $mission['shift_count'],
-            $mission['volunteer_count'],
+            $mission['member_count'],
             formatDateTime($mission['created_at'])
         ]);
     }
@@ -127,9 +127,9 @@ function exportMissionsToCsv($filters = []) {
 }
 
 /**
- * Export volunteers to CSV (all fields incl. volunteer_profiles)
+ * Export members to CSV (all fields incl. member_profiles)
  */
-function exportVolunteersToCsv($filters = []) {
+function exportMembersToCsv($filters = []) {
     $where = ['u.is_active = 1'];
     $params = [];
 
@@ -159,7 +159,7 @@ function exportVolunteersToCsv($filters = []) {
                 u.registry_epidrasis,
                 u.registry_ggpp,
                 u.role,
-                u.volunteer_type,
+                u.member_type,
                 u.is_active,
                 u.total_points,
                 vp.address,
@@ -176,16 +176,16 @@ function exportVolunteersToCsv($filters = []) {
                 vp.has_driving_license,
                 vp.has_first_aid
             FROM users u
-            LEFT JOIN volunteer_profiles vp ON vp.user_id = u.id
+            LEFT JOIN member_profiles vp ON vp.user_id = u.id
             WHERE " . implode(' AND ', $where) . "
             ORDER BY LOWER(TRIM(SUBSTRING_INDEX(TRIM(u.name), ' ', 1))) ASC, LOWER(TRIM(u.name)) ASC, u.id ASC";
 
-    $volunteers = dbFetchAll($sql, $params);
+    $members = dbFetchAll($sql, $params);
 
     if (ob_get_level()) ob_end_clean();
 
     header('Content-Type: text/csv; charset=utf-8');
-    header('Content-Disposition: attachment; filename="volunteers_' . date('Y-m-d_His') . '.csv"');
+    header('Content-Disposition: attachment; filename="members_' . date('Y-m-d_His') . '.csv"');
 
     $out = fopen('php://output', 'w');
     fprintf($out, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
@@ -194,7 +194,7 @@ function exportVolunteersToCsv($filters = []) {
         ROLE_SYSTEM_ADMIN    => 'SYSTEM_ADMIN',
         ROLE_DEPARTMENT_ADMIN => 'DEPARTMENT_ADMIN',
         ROLE_SHIFT_LEADER    => 'SHIFT_LEADER',
-        ROLE_VOLUNTEER       => 'VOLUNTEER',
+        ROLE_MEMBER       => 'VOLUNTEER',
     ];
     $vtypes = ['VOLUNTEER' => 'VOLUNTEER', 'TRAINEE_RESCUER' => 'TRAINEE_RESCUER', 'RESCUER' => 'RESCUER'];
 
@@ -213,7 +213,7 @@ function exportVolunteersToCsv($filters = []) {
 
     $yn = fn($v) => $v ? 'Ναι' : 'Όχι';
 
-    foreach ($volunteers as $v) {
+    foreach ($members as $v) {
         fputcsv($out, [
             $v['id'],
             $v['name'],
@@ -231,7 +231,7 @@ function exportVolunteersToCsv($filters = []) {
             $v['registry_epidrasis'],
             $v['registry_ggpp'],
             $roleLabels[$v['role']] ?? $v['role'],
-            $v['volunteer_type'] ?? 'VOLUNTEER',
+            $v['member_type'] ?? 'VOLUNTEER',
             $yn($v['is_active']),
             $v['total_points'],
             $v['address'],
@@ -272,9 +272,9 @@ function exportParticipationsToCsv($filters = []) {
         $params[] = $filters['mission_id'];
     }
     
-    if (!empty($filters['volunteer_id'])) {
-        $where[] = 'pr.volunteer_id = ?';
-        $params[] = $filters['volunteer_id'];
+    if (!empty($filters['member_id'])) {
+        $where[] = 'pr.member_id = ?';
+        $params[] = $filters['member_id'];
     }
     
     if (!empty($filters['department_id'])) {
@@ -284,8 +284,8 @@ function exportParticipationsToCsv($filters = []) {
     
     $sql = "SELECT 
                 pr.id,
-                u.name AS volunteer_name,
-                u.email AS volunteer_email,
+                u.name AS member_name,
+                u.email AS member_email,
                 m.title AS mission_title,
                 s.start_time,
                 s.end_time,
@@ -296,7 +296,7 @@ function exportParticipationsToCsv($filters = []) {
                 pr.admin_notes,
                 pr.created_at
             FROM participation_requests pr
-            INNER JOIN users u ON pr.volunteer_id = u.id
+            INNER JOIN users u ON pr.member_id = u.id
             INNER JOIN shifts s ON pr.shift_id = s.id
             INNER JOIN missions m ON s.mission_id = m.id
             WHERE " . implode(' AND ', $where) . "
@@ -333,8 +333,8 @@ function exportParticipationsToCsv($filters = []) {
     foreach ($participations as $p) {
         fputcsv($output, [
             $p['id'],
-            $p['volunteer_name'],
-            $p['volunteer_email'],
+            $p['member_name'],
+            $p['member_email'],
             $p['mission_title'],
             formatDateTime($p['start_time']),
             formatDateTime($p['end_time']),
@@ -369,7 +369,7 @@ function exportStatisticsToCsv($period = 'monthly', $deptId = null) {
                     COUNT(DISTINCT pr.id) AS total_participations,
                     COUNT(DISTINCT CASE WHEN pr.attended = 1 THEN pr.id END) AS attended_count,
                     SUM(pr.actual_hours) AS total_hours,
-                    COUNT(DISTINCT pr.volunteer_id) AS unique_volunteers
+                    COUNT(DISTINCT pr.member_id) AS unique_members
                 FROM missions m
                 LEFT JOIN shifts s ON m.id = s.mission_id
                 LEFT JOIN participation_requests pr ON s.id = pr.shift_id AND pr.status = '" . PARTICIPATION_APPROVED . "'
@@ -384,7 +384,7 @@ function exportStatisticsToCsv($period = 'monthly', $deptId = null) {
                     COUNT(DISTINCT pr.id) AS total_participations,
                     COUNT(DISTINCT CASE WHEN pr.attended = 1 THEN pr.id END) AS attended_count,
                     SUM(pr.actual_hours) AS total_hours,
-                    COUNT(DISTINCT pr.volunteer_id) AS unique_volunteers
+                    COUNT(DISTINCT pr.member_id) AS unique_members
                 FROM missions m
                 LEFT JOIN shifts s ON m.id = s.mission_id
                 LEFT JOIN participation_requests pr ON s.id = pr.shift_id AND pr.status = '" . PARTICIPATION_APPROVED . "'
@@ -422,7 +422,7 @@ function exportStatisticsToCsv($period = 'monthly', $deptId = null) {
             $stat['total_participations'],
             $stat['attended_count'],
             $stat['total_hours'] ?? 0,
-            $stat['unique_volunteers']
+            $stat['unique_members']
         ]);
     }
     

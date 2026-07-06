@@ -85,7 +85,7 @@ if (isPost() && post('action') === 'bulk_complete_overdue') {
 
             if ($awardPoints && getSetting('points_enabled', '1') === '1') {
                 $toAward = dbFetchAll(
-                    "SELECT pr.id, pr.volunteer_id, pr.actual_hours, s.id AS shift_id, s.start_time, s.end_time
+                    "SELECT pr.id, pr.member_id, pr.actual_hours, s.id AS shift_id, s.start_time, s.end_time
                      FROM participation_requests pr
                      JOIN shifts s ON s.id = pr.shift_id
                      WHERE s.mission_id = ?
@@ -105,13 +105,13 @@ if (isPost() && post('action') === 'bulk_complete_overdue') {
                     $points = (int)round($hours * POINTS_PER_HOUR);
 
                     dbInsert(
-                        "INSERT INTO volunteer_points (user_id, points, reason, description, pointable_type, pointable_id, created_at)
+                        "INSERT INTO member_points (user_id, points, reason, description, pointable_type, pointable_id, created_at)
                          VALUES (?, ?, ?, ?, ?, ?, NOW())",
-                        [$pr['volunteer_id'], $points, 'SHIFT_COMPLETED', 'Σκέλος: ' . $bulkMission['title'], 'App\\Models\\Shift', $pr['shift_id']]
+                        [$pr['member_id'], $points, 'SHIFT_COMPLETED', 'Σκέλος: ' . $bulkMission['title'], 'App\\Models\\Shift', $pr['shift_id']]
                     );
                     dbExecute(
                         "UPDATE users SET total_points = total_points + ?, monthly_points = monthly_points + ? WHERE id = ?",
-                        [$points, $points, $pr['volunteer_id']]
+                        [$points, $points, $pr['member_id']]
                     );
                     dbExecute("UPDATE participation_requests SET points_awarded = 1, updated_at = NOW() WHERE id = ?", [$pr['id']]);
                     $pointsRows++;
@@ -171,13 +171,13 @@ if (isAdmin()) {
             "SELECT COUNT(*) FROM missions m WHERE status = ? AND start_datetime >= ? AND start_datetime < ? AND m.deleted_at IS NULL $departmentFilter",
             array_merge([STATUS_COMPLETED, $yearStart, $yearEnd], $params)
         ),
-        'volunteers_total' => dbFetchValue(
+        'members_total' => dbFetchValue(
             "SELECT COUNT(*) FROM users WHERE role = ? AND deleted_at IS NULL",
-            [ROLE_VOLUNTEER]
+            [ROLE_MEMBER]
         ),
-        'volunteers_active' => dbFetchValue(
+        'members_active' => dbFetchValue(
             "SELECT COUNT(*) FROM users WHERE role = ? AND is_active = 1 AND deleted_at IS NULL",
-            [ROLE_VOLUNTEER]
+            [ROLE_MEMBER]
         ),
         'pending_requests' => dbFetchValue(
             "SELECT COUNT(*) FROM participation_requests pr 
@@ -200,8 +200,8 @@ if (isAdmin()) {
              WHERE pr.attended = 1 AND s.start_time >= ? AND s.start_time < ? + INTERVAL 1 MONTH AND m.deleted_at IS NULL $departmentFilter",
             array_merge([$previousMonth . '-01', $previousMonth . '-01'], $params)
         ),
-        'active_volunteers_this_month' => dbFetchValue(
-            "SELECT COUNT(DISTINCT pr.volunteer_id) FROM participation_requests pr
+        'active_members_this_month' => dbFetchValue(
+            "SELECT COUNT(DISTINCT pr.member_id) FROM participation_requests pr
              JOIN shifts s ON pr.shift_id = s.id
              JOIN missions m ON s.mission_id = m.id
              WHERE pr.attended = 1 AND s.start_time >= ? AND s.start_time < ? + INTERVAL 1 MONTH AND m.deleted_at IS NULL $departmentFilter",
@@ -237,7 +237,7 @@ if (isAdmin()) {
 
     $prRows = dbFetchAll(
         "SELECT DATE_FORMAT(s.start_time, '%Y-%m') as month,
-                COUNT(DISTINCT pr.volunteer_id) as volunteers,
+                COUNT(DISTINCT pr.member_id) as members,
                 COALESCE(SUM(pr.actual_hours), 0) as hours
          FROM participation_requests pr
          JOIN shifts s ON pr.shift_id = s.id
@@ -246,7 +246,7 @@ if (isAdmin()) {
          GROUP BY DATE_FORMAT(s.start_time, '%Y-%m')",
         array_merge([$sixMonthsAgo, $nextMonth], $params)
     );
-    $volunteersMap = array_column($prRows, 'volunteers', 'month');
+    $membersMap = array_column($prRows, 'members', 'month');
     $hoursMap      = array_column($prRows, 'hours', 'month');
 
     $monthlyStats = [];
@@ -255,18 +255,18 @@ if (isAdmin()) {
         $monthlyStats[] = [
             'month'      => date('M Y', strtotime("-$i months")),
             'missions'   => (int)($missionsMap[$month]   ?? 0),
-            'volunteers' => (int)($volunteersMap[$month] ?? 0),
+            'members' => (int)($membersMap[$month] ?? 0),
             'hours'      => (float)($hoursMap[$month]    ?? 0),
         ];
     }
 
-    // Top volunteers this month
-    $topVolunteers = dbFetchAll(
+    // Top members this month
+    $topMembers = dbFetchAll(
         "SELECT u.id, u.name, u.total_points, 
                 COUNT(DISTINCT pr.id) as shifts_count,
                 COALESCE(SUM(pr.actual_hours), 0) as total_hours
          FROM users u
-         LEFT JOIN participation_requests pr ON u.id = pr.volunteer_id 
+         LEFT JOIN participation_requests pr ON u.id = pr.member_id 
              AND pr.attended = 1
          LEFT JOIN shifts s ON s.id = pr.shift_id
              AND s.start_time >= ? AND s.start_time < ? + INTERVAL 1 MONTH
@@ -274,7 +274,7 @@ if (isAdmin()) {
          GROUP BY u.id
          ORDER BY u.total_points DESC
          LIMIT 5",
-        [$currentMonth . '-01', $currentMonth . '-01', ROLE_VOLUNTEER]
+        [$currentMonth . '-01', $currentMonth . '-01', ROLE_MEMBER]
     );
     
     // Recent missions
@@ -301,7 +301,7 @@ if (isAdmin()) {
     $overdueMissions = dbFetchAll(
         "SELECT m.*, d.name as department_name,
                 (SELECT COUNT(*) FROM shifts s WHERE s.mission_id = m.id) AS shift_count,
-                (SELECT COALESCE(SUM(s.max_volunteers), 0) FROM shifts s WHERE s.mission_id = m.id) AS capacity_total,
+                (SELECT COALESCE(SUM(s.max_members), 0) FROM shifts s WHERE s.mission_id = m.id) AS capacity_total,
                 (SELECT COUNT(*)
                  FROM participation_requests pr
                  JOIN shifts s ON s.id = pr.shift_id
@@ -325,9 +325,9 @@ if (isAdmin()) {
     );
     
     $pendingRequests = dbFetchAll(
-        "SELECT pr.*, u.name as volunteer_name, s.start_time, s.end_time, m.title as mission_title
+        "SELECT pr.*, u.name as member_name, s.start_time, s.end_time, m.title as mission_title
          FROM participation_requests pr
-         JOIN users u ON pr.volunteer_id = u.id
+         JOIN users u ON pr.member_id = u.id
          JOIN shifts s ON pr.shift_id = s.id
          JOIN missions m ON s.mission_id = m.id
          WHERE pr.status = ? $departmentFilter
@@ -336,14 +336,14 @@ if (isAdmin()) {
         array_merge([PARTICIPATION_PENDING], $params)
     );
 } else {
-    // Volunteer statistics
+    // Member statistics
     $stats = [
         'my_shifts' => dbFetchValue(
-            "SELECT COUNT(*) FROM participation_requests WHERE volunteer_id = ? AND status = ?",
+            "SELECT COUNT(*) FROM participation_requests WHERE member_id = ? AND status = ?",
             [$user['id'], PARTICIPATION_APPROVED]
         ),
         'pending_requests' => dbFetchValue(
-            "SELECT COUNT(*) FROM participation_requests WHERE volunteer_id = ? AND status = ?",
+            "SELECT COUNT(*) FROM participation_requests WHERE member_id = ? AND status = ?",
             [$user['id'], PARTICIPATION_PENDING]
         ),
         'total_hours' => dbFetchValue(
@@ -353,7 +353,7 @@ if (isAdmin()) {
             ), 0)
             FROM participation_requests pr
             JOIN shifts s ON pr.shift_id = s.id
-            WHERE pr.volunteer_id = ? AND pr.status = ? AND pr.attended = 1",
+            WHERE pr.member_id = ? AND pr.status = ? AND pr.attended = 1",
             [$user['id'], PARTICIPATION_APPROVED]
         ),
         'total_points' => $user['total_points'] ?? 0,
@@ -365,7 +365,7 @@ if (isAdmin()) {
          FROM participation_requests pr
          JOIN shifts s ON pr.shift_id = s.id
          JOIN missions m ON s.mission_id = m.id
-         WHERE pr.volunteer_id = ? AND pr.status = ? AND s.start_time >= NOW()
+         WHERE pr.member_id = ? AND pr.status = ? AND s.start_time >= NOW()
          ORDER BY s.start_time ASC
          LIMIT 5",
         [$user['id'], PARTICIPATION_APPROVED]
@@ -404,7 +404,7 @@ if (isAdmin()) {
              FROM participation_requests pr
              JOIN shifts s ON pr.shift_id = s.id
              JOIN missions m ON s.mission_id = m.id
-             WHERE pr.volunteer_id = ? AND pr.attended = 1
+             WHERE pr.member_id = ? AND pr.attended = 1
              AND YEAR(m.start_datetime) = ?
              AND m.mission_type_id IN ($attPlaceholders)",
             array_merge([$user['id'], $currentYear], $attTypeIds)
@@ -428,7 +428,7 @@ if (isAdmin()) {
             FROM participation_requests pr
             JOIN shifts s ON pr.shift_id = s.id
             JOIN missions m ON s.mission_id = m.id
-            WHERE pr.volunteer_id = ? AND pr.status = ? AND pr.attended = 1
+            WHERE pr.member_id = ? AND pr.status = ? AND pr.attended = 1
               AND m.mission_type_id = ?",
             [$user['id'], PARTICIPATION_APPROVED, getTepMissionTypeId()]
         );
@@ -439,12 +439,12 @@ if (isAdmin()) {
     // Leaderboard rank
     $leaderboardRank = (int) dbFetchValue(
         "SELECT COUNT(*) + 1 FROM users
-         WHERE total_points > ? AND role IN ('" . ROLE_VOLUNTEER . "','" . ROLE_SHIFT_LEADER . "') AND is_active = 1 AND deleted_at IS NULL",
+         WHERE total_points > ? AND role IN ('" . ROLE_MEMBER . "','" . ROLE_SHIFT_LEADER . "') AND is_active = 1 AND deleted_at IS NULL",
         [$user['total_points'] ?? 0]
     );
     $leaderboardTotal = (int) dbFetchValue(
         "SELECT COUNT(*) FROM users
-         WHERE role IN ('" . ROLE_VOLUNTEER . "','" . ROLE_SHIFT_LEADER . "') AND is_active = 1 AND deleted_at IS NULL"
+         WHERE role IN ('" . ROLE_MEMBER . "','" . ROLE_SHIFT_LEADER . "') AND is_active = 1 AND deleted_at IS NULL"
     );
 
     // Recent achievements & next to earn
@@ -617,11 +617,11 @@ $liveExams = dbFetchAll("
 .ds-leader-rank.silver { background: linear-gradient(135deg, #d1d5db, #9ca3af); color: #fff; }
 .ds-leader-rank.bronze { background: linear-gradient(135deg, #d97706, #b45309); color: #fff; }
 .ds-leader-rank.default { background: #e5e7eb; color: #6b7280; }
-.volunteer-shift-card {
+.member-shift-card {
     border-left: 4px solid #667eea;
     transition: transform .15s, box-shadow .15s;
 }
-.volunteer-shift-card:hover { transform: translateX(4px); box-shadow: 0 2px 12px rgba(0,0,0,.08); }
+.member-shift-card:hover { transform: translateX(4px); box-shadow: 0 2px 12px rgba(0,0,0,.08); }
 .pulse-dot {
     display: inline-block;
     width: 8px;
@@ -815,7 +815,7 @@ $randomQuote = $quotes[array_rand($quotes)];
                 $remainingMin = ceil($secsLeft / 60);
             }
         }
-        // Check if current user (volunteer) has already taken it
+        // Check if current user (member) has already taken it
         $alreadyTaken = false;
         if (!isAdmin()) {
             $alreadyTaken = !canUserTakeExam($liveExam['id'], $user['id']);
@@ -904,9 +904,9 @@ $randomQuote = $quotes[array_rand($quotes)];
                         </div>
                         <div class="flex-grow-1">
                             <div class="stat-label">Ενεργά Μέλη</div>
-                            <div class="stat-number"><?= $stats['volunteers_active'] ?></div>
+                            <div class="stat-number"><?= $stats['members_active'] ?></div>
                             <span class="stat-trend neutral">
-                                <?= $stats['volunteers_active'] ?> / <?= $stats['volunteers_total'] ?> σύνολο
+                                <?= $stats['members_active'] ?> / <?= $stats['members_total'] ?> σύνολο
                             </span>
                         </div>
                     </div>
@@ -1002,7 +1002,7 @@ $randomQuote = $quotes[array_rand($quotes)];
             </div>
         </div>
         <?php endif; ?>
-    <?php endif; // else (volunteer stats) ?>
+    <?php endif; // else (member stats) ?>
 </div>
 
 <?php if (isAdmin()): ?>
@@ -1153,8 +1153,8 @@ $randomQuote = $quotes[array_rand($quotes)];
         </div>
     </div>
     
-    <!-- Top Volunteers Widget -->
-    <div class="widget-item mb-4" data-widget-id="top-volunteers">
+    <!-- Top Members Widget -->
+    <div class="widget-item mb-4" data-widget-id="top-members">
         <div class="card ds-widget accent-gold h-100 draggable-card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5>
@@ -1165,11 +1165,11 @@ $randomQuote = $quotes[array_rand($quotes)];
                 </button>
             </div>
             <div class="card-body p-0">
-                <?php if (empty($topVolunteers)): ?>
+                <?php if (empty($topMembers)): ?>
                     <p class="text-muted text-center py-4">Δεν υπάρχουν δεδομένα.</p>
                 <?php else: ?>
                     <div class="list-group list-group-flush">
-                        <?php foreach ($topVolunteers as $idx => $vol):
+                        <?php foreach ($topMembers as $idx => $vol):
                             $rankClass = $idx === 0 ? 'gold' : ($idx === 1 ? 'silver' : ($idx === 2 ? 'bronze' : 'default'));
                         ?>
                             <div class="list-group-item ds-leader-item d-flex align-items-center px-3 py-2">
@@ -1241,7 +1241,7 @@ $randomQuote = $quotes[array_rand($quotes)];
                         pr.created_at as timestamp,
                         pr.status
                     FROM participation_requests pr
-                    JOIN users u ON pr.volunteer_id = u.id
+                    JOIN users u ON pr.member_id = u.id
                     WHERE pr.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
                     ORDER BY timestamp DESC
                     LIMIT 10
@@ -1351,7 +1351,7 @@ $randomQuote = $quotes[array_rand($quotes)];
                                 <?php foreach ($pendingRequests as $request): ?>
                                     <tr>
                                         <td>
-                                            <strong><?= h($request['volunteer_name']) ?></strong>
+                                            <strong><?= h($request['member_name']) ?></strong>
                                             <br>
                                             <small class="text-muted">
                                                 <?= h($request['mission_title']) ?> · 
@@ -1441,7 +1441,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     {
                         label: 'Μέλη',
-                        data: <?= json_encode(array_column($monthlyStats, 'volunteers')) ?>,
+                        data: <?= json_encode(array_column($monthlyStats, 'members')) ?>,
                         borderColor: 'rgb(255, 159, 64)',
                         backgroundColor: 'rgba(255, 159, 64, 0.1)',
                         tension: 0.4
@@ -1625,7 +1625,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </label>
                     <label class="list-group-item d-flex align-items-center">
-                        <input type="checkbox" class="form-check-input me-3" data-widget="top-volunteers" checked>
+                        <input type="checkbox" class="form-check-input me-3" data-widget="top-members" checked>
                         <div>
                             <i class="bi bi-trophy text-warning me-2"></i>
                             <strong>Κορυφαία Μέλη</strong>
@@ -1953,7 +1953,7 @@ document.getElementById('clearPreferencesBtn')?.addEventListener('click', functi
                     <?php else: ?>
                         <div class="list-group list-group-flush">
                             <?php foreach ($myShifts as $shift): ?>
-                                <div class="list-group-item volunteer-shift-card">
+                                <div class="list-group-item member-shift-card">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div>
                                             <strong><?= h($shift['mission_title']) ?></strong>
@@ -1992,7 +1992,7 @@ document.getElementById('clearPreferencesBtn')?.addEventListener('click', functi
                     <?php else: ?>
                         <div class="list-group list-group-flush">
                             <?php foreach ($availableMissions as $mission): ?>
-                                <a href="mission-view.php?id=<?= $mission['id'] ?>" class="list-group-item list-group-item-action volunteer-shift-card" style="border-left-color:#10b981">
+                                <a href="mission-view.php?id=<?= $mission['id'] ?>" class="list-group-item list-group-item-action member-shift-card" style="border-left-color:#10b981">
                                     <div class="d-flex justify-content-between align-items-start">
                                         <div>
                                             <strong><?= h($mission['title']) ?></strong>

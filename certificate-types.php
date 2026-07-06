@@ -70,7 +70,7 @@ if (isPost()) {
         if (!$type) {
             setFlash('error', 'Ο τύπος δεν βρέθηκε.');
         } else {
-            $certCount = dbFetchValue("SELECT COUNT(*) FROM volunteer_certificates WHERE certificate_type_id = ?", [$id]);
+            $certCount = dbFetchValue("SELECT COUNT(*) FROM member_certificates WHERE certificate_type_id = ?", [$id]);
             if ($certCount > 0) {
                 setFlash('error', 'Δεν μπορείτε να διαγράψετε αυτόν τον τύπο γιατί υπάρχουν <strong>' . $certCount . '</strong> πιστοποιητικά εθελοντών που τον χρησιμοποιούν. Απενεργοποιήστε τον αντί αυτού.');
             } else {
@@ -88,7 +88,7 @@ $types = dbFetchAll(
     "SELECT ct.*, COUNT(vc.id) AS cert_count,
             SUM(CASE WHEN vc.expiry_date IS NOT NULL AND vc.expiry_date < CURDATE() THEN 1 ELSE 0 END) AS expired_count
      FROM certificate_types ct
-     LEFT JOIN volunteer_certificates vc ON ct.id = vc.certificate_type_id
+     LEFT JOIN member_certificates vc ON ct.id = vc.certificate_type_id
      GROUP BY ct.id
      ORDER BY ct.is_active DESC, ct.name"
 );

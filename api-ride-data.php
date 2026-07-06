@@ -60,7 +60,7 @@ if (!empty($shiftIds)) {
         "SELECT pr.id as participation_id, pr.shift_id, pr.field_status, pr.field_status_updated_at,
                 u.id as user_id, u.name, u.phone
          FROM participation_requests pr
-         JOIN users u ON u.id = pr.volunteer_id
+         JOIN users u ON u.id = pr.member_id
          WHERE pr.shift_id IN ($placeholders)
            AND pr.status = ?
          ORDER BY u.name ASC",
@@ -71,7 +71,7 @@ if (!empty($shiftIds)) {
         $columns = dbFetchAll(
             "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
              WHERE TABLE_SCHEMA = DATABASE()
-               AND TABLE_NAME = 'volunteer_pings'"
+               AND TABLE_NAME = 'member_pings'"
         );
         $existing = array_flip(array_column($columns, 'COLUMN_NAME'));
         $optionalSelect = [];
@@ -82,12 +82,12 @@ if (!empty($shiftIds)) {
         $pingRows = dbFetchAll(
             "SELECT vp.user_id, vp.shift_id, vp.lat, vp.lng, vp.created_at,
                     " . implode(', ', $optionalSelect) . "
-             FROM volunteer_pings vp
+             FROM member_pings vp
              WHERE vp.shift_id IN ($placeholders)
                AND vp.created_at >= DATE_SUB(NOW(), INTERVAL 12 HOUR)
                AND vp.id = (
                    SELECT MAX(vp2.id)
-                   FROM volunteer_pings vp2
+                   FROM member_pings vp2
                    WHERE vp2.user_id = vp.user_id
                      AND vp2.shift_id IN ($placeholders)
                )",
@@ -100,7 +100,7 @@ if (!empty($shiftIds)) {
 
         $recentRows = dbFetchAll(
             "SELECT vp.user_id, vp.lat, vp.lng, vp.created_at
-             FROM volunteer_pings vp
+             FROM member_pings vp
              WHERE vp.shift_id IN ($placeholders)
                AND vp.created_at >= DATE_SUB(NOW(), INTERVAL {$stationaryWindowMinutes} MINUTE)
              ORDER BY vp.user_id ASC, vp.created_at ASC",

@@ -2,7 +2,7 @@
 /**
  * VolunteerOps - Παραρτήματα (Regional Branches)
  * Manage city-based departments that serve dual purpose:
- *   - Τμήμα πόλης: assigned to volunteers (users.warehouse_id)
+ *   - Τμήμα πόλης: assigned to members (users.warehouse_id)
  *   - Αποθήκη:     assigned to inventory items (inventory_items.department_id)
  * 
  * These are departments with has_inventory = 1.
@@ -148,8 +148,8 @@ if (isPost()) {
 // Fetch branches (departments with has_inventory=1)
 $branches = dbFetchAll("
     SELECT d.*,
-        (SELECT COUNT(*) FROM users u WHERE u.warehouse_id = d.id AND u.is_active = 1) AS volunteer_count,
-        (SELECT COUNT(*) FROM users u WHERE u.warehouse_id = d.id) AS total_volunteer_count,
+        (SELECT COUNT(*) FROM users u WHERE u.warehouse_id = d.id AND u.is_active = 1) AS member_count,
+        (SELECT COUNT(*) FROM users u WHERE u.warehouse_id = d.id) AS total_member_count,
         (SELECT COUNT(*) FROM inventory_items i WHERE i.department_id = d.id AND i.is_active = 1) AS item_count,
         (SELECT COUNT(*) FROM inventory_items i WHERE i.department_id = d.id AND i.status = 'booked') AS booked_count,
         (SELECT COUNT(*) FROM inventory_locations l WHERE l.department_id = d.id) AS location_count,
@@ -253,13 +253,13 @@ include __DIR__ . '/includes/header.php';
                                     </div>
                                     <div class="col-6">
                                         <div class="text-center p-2 bg-light rounded">
-                                            <div class="fs-5 fw-bold text-primary"><?= $b['volunteer_count'] ?></div>
+                                            <div class="fs-5 fw-bold text-primary"><?= $b['member_count'] ?></div>
                                             <small class="text-muted">Ενεργοί</small>
                                         </div>
                                     </div>
                                     <div class="col-6">
                                         <div class="text-center p-2 bg-light rounded">
-                                            <div class="fs-5 fw-bold text-secondary"><?= $b['total_volunteer_count'] ?></div>
+                                            <div class="fs-5 fw-bold text-secondary"><?= $b['total_member_count'] ?></div>
                                             <small class="text-muted">Σύνολο</small>
                                         </div>
                                     </div>
@@ -315,7 +315,7 @@ include __DIR__ . '/includes/header.php';
 
                                 <!-- Action buttons -->
                                 <div class="d-flex gap-2 mt-3 pt-2 border-top">
-                                    <a href="volunteers.php?warehouse=<?= $b['id'] ?>" class="btn btn-sm btn-outline-primary flex-fill" title="Εθελοντές">
+                                    <a href="members.php?warehouse=<?= $b['id'] ?>" class="btn btn-sm btn-outline-primary flex-fill" title="Εθελοντές">
                                         <i class="bi bi-people me-1"></i>Εθελοντές
                                     </a>
                                     <a href="inventory.php?dept=<?= $b['id'] ?>" class="btn btn-sm btn-outline-success flex-fill" title="Υλικά">
@@ -334,7 +334,7 @@ include __DIR__ . '/includes/header.php';
                                             <i class="bi bi-<?= $b['is_active'] ? 'pause' : 'play' ?>"></i>
                                         </button>
                                     </form>
-                                    <?php if ($b['volunteer_count'] == 0 && $b['item_count'] == 0): ?>
+                                    <?php if ($b['member_count'] == 0 && $b['item_count'] == 0): ?>
                                         <form method="post" class="d-inline" onsubmit="return confirm('Διαγραφή παραρτήματος «<?= h($b['name']) ?>»;')">
                                             <?= csrfField() ?>
                                             <input type="hidden" name="action" value="delete">
@@ -471,7 +471,7 @@ include __DIR__ . '/includes/header.php';
             <div class="card-body">
                 <h6 class="card-title"><i class="bi bi-link-45deg me-1"></i>Σχετικές Σελίδες</h6>
                 <div class="list-group list-group-flush">
-                    <a href="volunteers.php" class="list-group-item list-group-item-action d-flex align-items-center">
+                    <a href="members.php" class="list-group-item list-group-item-action d-flex align-items-center">
                         <i class="bi bi-people text-primary me-2"></i>Εθελοντές
                         <small class="text-muted ms-auto">Αντιστοίχιση πόλης</small>
                     </a>

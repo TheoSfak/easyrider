@@ -189,7 +189,7 @@ function canManageInventory() {
 /**
  * Apply department filter to an inventory query.
  * System admins can optionally filter by department via session.
- * Department admins/volunteers see only their department + global items.
+ * Department admins/members see only their department + global items.
  *
  * @param string $query SQL query being built
  * @param array  $params Query parameters
@@ -379,19 +379,19 @@ function createInventoryBooking($itemId, $userId, $data = []) {
             throw new Exception('Δεν έχετε πρόσβαση σε αυτό το υλικό.');
         }
 
-        $volunteer = dbFetchOne("SELECT name, phone, email FROM users WHERE id = ?", [$userId]);
+        $member = dbFetchOne("SELECT name, phone, email FROM users WHERE id = ?", [$userId]);
 
         $bookingId = dbInsert("
             INSERT INTO inventory_bookings 
-                (item_id, user_id, volunteer_name, volunteer_phone, volunteer_email,
+                (item_id, user_id, member_name, member_phone, member_email,
                  mission_location, notes, expected_return_date, status)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active')
         ", [
             $itemId,
             $userId,
-            $volunteer['name'],
-            $volunteer['phone'] ?? '',
-            $volunteer['email'] ?? '',
+            $member['name'],
+            $member['phone'] ?? '',
+            $member['email'] ?? '',
             $data['mission_location'] ?? '',
             $data['notes'] ?? '',
             !empty($data['expected_return_date']) ? $data['expected_return_date'] : null,

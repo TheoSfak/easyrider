@@ -1,31 +1,31 @@
 ﻿<?php
 /**
- * VolunteerOps - Volunteer View
+ * VolunteerOps - Member View
  */
 
 require_once __DIR__ . '/bootstrap.php';
-requirePermission('volunteers_view');
+requirePermission('members_view');
 
 $id = (int) get('id');
 if (!$id) {
-    redirect('volunteers.php');
+    redirect('members.php');
 }
 
-$volunteer = dbFetchOne(
+$member = dbFetchOne(
     "SELECT u.*,
             vp.name as position_name, vp.color as position_color, vp.icon as position_icon
      FROM users u 
-     LEFT JOIN volunteer_positions vp ON u.position_id = vp.id
+     LEFT JOIN member_positions vp ON u.position_id = vp.id
      WHERE u.id = ?",
     [$id]
 );
 
-if (!$volunteer) {
+if (!$member) {
     setFlash('error', 'Ο εθελοντής δεν βρέθηκε.');
-    redirect('volunteers.php');
+    redirect('members.php');
 }
 
-$pageTitle = $volunteer['name'];
+$pageTitle = $member['name'];
 
 // Handle actions
 if (isPost()) {
@@ -37,7 +37,7 @@ if (isPost()) {
         // Only system admins can delete personal data
         if (!isSystemAdmin()) {
             setFlash('error', 'Δεν έχετε δικαίωμα για αυτή την ενέργεια.');
-            redirect('volunteer-view.php?id=' . $id);
+            redirect('member-view.php?id=' . $id);
         }
         
         // Anonymize user data
@@ -56,8 +56,8 @@ if (isPost()) {
                 ['[Διαγραμμένος Χρήστης]', $anonymizedEmail, $id]
             );
             
-            // Delete volunteer profile
-            dbExecute("DELETE FROM volunteer_profiles WHERE user_id = ?", [$id]);
+            // Delete member profile
+            dbExecute("DELETE FROM member_profiles WHERE user_id = ?", [$id]);
             
             // Delete user skills
             dbExecute("DELETE FROM user_skills WHERE user_id = ?", [$id]);
@@ -76,23 +76,23 @@ if (isPost()) {
             db()->rollBack();
             setFlash('error', 'Σφάλμα κατά τη διαγραφή προσωπικών δεδομένων.');
         }
-        redirect('volunteers.php');
+        redirect('members.php');
     }
 
     if ($action === 'upload_document') {
         if (!isAdmin()) {
             setFlash('error', 'Δεν έχετε δικαίωμα για αυτή την ενέργεια.');
-            redirect('volunteer-view.php?id=' . $id);
+            redirect('member-view.php?id=' . $id);
         }
         if (empty($_FILES['doc_files']['name'][0])) {
             setFlash('error', 'Παρακαλώ επιλέξτε τουλάχιστον ένα αρχείο.');
-            redirect('volunteer-view.php?id=' . $id . '#documents');
+            redirect('member-view.php?id=' . $id . '#documents');
         }
         $allowedMime = ['application/pdf', 'image/jpeg', 'image/png', 'image/gif',
                         'image/webp', 'application/msword',
                         'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
         $allowedExt  = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'webp', 'doc', 'docx'];
-        $destDir     = __DIR__ . '/uploads/volunteer-docs/';
+        $destDir     = __DIR__ . '/uploads/member-docs/';
         if (!is_dir($destDir)) mkdir($destDir, 0755, true);
         $uploadedCount = 0;
         $errors        = [];
@@ -124,11 +124,11 @@ if (isPost()) {
                 continue;
             }
             dbInsert(
-                "INSERT INTO volunteer_documents (user_id, label, original_name, stored_name, mime_type, file_size, uploaded_by, created_at)
+                "INSERT INTO member_documents (user_id, label, original_name, stored_name, mime_type, file_size, uploaded_by, created_at)
                  VALUES (?, ?, ?, ?, ?, ?, ?, NOW())",
                 [$id, $label, $origName, $storedName, $mime, $_FILES['doc_files']['size'][$i], getCurrentUserId()]
             );
-            logAudit('upload_document', 'volunteer_documents', $id, $origName);
+            logAudit('upload_document', 'member_documents', $id, $origName);
             $uploadedCount++;
         }
         if ($uploadedCount > 0) {
@@ -138,30 +138,30 @@ if (isPost()) {
         } else {
             setFlash('error', 'Κανένα αρχείο δεν ανέβηκε.' . (!empty($errors) ? ' ' . implode(', ', $errors) : ''));
         }
-        redirect('volunteer-view.php?id=' . $id . '#documents');
+        redirect('member-view.php?id=' . $id . '#documents');
     }
 
     if ($action === 'delete_document') {
         if (!isAdmin()) {
             setFlash('error', 'Δεν έχετε δικαίωμα για αυτή την ενέργεια.');
-            redirect('volunteer-view.php?id=' . $id);
+            redirect('member-view.php?id=' . $id);
         }
         $docId = (int) post('doc_id');
-        $doc   = dbFetchOne("SELECT * FROM volunteer_documents WHERE id = ? AND user_id = ?", [$docId, $id]);
+        $doc   = dbFetchOne("SELECT * FROM member_documents WHERE id = ? AND user_id = ?", [$docId, $id]);
         if ($doc) {
-            $filePath = __DIR__ . '/uploads/volunteer-docs/' . $doc['stored_name'];
+            $filePath = __DIR__ . '/uploads/member-docs/' . $doc['stored_name'];
             if (file_exists($filePath)) unlink($filePath);
-            dbExecute("DELETE FROM volunteer_documents WHERE id = ?", [$docId]);
-            logAudit('delete_document', 'volunteer_documents', $docId, $doc['label']);
+            dbExecute("DELETE FROM member_documents WHERE id = ?", [$docId]);
+            logAudit('delete_document', 'member_documents', $docId, $doc['label']);
             setFlash('success', 'Το αρχείο διαγράφηκε.');
         }
-        redirect('volunteer-view.php?id=' . $id . '#documents');
+        redirect('member-view.php?id=' . $id . '#documents');
     }
 
     if ($action === 'upload_photo') {
         if (!isAdmin()) {
             setFlash('error', 'Δεν έχετε δικαίωμα για αυτή την ενέργεια.');
-            redirect('volunteer-view.php?id=' . $id);
+            redirect('member-view.php?id=' . $id);
         }
         if (!empty($_FILES['photo']['name']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
             $file = $_FILES['photo'];
@@ -212,13 +212,13 @@ if (isPost()) {
             logAudit('delete_photo', 'users', $id);
             setFlash('success', 'Η φωτογραφία διαγράφηκε.');
         }
-        redirect('volunteer-view.php?id=' . $id);
+        redirect('member-view.php?id=' . $id);
     }
 
     if ($action === 'update_member_since') {
         if (!isAdmin()) {
             setFlash('error', 'Δεν έχετε δικαίωμα για αυτή την ενέργεια.');
-            redirect('volunteer-view.php?id=' . $id);
+            redirect('member-view.php?id=' . $id);
         }
         $newDate = post('member_since_date', '');
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $newDate) || !strtotime($newDate)) {
@@ -228,17 +228,17 @@ if (isPost()) {
             logAudit('update_member_since', 'users', $id, 'Αλλαγή ημερομηνίας μέλους σε ' . $newDate);
             setFlash('success', 'Η ημερομηνία μέλους ενημερώθηκε.');
         }
-        redirect('volunteer-view.php?id=' . $id);
+        redirect('member-view.php?id=' . $id);
     }
 
 }
 
 // Get profile
-$profile = dbFetchOne("SELECT * FROM volunteer_profiles WHERE user_id = ?", [$id]);
+$profile = dbFetchOne("SELECT * FROM member_profiles WHERE user_id = ?", [$id]);
 
 // Get documents
 $documents = dbFetchAll(
-    "SELECT vd.*, u.name as uploader_name FROM volunteer_documents vd
+    "SELECT vd.*, u.name as uploader_name FROM member_documents vd
      LEFT JOIN users u ON vd.uploaded_by = u.id
      WHERE vd.user_id = ? ORDER BY vd.created_at DESC",
     [$id]
@@ -262,7 +262,7 @@ $participations = dbFetchAll(
      FROM participation_requests pr
      JOIN shifts s ON pr.shift_id = s.id
      JOIN missions m ON s.mission_id = m.id
-     WHERE pr.volunteer_id = ?
+     WHERE pr.member_id = ?
      ORDER BY s.start_time DESC
      LIMIT 20",
     [$id]
@@ -271,19 +271,19 @@ $participations = dbFetchAll(
 // Get stats
 $stats = [
     'total_shifts' => dbFetchValue(
-        "SELECT COUNT(*) FROM participation_requests WHERE volunteer_id = ? AND status = '" . PARTICIPATION_APPROVED . "'",
+        "SELECT COUNT(*) FROM participation_requests WHERE member_id = ? AND status = '" . PARTICIPATION_APPROVED . "'",
         [$id]
     ),
     'attended_shifts' => dbFetchValue(
-        "SELECT COUNT(*) FROM participation_requests WHERE volunteer_id = ? AND attended = 1",
+        "SELECT COUNT(*) FROM participation_requests WHERE member_id = ? AND attended = 1",
         [$id]
     ),
     'total_hours' => dbFetchValue(
-        "SELECT COALESCE(SUM(actual_hours), 0) FROM participation_requests WHERE volunteer_id = ? AND attended = 1",
+        "SELECT COALESCE(SUM(actual_hours), 0) FROM participation_requests WHERE member_id = ? AND attended = 1",
         [$id]
     ),
     'pending_requests' => dbFetchValue(
-        "SELECT COUNT(*) FROM participation_requests WHERE volunteer_id = ? AND status = '" . PARTICIPATION_PENDING . "'",
+        "SELECT COUNT(*) FROM participation_requests WHERE member_id = ? AND status = '" . PARTICIPATION_PENDING . "'",
         [$id]
     ),
 ];
@@ -300,7 +300,7 @@ if (empty($attTypeIds)) {
          FROM participation_requests pr
          JOIN shifts s ON pr.shift_id = s.id
          JOIN missions m ON s.mission_id = m.id
-         WHERE pr.volunteer_id = ? AND pr.attended = 1
+         WHERE pr.member_id = ? AND pr.attended = 1
          AND YEAR(m.start_datetime) = ?
          AND m.mission_type_id IN ($attPlaceholders)",
         array_merge([$id, $currentYear], $attTypeIds)
@@ -315,7 +315,7 @@ $tepHours = 0;
 $tepGoal = (int) getSetting('prereq_tep_hours_goal', '40');
 $tepPct = 0;
 $tepColor = 'danger';
-if (($volunteer['volunteer_type'] ?? '') === VTYPE_TRAINEE) {
+if (($member['member_type'] ?? '') === VTYPE_TRAINEE) {
     $tepHours = (float) dbFetchValue(
         "SELECT COALESCE(SUM(
             CASE WHEN pr.actual_hours IS NOT NULL THEN pr.actual_hours
@@ -324,7 +324,7 @@ if (($volunteer['volunteer_type'] ?? '') === VTYPE_TRAINEE) {
         FROM participation_requests pr
         JOIN shifts s ON pr.shift_id = s.id
         JOIN missions m ON s.mission_id = m.id
-        WHERE pr.volunteer_id = ? AND pr.status = ? AND pr.attended = 1
+        WHERE pr.member_id = ? AND pr.status = ? AND pr.attended = 1
           AND m.mission_type_id = ?",
         [$id, PARTICIPATION_APPROVED, getTepMissionTypeId()]
     );
@@ -337,13 +337,13 @@ $eduMissions = 0;
 $eduGoal = (int) getSetting('prereq_edu_attendance_goal', '2');
 $eduPct = 0;
 $eduColor = 'danger';
-if (($volunteer['volunteer_type'] ?? '') === VTYPE_RESCUER) {
+if (($member['member_type'] ?? '') === VTYPE_RESCUER) {
     $eduMissions = (int) dbFetchValue(
         "SELECT COUNT(DISTINCT m.id)
          FROM participation_requests pr
          JOIN shifts s ON pr.shift_id = s.id
          JOIN missions m ON s.mission_id = m.id
-         WHERE pr.volunteer_id = ? AND pr.attended = 1
+         WHERE pr.member_id = ? AND pr.attended = 1
            AND YEAR(m.start_datetime) = ?
            AND m.mission_type_id = ?",
         [$id, $currentYear, getEduMissionTypeId()]
@@ -357,7 +357,7 @@ $pointsHistory = dbFetchAll(
     "SELECT vp.*, 
             CASE WHEN vp.pointable_type = 'App\\\\Models\\\\Shift' THEN s.id ELSE NULL END as shift_id,
             CASE WHEN vp.pointable_type = 'App\\\\Models\\\\Shift' THEN m.title ELSE NULL END as shift_title
-     FROM volunteer_points vp
+     FROM member_points vp
      LEFT JOIN shifts s ON vp.pointable_type = 'App\\\\Models\\\\Shift' AND vp.pointable_id = s.id
      LEFT JOIN missions m ON s.mission_id = m.id
      WHERE vp.user_id = ?
@@ -391,7 +391,7 @@ $quizAttempts = dbFetchAll(
     [$id]
 );
 
-// Active inventory bookings for this volunteer
+// Active inventory bookings for this member
 $activeBookings = [];
 if (function_exists('inventoryTablesExist') && inventoryTablesExist()) {
     $activeBookings = getUserActiveBookings($id);
@@ -406,7 +406,7 @@ include __DIR__ . '/includes/header.php';
 ?>
 
 <style>
-/* Volunteer Profile Beautification */
+/* Member Profile Beautification */
 .hero-profile {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 1rem;
@@ -520,7 +520,7 @@ include __DIR__ . '/includes/header.php';
 <div class="hero-profile">
     <div class="d-flex align-items-center gap-3">
         <?php
-        $vpPhoto = $volunteer['profile_photo'] ?? null;
+        $vpPhoto = $member['profile_photo'] ?? null;
         $vpPhotoExists = $vpPhoto && file_exists(__DIR__ . '/uploads/avatars/' . $vpPhoto);
         ?>
         <?php if ($vpPhotoExists): ?>
@@ -530,40 +530,40 @@ include __DIR__ . '/includes/header.php';
         <?php endif; ?>
         <div class="flex-grow-1">
             <h1 class="h4 mb-1 text-white fw-bold">
-                <?= h($volunteer['name']) ?>
-                <?= volunteerTypeBadge($volunteer['volunteer_type'] ?? VTYPE_RESCUER) ?>
-                <?php if (!empty($volunteer['position_name'])): ?>
-                    <span class="badge bg-<?= h($volunteer['position_color'] ?? 'secondary') ?> ms-1" style="font-size:.7rem">
-                        <?php if ($volunteer['position_icon']): ?><i class="<?= h($volunteer['position_icon']) ?> me-1"></i><?php endif; ?>
-                        <?= h($volunteer['position_name']) ?>
+                <?= h($member['name']) ?>
+                <?= memberTypeBadge($member['member_type'] ?? VTYPE_RESCUER) ?>
+                <?php if (!empty($member['position_name'])): ?>
+                    <span class="badge bg-<?= h($member['position_color'] ?? 'secondary') ?> ms-1" style="font-size:.7rem">
+                        <?php if ($member['position_icon']): ?><i class="<?= h($member['position_icon']) ?> me-1"></i><?php endif; ?>
+                        <?= h($member['position_name']) ?>
                     </span>
                 <?php endif; ?>
             </h1>
             <div style="opacity:.85">
-                <i class="bi bi-envelope me-1"></i><?= h($volunteer['email']) ?>
-                <?php if ($volunteer['phone']): ?>
-                    <span class="ms-3"><i class="bi bi-telephone me-1"></i><?php if ($volunteer['phone']): ?><a href="tel:<?= h($volunteer['phone']) ?>" style="color:#fff !important; text-decoration:none;"><?= h($volunteer['phone']) ?></a><?php else: ?>-<?php endif; ?></span>
+                <i class="bi bi-envelope me-1"></i><?= h($member['email']) ?>
+                <?php if ($member['phone']): ?>
+                    <span class="ms-3"><i class="bi bi-telephone me-1"></i><?php if ($member['phone']): ?><a href="tel:<?= h($member['phone']) ?>" style="color:#fff !important; text-decoration:none;"><?= h($member['phone']) ?></a><?php else: ?>-<?php endif; ?></span>
                 <?php endif; ?>
             </div>
             <div class="mt-1">
-                <?php if ($volunteer['is_active']): ?>
+                <?php if ($member['is_active']): ?>
                     <span class="badge bg-success" style="font-size:.72rem"><i class="bi bi-check-circle me-1"></i>Ενεργός</span>
                 <?php else: ?>
                     <span class="badge bg-secondary" style="font-size:.72rem">Ανενεργός</span>
                 <?php endif; ?>
-                <?= roleBadge($volunteer['role']) ?>
-                <span class="badge bg-light text-dark ms-1" style="font-size:.72rem"><i class="bi bi-calendar3 me-1"></i>Μέλος από <?= formatDate($volunteer['created_at']) ?><?php if (isAdmin()): ?> <a href="#" data-bs-toggle="modal" data-bs-target="#memberSinceModal" style="color:#6c757d;" title="Αλλαγή ημερομηνίας"><i class="bi bi-pencil-square"></i></a><?php endif; ?></span>
+                <?= roleBadge($member['role']) ?>
+                <span class="badge bg-light text-dark ms-1" style="font-size:.72rem"><i class="bi bi-calendar3 me-1"></i>Μέλος από <?= formatDate($member['created_at']) ?><?php if (isAdmin()): ?> <a href="#" data-bs-toggle="modal" data-bs-target="#memberSinceModal" style="color:#6c757d;" title="Αλλαγή ημερομηνίας"><i class="bi bi-pencil-square"></i></a><?php endif; ?></span>
             </div>
         </div>
         <div class="hero-actions d-flex gap-2 flex-shrink-0">
-            <a href="volunteer-form.php?id=<?= $id ?>" class="btn btn-sm"><i class="bi bi-pencil me-1"></i>Επεξεργασία</a>
-            <a href="volunteer-report.php?id=<?= $id ?>" target="_blank" class="btn btn-sm"><i class="bi bi-file-earmark-text me-1"></i>Αναφορά</a>
+            <a href="member-form.php?id=<?= $id ?>" class="btn btn-sm"><i class="bi bi-pencil me-1"></i>Επεξεργασία</a>
+            <a href="member-report.php?id=<?= $id ?>" target="_blank" class="btn btn-sm"><i class="bi bi-file-earmark-text me-1"></i>Αναφορά</a>
             <?php if (isSystemAdmin()): ?>
                 <button type="button" class="btn btn-sm" data-bs-toggle="modal" data-bs-target="#deleteDataModal">
                     <i class="bi bi-shield-x me-1"></i>Διαγραφή Δεδομένων
                 </button>
             <?php endif; ?>
-            <a href="volunteers.php" class="btn btn-sm"><i class="bi bi-arrow-left me-1"></i>Πίσω</a>
+            <a href="members.php" class="btn btn-sm"><i class="bi bi-arrow-left me-1"></i>Πίσω</a>
         </div>
     </div>
 </div>
@@ -599,7 +599,7 @@ include __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<?php if (($volunteer['volunteer_type'] ?? '') === VTYPE_TRAINEE): ?>
+<?php if (($member['member_type'] ?? '') === VTYPE_TRAINEE): ?>
 <!-- Τ.Ε.Π. Hours Progress Bar (only for trainee rescuers) -->
 <div class="card vp-card mb-4" style="border-left: 4px solid var(--bs-<?= $tepColor ?>)">
     <div class="card-body py-3">
@@ -633,7 +633,7 @@ include __DIR__ . '/includes/header.php';
 </div>
 <?php endif; // VTYPE_TRAINEE ?>
 
-<?php if (($volunteer['volunteer_type'] ?? '') === VTYPE_RESCUER): ?>
+<?php if (($member['member_type'] ?? '') === VTYPE_RESCUER): ?>
 <!-- Εκπαιδευτικές Αποστολές Progress Bar (only for rescuers) -->
 <div class="card vp-card mb-4" style="border-left: 4px solid var(--bs-<?= $eduColor ?>)">
     <div class="card-body py-3">
@@ -707,7 +707,7 @@ include __DIR__ . '/includes/header.php';
             <div class="card-body d-flex align-items-center gap-3 py-3 px-3">
                 <div class="stat-icon" style="background:linear-gradient(135deg,#f59e0b,#d97706)"><i class="bi bi-star-fill"></i></div>
                 <div>
-                    <div class="stat-value text-dark"><?= number_format($volunteer['total_points']) ?></div>
+                    <div class="stat-value text-dark"><?= number_format($member['total_points']) ?></div>
                     <small class="text-muted">Πόντοι</small>
                 </div>
             </div>
@@ -727,26 +727,26 @@ include __DIR__ . '/includes/header.php';
                 <div class="row g-2">
                     <div class="col-md-6">
                         <div class="vp-info-label"><i class="bi bi-telephone me-1"></i>Τηλέφωνο</div>
-                        <div class="vp-info-value"><?= h($volunteer['phone'] ?: '-') ?></div>
+                        <div class="vp-info-value"><?= h($member['phone'] ?: '-') ?></div>
                     </div>
                     <div class="col-md-6">
                         <div class="vp-info-label"><i class="bi bi-card-text me-1"></i>Ταυτότητα</div>
-                        <div class="vp-info-value"><?= h($volunteer['id_card'] ?: '-') ?></div>
+                        <div class="vp-info-value"><?= h($member['id_card'] ?: '-') ?></div>
                         <div class="vp-info-label"><i class="bi bi-receipt me-1"></i>ΑΦΜ</div>
-                        <div class="vp-info-value"><?= h($volunteer['afm'] ?: '-') ?></div>
-                        <?php if (!empty($volunteer['position_name'])): ?>
+                        <div class="vp-info-value"><?= h($member['afm'] ?: '-') ?></div>
+                        <?php if (!empty($member['position_name'])): ?>
                         <div class="vp-info-label"><i class="bi bi-person-gear me-1"></i>Θέση / Ρόλος</div>
                         <div class="vp-info-value">
-                            <span class="badge bg-<?= h($volunteer['position_color'] ?? 'secondary') ?>">
-                                <?php if ($volunteer['position_icon']): ?><i class="<?= h($volunteer['position_icon']) ?> me-1"></i><?php endif; ?>
-                                <?= h($volunteer['position_name']) ?>
+                            <span class="badge bg-<?= h($member['position_color'] ?? 'secondary') ?>">
+                                <?php if ($member['position_icon']): ?><i class="<?= h($member['position_icon']) ?> me-1"></i><?php endif; ?>
+                                <?= h($member['position_name']) ?>
                             </span>
                         </div>
                         <?php endif; ?>
                         <div class="vp-info-label"><i class="bi bi-hash me-1"></i>Α.Μ.Κ.Α.</div>
-                        <div class="vp-info-value"><?= h($volunteer['amka'] ?: '-') ?></div>
+                        <div class="vp-info-value"><?= h($member['amka'] ?: '-') ?></div>
                         <div class="vp-info-label"><i class="bi bi-car-front me-1"></i>Άδεια Οδήγησης / Όχημα</div>
-                        <div class="vp-info-value"><?= h($volunteer['driving_license'] ?: '-') ?> <?= $volunteer['vehicle_plate'] ? '/ ' . h($volunteer['vehicle_plate']) : '' ?></div>
+                        <div class="vp-info-value"><?= h($member['driving_license'] ?: '-') ?> <?= $member['vehicle_plate'] ? '/ ' . h($member['vehicle_plate']) : '' ?></div>
                     </div>
                 </div>
                 
@@ -755,18 +755,18 @@ include __DIR__ . '/includes/header.php';
                     <div class="col-md-6">
                         <h6 class="text-primary mb-2" style="font-size:.85rem"><i class="bi bi-person-badge me-1"></i>Μεγέθη Στολής</h6>
                         <div class="d-flex flex-wrap gap-2 mb-2">
-                            <span class="badge bg-light text-dark border"><i class="bi bi-slash-circle me-1"></i>Παντ: <?= h($volunteer['pants_size'] ?: '-') ?></span>
-                            <span class="badge bg-light text-dark border"><i class="bi bi-slash-circle me-1"></i>Χιτ: <?= h($volunteer['shirt_size'] ?: '-') ?></span>
-                            <span class="badge bg-light text-dark border"><i class="bi bi-slash-circle me-1"></i>Μπλ: <?= h($volunteer['blouse_size'] ?: '-') ?></span>
-                            <span class="badge bg-light text-dark border"><i class="bi bi-slash-circle me-1"></i>Fl: <?= h($volunteer['fleece_size'] ?: '-') ?></span>
+                            <span class="badge bg-light text-dark border"><i class="bi bi-slash-circle me-1"></i>Παντ: <?= h($member['pants_size'] ?: '-') ?></span>
+                            <span class="badge bg-light text-dark border"><i class="bi bi-slash-circle me-1"></i>Χιτ: <?= h($member['shirt_size'] ?: '-') ?></span>
+                            <span class="badge bg-light text-dark border"><i class="bi bi-slash-circle me-1"></i>Μπλ: <?= h($member['blouse_size'] ?: '-') ?></span>
+                            <span class="badge bg-light text-dark border"><i class="bi bi-slash-circle me-1"></i>Fl: <?= h($member['fleece_size'] ?: '-') ?></span>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <h6 class="text-primary mb-2" style="font-size:.85rem"><i class="bi bi-journal-text me-1"></i>Μητρώα</h6>
                         <div class="vp-info-label">ΕΠΙΔΡΑΣΙΣ</div>
-                        <div class="vp-info-value"><?= h($volunteer['registry_epidrasis'] ?: '-') ?></div>
+                        <div class="vp-info-value"><?= h($member['registry_epidrasis'] ?: '-') ?></div>
                         <div class="vp-info-label">Γ.Γ.Π.Π.</div>
-                        <div class="vp-info-value"><?= h($volunteer['registry_ggpp'] ?: '-') ?></div>
+                        <div class="vp-info-value"><?= h($member['registry_ggpp'] ?: '-') ?></div>
                     </div>
                 </div>
 
@@ -1001,11 +1001,11 @@ include __DIR__ . '/includes/header.php';
             </div>
             <div class="card-body text-center">
                 <?php
-                $volunteerPhoto = $volunteer['profile_photo'] ?? null;
-                $photoExists = $volunteerPhoto && file_exists(__DIR__ . '/uploads/avatars/' . $volunteerPhoto);
+                $memberPhoto = $member['profile_photo'] ?? null;
+                $photoExists = $memberPhoto && file_exists(__DIR__ . '/uploads/avatars/' . $memberPhoto);
                 ?>
                 <?php if ($photoExists): ?>
-                    <img src="<?= BASE_URL ?>/uploads/avatars/<?= h($volunteerPhoto) ?>?t=<?= time() ?>"
+                    <img src="<?= BASE_URL ?>/uploads/avatars/<?= h($memberPhoto) ?>?t=<?= time() ?>"
                          class="rounded-circle mb-3" style="width:120px;height:120px;object-fit:cover;" alt="">
                 <?php else: ?>
                     <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center mx-auto mb-3"
@@ -1013,8 +1013,8 @@ include __DIR__ . '/includes/header.php';
                         <i class="bi bi-person-fill"></i>
                     </div>
                 <?php endif; ?>
-                <h5 class="mb-1"><?= h($volunteer['name']) ?></h5>
-                <small class="text-muted d-block mb-3"><?= h($volunteer['email']) ?></small>
+                <h5 class="mb-1"><?= h($member['name']) ?></h5>
+                <small class="text-muted d-block mb-3"><?= h($member['email']) ?></small>
 
                 <?php if (isAdmin()): ?>
                     <form method="post" enctype="multipart/form-data">
@@ -1111,7 +1111,7 @@ include __DIR__ . '/includes/header.php';
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div class="text-truncate me-2" style="max-width:220px">
                                         <i class="bi <?= $icon ?> me-1"></i>
-                                        <a href="volunteer-doc-download.php?id=<?= $doc['id'] ?>&volunteer=<?= $id ?>" target="_blank" class="fw-semibold text-decoration-none">
+                                        <a href="member-doc-download.php?id=<?= $doc['id'] ?>&member=<?= $id ?>" target="_blank" class="fw-semibold text-decoration-none">
                                             <?= h($doc['original_name']) ?>
                                         </a>
                                         <br>
@@ -1246,7 +1246,7 @@ include __DIR__ . '/includes/header.php';
                             <tr class="doc-row">
                                 <td>
                                     <i class="bi <?= $icon ?> me-1"></i>
-                                    <a href="volunteer-doc-download.php?id=<?= $doc['id'] ?>&volunteer=<?= $id ?>" target="_blank" class="fw-semibold text-decoration-none doc-name">
+                                    <a href="member-doc-download.php?id=<?= $doc['id'] ?>&member=<?= $id ?>" target="_blank" class="fw-semibold text-decoration-none doc-name">
                                         <?= h($doc['original_name']) ?>
                                     </a>
                                 </td>
@@ -1306,7 +1306,7 @@ include __DIR__ . '/includes/header.php';
                     <li>Ειδοποιήσεις</li>
                 </ul>
                 <p class="text-muted"><small><i class="bi bi-info-circle me-1"></i>Οι συμμετοχές σε αποστολές και βάρδιες θα διατηρηθούν για στατιστικούς λόγους, αλλά θα συνδεθούν με ανωνυμοποιημένο χρήστη.</small></p>
-                <p class="mb-0">Είστε σίγουροι ότι θέλετε να διαγράψετε τα προσωπικά δεδομένα του <strong><?= h($volunteer['name']) ?></strong>;</p>
+                <p class="mb-0">Είστε σίγουροι ότι θέλετε να διαγράψετε τα προσωπικά δεδομένα του <strong><?= h($member['name']) ?></strong>;</p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
@@ -1338,7 +1338,7 @@ include __DIR__ . '/includes/header.php';
                 </div>
                 <div class="modal-body">
                     <label class="form-label">Μέλος από</label>
-                    <input type="date" class="form-control" name="member_since_date" value="<?= date('Y-m-d', strtotime($volunteer['created_at'])) ?>" required>
+                    <input type="date" class="form-control" name="member_since_date" value="<?= date('Y-m-d', strtotime($member['created_at'])) ?>" required>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Ακύρωση</button>

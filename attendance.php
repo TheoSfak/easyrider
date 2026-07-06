@@ -43,12 +43,12 @@ function reverseShiftPointsForParticipation(array $participation): void {
         "SELECT
             COALESCE(SUM(points), 0) AS total_points,
             COALESCE(SUM(CASE WHEN created_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01') THEN points ELSE 0 END), 0) AS monthly_points
-         FROM volunteer_points
+         FROM member_points
          WHERE user_id = ?
            AND reason = ?
            AND pointable_type = ?
            AND pointable_id = ?",
-        [$participation['volunteer_id'], 'SHIFT_COMPLETED', $pointableType, $participation['shift_id']]
+        [$participation['member_id'], 'SHIFT_COMPLETED', $pointableType, $participation['shift_id']]
     );
 
     $totalPoints = (int)($pointSums['total_points'] ?? 0);
@@ -61,17 +61,17 @@ function reverseShiftPointsForParticipation(array $participation): void {
                  monthly_points = GREATEST(monthly_points - ?, 0),
                  updated_at = NOW()
              WHERE id = ?",
-            [$totalPoints, $monthlyPoints, $participation['volunteer_id']]
+            [$totalPoints, $monthlyPoints, $participation['member_id']]
         );
     }
 
     dbExecute(
-        "DELETE FROM volunteer_points
+        "DELETE FROM member_points
          WHERE user_id = ?
            AND reason = ?
            AND pointable_type = ?
            AND pointable_id = ?",
-        [$participation['volunteer_id'], 'SHIFT_COMPLETED', $pointableType, $participation['shift_id']]
+        [$participation['member_id'], 'SHIFT_COMPLETED', $pointableType, $participation['shift_id']]
     );
 
     dbExecute("UPDATE participation_requests SET points_awarded = 0, updated_at = NOW() WHERE id = ?", [$participation['id']]);
@@ -92,7 +92,7 @@ $shifts = dbFetchAll(
 $participants = dbFetchAll(
     "SELECT pr.*, u.name, u.email, u.phone, s.start_time, s.end_time, s.id as shift_id
      FROM participation_requests pr
-     JOIN users u ON pr.volunteer_id = u.id
+     JOIN users u ON pr.member_id = u.id
      JOIN shifts s ON pr.shift_id = s.id
      WHERE s.mission_id = ? AND pr.status = ?
      ORDER BY s.start_time ASC, u.name ASC",
@@ -251,15 +251,15 @@ if (isPost()) {
             
             // Award points
             dbInsert(
-                "INSERT INTO volunteer_points (user_id, points, reason, description, pointable_type, pointable_id, created_at) 
+                "INSERT INTO member_points (user_id, points, reason, description, pointable_type, pointable_id, created_at) 
                  VALUES (?, ?, ?, ?, ?, ?, NOW())",
-                [$pr['volunteer_id'], $points, 'SHIFT_COMPLETED', 'Βάρδια: ' . $mission['title'], 'App\\Models\\Shift', $shiftId]
+                [$pr['member_id'], $points, 'SHIFT_COMPLETED', 'Βάρδια: ' . $mission['title'], 'App\\Models\\Shift', $shiftId]
             );
             
             // Update user total points
             dbExecute(
                 "UPDATE users SET total_points = total_points + ?, monthly_points = monthly_points + ? WHERE id = ?",
-                [$points, $points, $pr['volunteer_id']]
+                [$points, $points, $pr['member_id']]
             );
             
             // Mark as awarded
@@ -486,7 +486,7 @@ include __DIR__ . '/includes/header.php';
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="mb-3"><strong id="editVolunteerName"></strong></p>
+                    <p class="mb-3"><strong id="editMemberName"></strong></p>
                     
                     <div class="form-check form-switch mb-3">
                         <input class="form-check-input" type="checkbox" name="attended" id="editAttended" value="1">
@@ -532,7 +532,7 @@ function toggleAll(checkbox, shiftId) {
 
 function editAttendance(p, defaultHours) {
     document.getElementById('editParticipationId').value = p.id;
-    document.getElementById('editVolunteerName').textContent = p.name;
+    document.getElementById('editMemberName').textContent = p.name;
     document.getElementById('editAttended').checked = p.attended == 1;
     document.getElementById('editActualHours').value = p.actual_hours || defaultHours;
     document.getElementById('editStartTime').value = p.actual_start_time || '';

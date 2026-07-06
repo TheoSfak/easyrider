@@ -12,7 +12,7 @@ if ($step == '2' && isPost()) {
     
     if (!isset($_FILES['csv_file']) || $_FILES['csv_file']['error'] !== UPLOAD_ERR_OK) {
         setFlash('error', 'Σφάλμα κατά το ανέβασμα του αρχείου.');
-        redirect('import-volunteers.php');
+        redirect('import-members.php');
     }
     
     $tempFile = $_FILES['csv_file']['tmp_name'];
@@ -20,13 +20,13 @@ if ($step == '2' && isPost()) {
     
     if (!$result['success']) {
         setFlash('error', $result['error']);
-        redirect('import-volunteers.php');
+        redirect('import-members.php');
     }
     
     // Validate all rows
     $validationErrors = [];
     foreach ($result['rows'] as $index => $row) {
-        $errors = validateVolunteerData($row, $index + 2);
+        $errors = validateMemberData($row, $index + 2);
         if (!empty($errors)) {
             $validationErrors = array_merge($validationErrors, $errors);
         }
@@ -43,17 +43,17 @@ if ($step == '3' && isPost()) {
     
     if (!isset($_SESSION['import_data'])) {
         setFlash('error', 'Δεν βρέθηκαν δεδομένα για εισαγωγή.');
-        redirect('import-volunteers.php');
+        redirect('import-members.php');
     }
     
     $rows = $_SESSION['import_data'];
-    $result = importVolunteersFromCsv($rows, false);
+    $result = importMembersFromCsv($rows, false);
     
     $_SESSION['import_results'] = $result;
     unset($_SESSION['import_data']);
     unset($_SESSION['import_errors']);
     
-    redirect('import-volunteers.php?step=4');
+    redirect('import-members.php?step=4');
 }
 
 include __DIR__ . '/includes/header.php';
@@ -92,16 +92,16 @@ include __DIR__ . '/includes/header.php';
                             <i class="bi bi-info-circle"></i>
                             <strong>Μορφή αρχείου:</strong> CSV με headers (υποχρεωτικά: <strong>Όνομα, Email, Τμήμα ID, Ρόλος</strong>).<br>
                             Προαιρετικά: Τηλέφωνο, Ταυτότητα, ΑΜΚΑ, Δίπλωμα Οδήγησης, Πινακίδα Οχήματος, Παντελόνι, Μπλούζα, Μπλάκετ, Fleece, Μητρώο Επίδρασης, Μητρώο ΓΓΠΠ, Τύπος Εθελοντή, Διεύθυνση, Πόλη, ΤΚ, Επαφή Έκτακτης Ανάγκης, Τηλ. Επαφής Έκτακτης, Ομάδα Αίματος, Βιογραφικό, Ιατρικές Σημειώσεις, Διαθ. Καθημερινές, Διαθ. Σαββ/κα, Διαθ. Βράδια, Έχει Δίπλωμα Οδήγησης, Έχει Πρώτες Βοήθειες.<br>
-                            <strong>Τύπος Εθελοντή:</strong> VOLUNTEER / TRAINEE_RESCUER / RESCUER<br>
-                            <strong>Ρόλος:</strong> VOLUNTEER / SHIFT_LEADER / DEPARTMENT_ADMIN / SYSTEM_ADMIN<br>
+                            <strong>Τύπος Εθελοντή:</strong> MEMBER / TRAINEE_RESCUER / RESCUER<br>
+                            <strong>Ρόλος:</strong> MEMBER / SHIFT_LEADER / DEPARTMENT_ADMIN / SYSTEM_ADMIN<br>
                             <strong>Boolean πεδία:</strong> Ναι = 1, Όχι = 0
                             <br class="mt-1">
-                            <a href="exports/templates/volunteers_template.csv" class="alert-link">
+                            <a href="exports/templates/members_template.csv" class="alert-link">
                                 <i class="bi bi-download"></i> Κατέβασμα Υποδείγματος
                             </a>
                         </div>
                         
-                        <form method="post" action="import-volunteers.php?step=2" enctype="multipart/form-data">
+                        <form method="post" action="import-members.php?step=2" enctype="multipart/form-data">
                             <?= csrfField() ?>
                             
                             <div class="mb-3">
@@ -113,7 +113,7 @@ include __DIR__ . '/includes/header.php';
                                 <button type="submit" class="btn btn-primary">
                                     <i class="bi bi-arrow-right"></i> Επόμενο
                                 </button>
-                                <a href="<?= SITE_URL ?>/volunteers.php" class="btn btn-secondary">Ακύρωση</a>
+                                <a href="<?= SITE_URL ?>/members.php" class="btn btn-secondary">Ακύρωση</a>
                             </div>
                         </form>
                         
@@ -143,7 +143,7 @@ include __DIR__ . '/includes/header.php';
                             <p class="text-danger">
                                 Διορθώστε τα σφάλματα και δοκιμάστε ξανά.
                             </p>
-                            <a href="import-volunteers.php" class="btn btn-secondary">
+                            <a href="import-members.php" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left"></i> Πίσω
                             </a>
                             
@@ -185,13 +185,13 @@ include __DIR__ . '/includes/header.php';
                                 </table>
                             </div>
                             
-                            <form method="post" action="import-volunteers.php?step=3">
+                            <form method="post" action="import-members.php?step=3">
                                 <?= csrfField() ?>
                                 <div class="d-flex gap-2">
                                     <button type="submit" class="btn btn-success">
                                         <i class="bi bi-check-circle"></i> Επιβεβαίωση & Εισαγωγή
                                     </button>
-                                    <a href="import-volunteers.php" class="btn btn-secondary">
+                                    <a href="import-members.php" class="btn btn-secondary">
                                         <i class="bi bi-arrow-left"></i> Ακύρωση
                                     </a>
                                 </div>
@@ -258,10 +258,10 @@ include __DIR__ . '/includes/header.php';
                         <?php endif; ?>
                         
                         <div class="d-flex gap-2">
-                            <a href="<?= SITE_URL ?>/volunteers.php" class="btn btn-primary">
+                            <a href="<?= SITE_URL ?>/members.php" class="btn btn-primary">
                                 <i class="bi bi-people"></i> Προβολή Εθελοντών
                             </a>
-                            <a href="import-volunteers.php" class="btn btn-secondary">
+                            <a href="import-members.php" class="btn btn-secondary">
                                 <i class="bi bi-arrow-clockwise"></i> Νέα Εισαγωγή
                             </a>
                         </div>

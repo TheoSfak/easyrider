@@ -53,7 +53,7 @@ $params[] = date('Y-m-d H:i:s', strtotime($rangeStart));
 if (!isAdmin()) {
     $where[]  = "(m.status IN (?,?,?)
                    OR EXISTS (SELECT 1 FROM participation_requests pr2
-                              WHERE pr2.shift_id = s.id AND pr2.volunteer_id = ?))";
+                              WHERE pr2.shift_id = s.id AND pr2.member_id = ?))";
     $params[] = STATUS_OPEN;
     $params[] = STATUS_CLOSED;
     $params[] = STATUS_COMPLETED;
@@ -67,7 +67,7 @@ if (!canSeeTep()) {
     $params[] = $userId;
 }
 
-// Department filter (admin-only; volunteers only see their own dept shifts anyway)
+// Department filter (admin-only; members only see their own dept shifts anyway)
 if ($deptId && isAdmin()) {
     $where[]  = 'm.department_id = ?';
     $params[] = $deptId;
@@ -82,7 +82,7 @@ if ($missionTypeId) {
 // "Mine only" filter
 if ($mineOnly) {
     $where[]  = 'EXISTS (SELECT 1 FROM participation_requests pr_mine
-                         WHERE pr_mine.shift_id = s.id AND pr_mine.volunteer_id = ?)';
+                         WHERE pr_mine.shift_id = s.id AND pr_mine.member_id = ?)';
     $params[] = $userId;
 }
 
@@ -95,8 +95,8 @@ $shifts = dbFetchAll(
          s.mission_id,
          s.start_time,
          s.end_time,
-         s.max_volunteers,
-         s.min_volunteers,
+         s.max_members,
+         s.min_members,
          s.notes,
          m.title          AS mission_title,
          m.status         AS mission_status,
@@ -124,7 +124,7 @@ $shifts = dbFetchAll(
      ) pr_pend ON s.id = pr_pend.shift_id
      LEFT JOIN participation_requests my_pr
            ON  my_pr.shift_id = s.id
-           AND my_pr.volunteer_id = ?
+           AND my_pr.member_id = ?
      WHERE $whereClause
      ORDER BY s.start_time",
     array_merge([$userId], $params)
@@ -136,7 +136,7 @@ $events = [];
 
 foreach ($shifts as $s) {
     $approved    = (int) $s['approved_count'];
-    $max         = (int) $s['max_volunteers'];
+    $max         = (int) $s['max_members'];
     $isPast      = strtotime($s['end_time']) < $now;
     $isCanceled  = in_array($s['mission_status'], ['CANCELED']);
 
@@ -178,7 +178,7 @@ foreach ($shifts as $s) {
             'mission_status' => $s['mission_status'],
             'type_name'      => $s['type_name'],
             'approved_count' => $approved,
-            'max_volunteers' => $max,
+            'max_members' => $max,
             'pending_count'  => (int) $s['pending_count'],
             'my_status'      => $s['my_status'],
             'location'       => $s['location'],

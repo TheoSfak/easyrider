@@ -13,14 +13,14 @@ $user = getCurrentUser();
 // Get all participations for current user
 $participations = dbFetchAll(
     "SELECT pr.*, 
-            s.start_time, s.end_time, s.max_volunteers,
+            s.start_time, s.end_time, s.max_members,
             m.title as mission_title, m.location, m.status as mission_status,
             decider.name as decided_by_name
      FROM participation_requests pr
      JOIN shifts s ON pr.shift_id = s.id
      JOIN missions m ON s.mission_id = m.id
      LEFT JOIN users decider ON pr.decided_by = decider.id
-     WHERE pr.volunteer_id = ?
+     WHERE pr.member_id = ?
      ORDER BY s.start_time DESC",
     [$user['id']]
 );
@@ -35,7 +35,7 @@ if (isPost()) {
         
         // Verify ownership and status
         $pr = dbFetchOne(
-            "SELECT * FROM participation_requests WHERE id = ? AND volunteer_id = ? AND status = ?",
+            "SELECT * FROM participation_requests WHERE id = ? AND member_id = ? AND status = ?",
             [$prId, $user['id'], PARTICIPATION_PENDING]
         );
         
@@ -61,20 +61,20 @@ if (isPost()) {
              FROM shift_swap_requests ssr
              JOIN shifts s ON ssr.shift_id = s.id
              JOIN missions m ON s.mission_id = m.id
-             WHERE ssr.id = ? AND ssr.to_volunteer_id = ? AND ssr.status = ?",
+             WHERE ssr.id = ? AND ssr.to_member_id = ? AND ssr.status = ?",
             [$swapId, $user['id'], SWAP_PENDING_RESPONSE]
         );
 
         if ($swap) {
             if ($response === 'accept') {
                 dbExecute(
-                    "UPDATE shift_swap_requests SET status = ?, to_volunteer_responded_at = NOW(), updated_at = NOW() WHERE id = ?",
+                    "UPDATE shift_swap_requests SET status = ?, to_member_responded_at = NOW(), updated_at = NOW() WHERE id = ?",
                     [SWAP_ACCEPTED, $swapId]
                 );
                 logAudit('swap_accepted', 'shift_swap_requests', $swapId);
 
                 // Notify requester (email + in-app)
-                $requester = dbFetchOne("SELECT name, email FROM users WHERE id = ?", [$swap['from_volunteer_id']]);
+                $requester = dbFetchOne("SELECT name, email FROM users WHERE id = ?", [$swap['from_member_id']]);
                 if ($requester) {
                     if (!empty($requester['email']) && isNotificationEnabled('shift_swap_accepted')) {
                         sendNotificationEmail('shift_swap_accepted', $requester['email'], [
@@ -86,7 +86,7 @@ if (isPost()) {
                         ]);
                     }
                     sendNotification(
-                        $swap['from_volunteer_id'],
+                        $swap['from_member_id'],
                         'Αποδοχή Αντικατάστασης',
                         'Ο/Η ' . $user['name'] . ' αποδέχτηκε το αίτημα αντικατάστασης για: ' . $swap['mission_title'] . '. Αναμένεται έγκριση διαχειριστή.'
                     );
@@ -94,14 +94,14 @@ if (isPost()) {
                 setFlash('success', 'Αποδεχτήκατε το αίτημα. Αναμένεται η τελική έγκριση από τον διαχειριστή.');
             } else {
                 dbExecute(
-                    "UPDATE shift_swap_requests SET status = ?, to_volunteer_responded_at = NOW(), updated_at = NOW() WHERE id = ?",
+                    "UPDATE shift_swap_requests SET status = ?, to_member_responded_at = NOW(), updated_at = NOW() WHERE id = ?",
                     [SWAP_DECLINED, $swapId]
                 );
                 logAudit('swap_declined', 'shift_swap_requests', $swapId);
 
                 // Notify requester in-app
                 sendNotification(
-                    $swap['from_volunteer_id'],
+                    $swap['from_member_id'],
                     'Άρνηση Αντικατάστασης',
                     'Ο/Η ' . $user['name'] . ' αρνήθηκε το αίτημα αντικατάστασης για: ' . $swap['mission_title'] . '. Μπορείτε να ζητήσετε άλλο μέλος.'
                 );
@@ -116,7 +116,7 @@ if (isPost()) {
     if ($action === 'cancel_swap') {
         $swapId = (int) post('swap_id');
         $swap = dbFetchOne(
-            "SELECT id FROM shift_swap_requests WHERE id = ? AND from_volunteer_id = ? AND status IN (?,?)",
+            "SELECT id FROM shift_swap_requests WHERE id = ? AND from_member_id = ? AND status IN (?,?)",
             [$swapId, $user['id'], SWAP_PENDING_RESPONSE, SWAP_ACCEPTED]
         );
         if ($swap) {
@@ -150,8 +150,8 @@ $incomingSwaps = dbFetchAll(
      FROM shift_swap_requests ssr
      JOIN shifts s ON ssr.shift_id = s.id
      JOIN missions m ON s.mission_id = m.id
-     JOIN users fu ON ssr.from_volunteer_id = fu.id
-     WHERE ssr.to_volunteer_id = ? AND ssr.status = ?
+     JOIN users fu ON ssr.from_member_id = fu.id
+     WHERE ssr.to_member_id = ? AND ssr.status = ?
      ORDER BY ssr.created_at DESC",
     [$user['id'], SWAP_PENDING_RESPONSE]
 );
@@ -159,10 +159,10 @@ $incomingSwaps = dbFetchAll(
 // Outgoing swaps keyed by participation_id, for status badges on approved rows
 $outgoingSwaps = [];
 $outgoingRaw = dbFetchAll(
-    "SELECT ssr.*, u.name as to_volunteer_name
+    "SELECT ssr.*, u.name as to_member_name
      FROM shift_swap_requests ssr
-     JOIN users u ON ssr.to_volunteer_id = u.id
-     WHERE ssr.from_volunteer_id = ? AND ssr.status IN (?,?,?)",
+     JOIN users u ON ssr.to_member_id = u.id
+     WHERE ssr.from_member_id = ? AND ssr.status IN (?,?,?)",
     [$user['id'], SWAP_PENDING_RESPONSE, SWAP_ACCEPTED, SWAP_APPROVED]
 );
 foreach ($outgoingRaw as $sr) {
@@ -177,7 +177,7 @@ include __DIR__ . '/includes/header.php';
         <i class="bi bi-list-check me-2"></i>Οι Αιτήσεις μου
     </h1>
     <div class="d-flex gap-2">
-        <a href="volunteer-report.php?id=<?= getCurrentUserId() ?>" target="_blank" class="btn btn-outline-secondary">
+        <a href="member-report.php?id=<?= getCurrentUserId() ?>" target="_blank" class="btn btn-outline-secondary">
             <i class="bi bi-file-earmark-text me-1"></i>Αναφορά Δραστηριότητας
         </a>
         <a href="missions.php" class="btn btn-primary">
@@ -499,7 +499,7 @@ include __DIR__ . '/includes/header.php';
                                     <?php $sw = $outgoingSwaps[$p['id']]; ?>
                                     <?php if ($sw['status'] === SWAP_PENDING_RESPONSE): ?>
                                         <span class="badge" style="background:#8e44ad">Αναμένει απάντηση</span>
-                                        <br><small class="text-muted"><?= h($sw['to_volunteer_name']) ?></small>
+                                        <br><small class="text-muted"><?= h($sw['to_member_name']) ?></small>
                                         <form method="post" class="mt-1">
                                             <?= csrfField() ?>
                                             <input type="hidden" name="action" value="cancel_swap">
@@ -510,7 +510,7 @@ include __DIR__ . '/includes/header.php';
                                         </form>
                                     <?php elseif ($sw['status'] === SWAP_ACCEPTED): ?>
                                         <span class="badge bg-success">Αποδεχτήκε</span>
-                                        <br><small class="text-muted"><?= h($sw['to_volunteer_name']) ?></small><br>
+                                        <br><small class="text-muted"><?= h($sw['to_member_name']) ?></small><br>
                                         <small class="text-muted">Αναμένει admin</small>
                                     <?php endif; ?>
                                 <?php elseif (!$isPast && !isset($outgoingSwaps[$p['id']])): ?>
@@ -569,7 +569,7 @@ include __DIR__ . '/includes/header.php';
                             <?php if ($sw['status'] === SWAP_PENDING_RESPONSE): ?>
                             <div class="mobile-card-row mt-2">
                                 <span class="badge" style="background:#8e44ad">Εκκρεμεί αίτημα αντικ.</span>
-                                <small class="text-muted"><?= h($sw['to_volunteer_name']) ?></small>
+                                <small class="text-muted"><?= h($sw['to_member_name']) ?></small>
                                 <form method="post" class="ms-auto">
                                     <?= csrfField() ?>
                                     <input type="hidden" name="action" value="cancel_swap">
@@ -580,7 +580,7 @@ include __DIR__ . '/includes/header.php';
                             <?php elseif ($sw['status'] === SWAP_ACCEPTED): ?>
                             <div class="mobile-card-row mt-2">
                                 <span class="badge bg-success">Αποδεχτήκε</span>
-                                <small class="text-muted"><?= h($sw['to_volunteer_name']) ?> — αναμένει admin</small>
+                                <small class="text-muted"><?= h($sw['to_member_name']) ?> — αναμένει admin</small>
                             </div>
                             <?php endif; ?>
                         <?php elseif (!$isPast && !isset($outgoingSwaps[$p['id']])): ?>
@@ -851,7 +851,7 @@ function setStatus(btn, prId, status) {
     const group = document.getElementById('statusBtns-' + prId);
     if (group) group.querySelectorAll('button').forEach(b => b.disabled = true);
 
-    fetch('volunteer-status.php', { method: 'POST', body })
+    fetch('member-status.php', { method: 'POST', body })
         .then(r => r.json())
         .then(d => {
             if (d.ok) {

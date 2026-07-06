@@ -68,7 +68,7 @@ include __DIR__ . '/includes/header.php';
                     <nav aria-label="breadcrumb">
                         <ol class="breadcrumb">
                             <li class="breadcrumb-item"><a href="exam-statistics.php">Στατιστικά Εξετάσεων</a></li>
-                            <li class="breadcrumb-item"><a href="volunteer-view.php?id=<?= $attempt['user_id'] ?>"><?= h($attempt['user_name']) ?></a></li>
+                            <li class="breadcrumb-item"><a href="member-view.php?id=<?= $attempt['user_id'] ?>"><?= h($attempt['user_name']) ?></a></li>
                             <li class="breadcrumb-item active">Αποτελέσματα</li>
                         </ol>
                     </nav>

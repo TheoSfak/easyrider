@@ -167,7 +167,7 @@ $shifts = dbFetchAll(
 $userParticipations = [];
 if (!$canViewAllMissions) {
     $rawParts = dbFetchAll(
-        "SELECT id, shift_id, status FROM participation_requests WHERE volunteer_id = ? AND shift_id IN (SELECT id FROM shifts WHERE mission_id = ?)",
+        "SELECT id, shift_id, status FROM participation_requests WHERE member_id = ? AND shift_id IN (SELECT id FROM shifts WHERE mission_id = ?)",
         [$user['id'], $id]
     );
     $userParticipations = [];
@@ -182,7 +182,7 @@ if (!$canViewAllMissions) {
     $isApprovedParticipant = dbFetchValue(
         "SELECT COUNT(*) FROM participation_requests pr
          INNER JOIN shifts s ON pr.shift_id = s.id
-         WHERE s.mission_id = ? AND pr.volunteer_id = ? AND pr.status = ?",
+         WHERE s.mission_id = ? AND pr.member_id = ? AND pr.status = ?",
         [$id, $user['id'], PARTICIPATION_APPROVED]
     ) > 0;
 }
@@ -201,10 +201,10 @@ if ($canAccessChat) {
     );
 }
 
-// Get available volunteers for admin manual add
-$availableVolunteers = [];
+// Get available members for admin manual add
+$availableMembers = [];
 if ($canManageMissions) {
-    $availableVolunteers = dbFetchAll(
+    $availableMembers = dbFetchAll(
         "SELECT id, name, email, role FROM users 
          WHERE is_active = 1
          ORDER BY name"
@@ -213,7 +213,7 @@ if ($canManageMissions) {
 
 // Positions for publish targeting panel
 $publishPositions = dbFetchAll(
-    "SELECT id, name FROM volunteer_positions WHERE is_active = 1 ORDER BY name"
+    "SELECT id, name FROM member_positions WHERE is_active = 1 ORDER BY name"
 );
 
 // Get debrief if it exists (even if status is not completed yet, e.g. reopened)
@@ -302,7 +302,7 @@ if (isPost()) {
                     "SELECT DISTINCT u.id, u.name, u.email
                      FROM participation_requests pr
                      JOIN shifts s ON s.id = pr.shift_id
-                     JOIN users u ON u.id = pr.volunteer_id
+                     JOIN users u ON u.id = pr.member_id
                      WHERE s.mission_id = ?
                        AND pr.status = ?
                        AND u.is_active = 1
@@ -362,21 +362,21 @@ if (isPost()) {
                 $shiftCount = (int) dbFetchValue("SELECT COUNT(*) FROM shifts WHERE mission_id = ?", [$id]);
                 if ($shiftCount === 0) {
                     dbInsert(
-                        "INSERT INTO shifts (mission_id, start_time, end_time, max_volunteers, min_volunteers, created_at, updated_at)
+                        "INSERT INTO shifts (mission_id, start_time, end_time, max_members, min_members, created_at, updated_at)
                          VALUES (?, ?, ?, 5, 1, NOW(), NOW())",
                         [$id, $mission['start_datetime'], $mission['end_datetime']]
                     );
                     logAudit('auto_create_shift', 'shifts', $id, 'Αυτόματη δημιουργία βαρδίας κατά τη δημοσίευση');
                 }
 
-                // Notify volunteers based on targeting selection
-                if (isset($_POST['notify_volunteers'])) {
+                // Notify members based on targeting selection
+                if (isset($_POST['notify_members'])) {
                     $notifyTarget = post('notify_target', 'all');
                     $whereFilter  = "is_active = 1 AND deleted_at IS NULL";
                     $filterParams = [];
 
                     if ($notifyTarget === 'roles' && !empty($_POST['notify_roles'])) {
-                        $allowedRoles = [ROLE_SYSTEM_ADMIN, ROLE_DEPARTMENT_ADMIN, ROLE_SHIFT_LEADER, ROLE_VOLUNTEER];
+                        $allowedRoles = [ROLE_SYSTEM_ADMIN, ROLE_DEPARTMENT_ADMIN, ROLE_SHIFT_LEADER, ROLE_MEMBER];
                         $roles = array_values(array_filter((array)$_POST['notify_roles'], fn($r) => in_array($r, $allowedRoles)));
                         if (!empty($roles)) {
                             $placeholders  = implode(',', array_fill(0, count($roles), '?'));
@@ -388,7 +388,7 @@ if (isPost()) {
                         $vtypes = array_values(array_filter((array)$_POST['notify_vtypes'], fn($v) => in_array($v, $allowedVtypes)));
                         if (!empty($vtypes)) {
                             $placeholders  = implode(',', array_fill(0, count($vtypes), '?'));
-                            $whereFilter  .= " AND volunteer_type IN ($placeholders)";
+                            $whereFilter  .= " AND member_type IN ($placeholders)";
                             $filterParams  = $vtypes;
                         }
                     } elseif ($notifyTarget === 'positions' && !empty($_POST['notify_positions'])) {
@@ -400,7 +400,7 @@ if (isPost()) {
                         }
                     }
 
-                    $volunteers = dbFetchAll(
+                    $members = dbFetchAll(
                         "SELECT id, name, email FROM users WHERE $whereFilter",
                         $filterParams
                     );
@@ -413,18 +413,18 @@ if (isPost()) {
                         $roleLabels = array_map(fn($r) => ROLE_LABELS[$r] ?? $r, $roles);
                         $targetLabel = implode(', ', $roleLabels);
                     } elseif ($notifyTarget === 'vtypes' && !empty($vtypes ?? [])) {
-                        $vtypeLabels = array_map(fn($v) => VOLUNTEER_TYPE_LABELS[$v] ?? $v, $vtypes);
+                        $vtypeLabels = array_map(fn($v) => MEMBER_TYPE_LABELS[$v] ?? $v, $vtypes);
                         $targetLabel = implode(', ', $vtypeLabels);
                     } elseif ($notifyTarget === 'positions' && !empty($positions ?? [])) {
                         $posPh = implode(',', array_fill(0, count($positions), '?'));
                         $posRows = dbFetchAll(
-                            "SELECT name FROM volunteer_positions WHERE id IN ($posPh)",
+                            "SELECT name FROM member_positions WHERE id IN ($posPh)",
                             $positions
                         );
                         $targetLabel = implode(', ', array_column($posRows, 'name'));
                     }
                     
-                    $userIds = array_column($volunteers, 'id');
+                    $userIds = array_column($members, 'id');
                     if (!empty($userIds)) {
                         sendBulkNotifications(
                             $userIds,
@@ -434,7 +434,7 @@ if (isPost()) {
                     }
                     
                     $sent = 0; $failed = 0; $lastError = '';
-                    foreach ($volunteers as $v) {
+                    foreach ($members as $v) {
                         if (!empty($v['email'])) {
                             $result = sendNotificationEmail('new_mission', $v['email'], [
                                 'user_name'           => $v['name'],
@@ -546,17 +546,17 @@ if (isPost()) {
                         $rideReportUrl = rtrim(BASE_URL, '/') . '/ride-report.php?mission_id=' . $id;
                         $appName = getSetting('app_name', APP_NAME);
                         $participants = dbFetchAll(
-                            "SELECT DISTINCT pr.volunteer_id, u.name, u.email
+                            "SELECT DISTINCT pr.member_id, u.name, u.email
                              FROM participation_requests pr
                              JOIN shifts s ON s.id = pr.shift_id
-                             JOIN users u ON u.id = pr.volunteer_id
+                             JOIN users u ON u.id = pr.member_id
                              WHERE s.mission_id = ?
                                AND pr.status = ?
                                AND u.is_active = 1
                                AND u.deleted_at IS NULL",
                             [$id, PARTICIPATION_APPROVED]
                         );
-                        $participantIds = array_column($participants, 'volunteer_id');
+                        $participantIds = array_column($participants, 'member_id');
                         if (!empty($participantIds)) {
                             sendBulkNotifications(
                                 $participantIds,
@@ -614,21 +614,21 @@ if (isPost()) {
                     );
                     logAudit('cancel', 'missions', $id, null, ['reason' => $reason]);
 
-                    // Notify all volunteers with PENDING or APPROVED participation in any shift
+                    // Notify all members with PENDING or APPROVED participation in any shift
                     $cancelShifts = dbFetchAll("SELECT id FROM shifts WHERE mission_id = ?", [$id]);
                     $cancelShiftIds = array_column($cancelShifts, 'id');
                     $notifiedCancel = [];
                     if (!empty($cancelShiftIds)) {
                         $ph = implode(',', array_fill(0, count($cancelShiftIds), '?'));
                         $cancelParticipants = dbFetchAll(
-                            "SELECT DISTINCT pr.volunteer_id, u.name, u.email
+                            "SELECT DISTINCT pr.member_id, u.name, u.email
                              FROM participation_requests pr
-                             JOIN users u ON pr.volunteer_id = u.id
+                             JOIN users u ON pr.member_id = u.id
                              WHERE pr.shift_id IN ($ph) AND pr.status IN (?,?)",
                             array_merge($cancelShiftIds, [PARTICIPATION_PENDING, PARTICIPATION_APPROVED])
                         );
                         
-                        $userIds = array_column($cancelParticipants, 'volunteer_id');
+                        $userIds = array_column($cancelParticipants, 'member_id');
                         if (!empty($userIds)) {
                             sendBulkNotifications(
                                 $userIds,
@@ -638,8 +638,8 @@ if (isPost()) {
                         }
                         
                         foreach ($cancelParticipants as $cp) {
-                            if (in_array($cp['volunteer_id'], $notifiedCancel)) continue;
-                            $notifiedCancel[] = $cp['volunteer_id'];
+                            if (in_array($cp['member_id'], $notifiedCancel)) continue;
+                            $notifiedCancel[] = $cp['member_id'];
                             // Email
                             if (!empty($cp['email'])) {
                                 sendNotificationEmail('mission_canceled', $cp['email'], [
@@ -679,15 +679,15 @@ if (isPost()) {
                         // Get all affected participants (PENDING or APPROVED)
                         $placeholders = implode(',', array_fill(0, count($shiftIds), '?'));
                         $affectedParticipants = dbFetchAll(
-                            "SELECT DISTINCT pr.volunteer_id, u.name, u.email
+                            "SELECT DISTINCT pr.member_id, u.name, u.email
                              FROM participation_requests pr 
-                             JOIN users u ON pr.volunteer_id = u.id 
+                             JOIN users u ON pr.member_id = u.id 
                              WHERE pr.shift_id IN ($placeholders) AND pr.status IN (?,?)",
                             array_merge($shiftIds, [PARTICIPATION_PENDING, PARTICIPATION_APPROVED])
                         );
                         
                         // Bulk in-app notification
-                        $notifiedUsers = array_column($affectedParticipants, 'volunteer_id');
+                        $notifiedUsers = array_column($affectedParticipants, 'member_id');
                         if (!empty($notifiedUsers)) {
                             sendBulkNotifications(
                                 $notifiedUsers,
@@ -696,7 +696,7 @@ if (isPost()) {
                             );
                         }
                         
-                        // Email each affected volunteer
+                        // Email each affected member
                         foreach ($affectedParticipants as $participant) {
                             if (!empty($participant['email'])) {
                                 sendNotificationEmail('mission_canceled', $participant['email'], [
@@ -716,7 +716,7 @@ if (isPost()) {
                     
                     // Soft delete mission
                     dbExecute("UPDATE missions SET deleted_at = NOW(), updated_at = NOW() WHERE id = ?", [$id]);
-                    logAudit('delete', 'missions', $id, 'Notified ' . count($notifiedUsers) . ' volunteers');
+                    logAudit('delete', 'missions', $id, 'Notified ' . count($notifiedUsers) . ' members');
                     
                     db()->commit();
                     
@@ -735,8 +735,8 @@ if (isPost()) {
             
         case 'apply':
             $shiftId = post('shift_id');
-            $volunteerNotes = post('volunteer_notes');
-            // Block volunteer apply if mission has expired
+            $memberNotes = post('member_notes');
+            // Block member apply if mission has expired
             $missionExpired = in_array($mission['status'], [STATUS_OPEN, STATUS_CLOSED]) && strtotime($mission['end_datetime']) < time();
             if ($missionExpired && !$canManageMissions) {
                 setFlash('error', 'Η δράση είναι ακόμα ανοιχτή αλλά ο χρόνος διεξαγωγής έχει παρέλθει. Δεν μπορείτε να υποβάλετε αίτηση.');
@@ -745,14 +745,14 @@ if (isPost()) {
             if ($shiftId && !$canManageMissions) {
                 // Check if already applied
                 $existing = dbFetchValue(
-                    "SELECT COUNT(*) FROM participation_requests WHERE volunteer_id = ? AND shift_id = ?",
+                    "SELECT COUNT(*) FROM participation_requests WHERE member_id = ? AND shift_id = ?",
                     [$user['id'], $shiftId]
                 );
                 
                 if (!$existing) {
                     dbInsert(
-                        "INSERT INTO participation_requests (volunteer_id, shift_id, status, notes, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())",
-                        [$user['id'], $shiftId, PARTICIPATION_PENDING, $volunteerNotes ?: null]
+                        "INSERT INTO participation_requests (member_id, shift_id, status, notes, created_at, updated_at) VALUES (?, ?, ?, ?, NOW(), NOW())",
+                        [$user['id'], $shiftId, PARTICIPATION_PENDING, $memberNotes ?: null]
                     );
                     logAudit('apply', 'participation_requests', null, null, ['shift_id' => $shiftId]);
                     setFlash('success', 'Η αίτησή σας υποβλήθηκε.');
@@ -763,24 +763,24 @@ if (isPost()) {
             }
             break;
             
-        case 'manual_add_volunteer':
+        case 'manual_add_member':
             if ($canManageMissions && $mission['status'] !== STATUS_COMPLETED) {
                 $shiftIds = post('shift_ids', []); // Array of shift IDs
-                $volunteerId = post('volunteer_id');
+                $memberId = post('member_id');
                 $adminNotes = post('admin_notes');
                 
-                if (!empty($shiftIds) && $volunteerId) {
+                if (!empty($shiftIds) && $memberId) {
                     $addedCount = 0;
                     $skippedCount = 0;
                     
-                    // Get volunteer info once
-                    $volunteer = dbFetchOne("SELECT name, email FROM users WHERE id = ?", [$volunteerId]);
+                    // Get member info once
+                    $member = dbFetchOne("SELECT name, email FROM users WHERE id = ?", [$memberId]);
                     
                     foreach ($shiftIds as $shiftId) {
                         // Check if already has an active (PENDING/APPROVED) participation
                         $existingPr = dbFetchOne(
-                            "SELECT id, status FROM participation_requests WHERE volunteer_id = ? AND shift_id = ?",
-                            [$volunteerId, $shiftId]
+                            "SELECT id, status FROM participation_requests WHERE member_id = ? AND shift_id = ?",
+                            [$memberId, $shiftId]
                         );
                         
                         if ($existingPr && in_array($existingPr['status'], [PARTICIPATION_PENDING, PARTICIPATION_APPROVED])) {
@@ -801,9 +801,9 @@ if (isPost()) {
                                 // Insert new record
                                 $prId = dbInsert(
                                     "INSERT INTO participation_requests 
-                                     (volunteer_id, shift_id, status, admin_notes, decided_by, decided_at, created_at, updated_at) 
+                                     (member_id, shift_id, status, admin_notes, decided_by, decided_at, created_at, updated_at) 
                                      VALUES (?, ?, ?, ?, ?, NOW(), NOW(), NOW())",
-                                    [$volunteerId, $shiftId, PARTICIPATION_APPROVED, $adminNotes, $user['id']]
+                                    [$memberId, $shiftId, PARTICIPATION_APPROVED, $adminNotes, $user['id']]
                                 );
                             }
                             
@@ -817,13 +817,13 @@ if (isPost()) {
                             );
                             
                             // Send notification email
-                            if ($volunteer && !empty($volunteer['email']) && isNotificationEnabled('admin_added_volunteer')) {
+                            if ($member && !empty($member['email']) && isNotificationEnabled('admin_added_member')) {
                                 $gcalLink = buildGcalLink($shift['mission_title'], $shift['start_time'], $shift['end_time'], $shift['location'] ?: '');
                                 sendNotificationEmail(
-                                    'admin_added_volunteer',
-                                    $volunteer['email'],
+                                    'admin_added_member',
+                                    $member['email'],
                                     [
-                                        'user_name'     => $volunteer['name'],
+                                        'user_name'     => $member['name'],
                                         'mission_title' => $shift['mission_title'],
                                         'shift_date'    => formatDateTime($shift['start_time'], 'd/m/Y'),
                                         'shift_time'    => formatDateTime($shift['start_time'], 'H:i') . ' - ' . formatDateTime($shift['end_time'], 'H:i'),
@@ -836,12 +836,12 @@ if (isPost()) {
                             
                             // Send in-app notification
                             sendNotification(
-                                $volunteerId,
+                                $memberId,
                                 'Τοποθετήθηκατε σε βάρδια',
                                 'Ο διαχειριστής σας τοποθέτησε στη βάρδια: ' . $shift['mission_title'] . ' - ' . formatDateTime($shift['start_time'])
                             );
                             
-                            logAudit('manual_add_volunteer', 'participation_requests', $prId);
+                            logAudit('manual_add_member', 'participation_requests', $prId);
                             $addedCount++;
                         }
                     }
@@ -1372,14 +1372,14 @@ include __DIR__ . '/includes/header.php';
                                         <td>
                                             <span class="badge bg-success"><?= $shift['approved_count'] ?></span>
                                             <span class="text-muted">/</span>
-                                            <span class="badge bg-secondary"><?= $shift['max_volunteers'] ?></span>
+                                            <span class="badge bg-secondary"><?= $shift['max_members'] ?></span>
                                             <?php if ($shift['pending_count'] > 0): ?>
                                                 <span class="badge bg-warning ms-1"><?= $shift['pending_count'] ?> εκκρεμείς</span>
                                             <?php endif; ?>
                                         </td>
                                         <td>
                                             <?php
-                                            $isFull = $shift['approved_count'] >= $shift['max_volunteers'];
+                                            $isFull = $shift['approved_count'] >= $shift['max_members'];
                                             $isPast = strtotime($shift['end_time']) < time();
                                             
                                             if ($isPast) {
@@ -1436,7 +1436,7 @@ include __DIR__ . '/includes/header.php';
                     <div class="d-sm-none mobile-cards-container p-2">
                         <?php foreach ($shifts as $shift): ?>
                             <?php
-                            $isFull = $shift['approved_count'] >= $shift['max_volunteers'];
+                            $isFull = $shift['approved_count'] >= $shift['max_members'];
                             $isPast = strtotime($shift['end_time']) < time();
                             ?>
                             <div class="card mobile-card <?= $isPast ? 'border-secondary' : '' ?>">
@@ -1461,7 +1461,7 @@ include __DIR__ . '/includes/header.php';
                                         <div class="mobile-card-label">Θέσεις</div>
                                         <span class="badge bg-success"><?= $shift['approved_count'] ?></span>
                                         <span class="text-muted">/</span>
-                                        <span class="badge bg-secondary"><?= $shift['max_volunteers'] ?></span>
+                                        <span class="badge bg-secondary"><?= $shift['max_members'] ?></span>
                                         <?php if ($shift['pending_count'] > 0): ?>
                                             <span class="badge bg-warning ms-1"><?= $shift['pending_count'] ?> εκκρεμείς</span>
                                         <?php endif; ?>
@@ -1518,7 +1518,7 @@ include __DIR__ . '/includes/header.php';
                 </div>
                 <div class="card-body d-grid gap-2">
                     <?php if ($canManageMissions && $mission['status'] !== STATUS_COMPLETED): ?>
-                    <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addVolunteerModal">
+                    <button type="button" class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#addMemberModal">
                         <i class="bi bi-person-plus me-1"></i>Προσθήκη Μέλους
                     </button>
                     <?php endif; ?>
@@ -1546,10 +1546,10 @@ include __DIR__ . '/includes/header.php';
 
                             <!-- Notify toggle -->
                             <div class="form-check mb-2">
-                                <input class="form-check-input" type="checkbox" name="notify_volunteers"
-                                       id="notifyVolunteers" value="1" checked
+                                <input class="form-check-input" type="checkbox" name="notify_members"
+                                       id="notifyMembers" value="1" checked
                                        onchange="toggleNotifyPanel(this.checked)">
-                                <label class="form-check-label small fw-semibold" for="notifyVolunteers">
+                                <label class="form-check-label small fw-semibold" for="notifyMembers">
                                     <i class="bi bi-envelope me-1"></i>Αποστολή ειδοποίησης Email
                                 </label>
                             </div>
@@ -1583,8 +1583,8 @@ include __DIR__ . '/includes/header.php';
                                         <label class="form-check-label" for="roleShiftLeader">Road Captains</label>
                                     </div>
                                     <div class="form-check form-check-sm">
-                                        <input class="form-check-input" type="checkbox" name="notify_roles[]" value="VOLUNTEER" id="roleVolunteer">
-                                        <label class="form-check-label" for="roleVolunteer">Μέλη</label>
+                                        <input class="form-check-input" type="checkbox" name="notify_roles[]" value="VOLUNTEER" id="roleMember">
+                                        <label class="form-check-label" for="roleMember">Μέλη</label>
                                     </div>
                                     <div class="form-check form-check-sm">
                                         <input class="form-check-input" type="checkbox" name="notify_roles[]" value="SYSTEM_ADMIN" id="roleSysAdmin">
@@ -1592,7 +1592,7 @@ include __DIR__ . '/includes/header.php';
                                     </div>
                                 </div>
 
-                                <!-- By Volunteer Type -->
+                                <!-- By Member Type -->
                                 <div class="form-check mb-1">
                                     <input class="form-check-input" type="radio" name="notify_target"
                                            id="targetVtypes" value="vtypes"
@@ -2054,7 +2054,7 @@ if (!empty($shiftIds)) {
     $allMissionParticipants = dbFetchAll(
         "SELECT DISTINCT u.name, pr.status 
          FROM participation_requests pr 
-         JOIN users u ON pr.volunteer_id = u.id 
+         JOIN users u ON pr.member_id = u.id 
          WHERE pr.shift_id IN ($placeholders) AND pr.status IN (?,?)",
         array_merge($shiftIds, [PARTICIPATION_PENDING, PARTICIPATION_APPROVED])
     );
@@ -2149,7 +2149,7 @@ if (!empty($shiftIds)) {
     </div>
 </div>
 
-<!-- Apply Modal (for volunteers) -->
+<!-- Apply Modal (for members) -->
 <?php if (!$canManageMissions): ?>
 <div class="modal fade" id="applyModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
@@ -2166,7 +2166,7 @@ if (!empty($shiftIds)) {
                     <p>Αίτηση για τη βάρδια: <strong id="applyShiftDate"></strong></p>
                     <div class="mb-3">
                         <label class="form-label">Σημειώσεις (προαιρετικά)</label>
-                        <textarea class="form-control" name="volunteer_notes" rows="3" 
+                        <textarea class="form-control" name="member_notes" rows="3" 
                                   placeholder="Π.χ. διαθεσιμότητα, εμπειρία, ειδικές δεξιότητες..."></textarea>
                         <small class="text-muted">Οι σημειώσεις θα είναι ορατές στους διαχειριστές.</small>
                     </div>
@@ -2194,14 +2194,14 @@ document.querySelectorAll('.apply-btn').forEach(function(btn) {
 </script>
 <?php endif; ?>
 
-<!-- Add Volunteer Modal (for admins) -->
+<!-- Add Member Modal (for admins) -->
 <?php if ($canManageMissions): ?>
-<div class="modal fade" id="addVolunteerModal" tabindex="-1">
+<div class="modal fade" id="addMemberModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="post">
                 <?= csrfField() ?>
-                <input type="hidden" name="action" value="manual_add_volunteer">
+                <input type="hidden" name="action" value="manual_add_member">
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="bi bi-person-plus me-1"></i>Προσθήκη Μέλους</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -2209,9 +2209,9 @@ document.querySelectorAll('.apply-btn').forEach(function(btn) {
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label">Επιλογή Χρήστη</label>
-                        <select class="form-select" name="volunteer_id" required>
+                        <select class="form-select" name="member_id" required>
                             <option value="">-- Επιλέξτε χρήστη --</option>
-                            <?php foreach ($availableVolunteers as $vol): ?>
+                            <?php foreach ($availableMembers as $vol): ?>
                                 <option value="<?= $vol['id'] ?>">
                                     <?= h($vol['name']) ?> (<?= h($vol['email']) ?>) — <?= h(ROLE_LABELS[$vol['role']] ?? $vol['role']) ?>
                                 </option>
@@ -2236,7 +2236,7 @@ document.querySelectorAll('.apply-btn').forEach(function(btn) {
                                             <small class="text-muted">
                                                 <?= formatDateTime($shift['start_time'], 'H:i') ?> - 
                                                 <?= formatDateTime($shift['end_time'], 'H:i') ?>
-                                                | <?= $shift['approved_count'] ?>/<?= $shift['max_volunteers'] ?> εθελοντές
+                                                | <?= $shift['approved_count'] ?>/<?= $shift['max_members'] ?> εθελοντές
                                             </small>
                                         </div>
                                     </label>

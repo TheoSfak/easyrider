@@ -1,7 +1,7 @@
 <?php
 /**
  * VolunteerOps - One-time Achievement Backfill
- * Retroactively awards badges to all volunteers based on their existing history.
+ * Retroactively awards badges to all members based on their existing history.
  * Run once as a system admin, then it can be deleted or left (it's idempotent).
  */
 require_once __DIR__ . '/bootstrap.php';
@@ -16,15 +16,15 @@ $totalNew  = 0;
 if (isPost()) {
     verifyCsrf();
 
-    // Fetch all active volunteers (not soft-deleted)
-    $volunteers = dbFetchAll(
+    // Fetch all active members (not soft-deleted)
+    $members = dbFetchAll(
         "SELECT id, name, email FROM users
          WHERE is_active = 1 AND deleted_at IS NULL AND role = ?
          ORDER BY name ASC",
-        [ROLE_VOLUNTEER]
+        [ROLE_MEMBER]
     );
 
-    foreach ($volunteers as $v) {
+    foreach ($members as $v) {
         $awarded = checkAndAwardAchievements((int)$v['id']);
 
         // Mark newly awarded as notified=0 (so the popup fires on their next login)
@@ -48,13 +48,13 @@ if (isPost()) {
     }
 
     $ran = true;
-    logAudit('backfill_achievements', 'users', null, "Awarded $totalNew badges to " . count($volunteers) . " volunteers");
+    logAudit('backfill_achievements', 'users', null, "Awarded $totalNew badges to " . count($members) . " members");
 }
 
 // Pre-run stats
-$totalVolunteers = (int)dbFetchValue(
+$totalMembers = (int)dbFetchValue(
     "SELECT COUNT(*) FROM users WHERE is_active = 1 AND deleted_at IS NULL AND role = ?",
-    [ROLE_VOLUNTEER]
+    [ROLE_MEMBER]
 );
 $alreadyHaveBadges = (int)dbFetchValue(
     "SELECT COUNT(DISTINCT user_id) FROM user_achievements"
@@ -93,7 +93,7 @@ include __DIR__ . '/includes/header.php';
             <div class="col-sm-4">
                 <div class="card text-center border-0 bg-light">
                     <div class="card-body py-3">
-                        <div class="h2 text-primary mb-0"><?= $totalVolunteers ?></div>
+                        <div class="h2 text-primary mb-0"><?= $totalMembers ?></div>
                         <small class="text-muted">Ενεργοί Εθελοντές</small>
                     </div>
                 </div>
@@ -109,7 +109,7 @@ include __DIR__ . '/includes/header.php';
             <div class="col-sm-4">
                 <div class="card text-center border-0 bg-light">
                     <div class="card-body py-3">
-                        <div class="h2 text-warning mb-0"><?= $totalVolunteers - $alreadyHaveBadges ?></div>
+                        <div class="h2 text-warning mb-0"><?= $totalMembers - $alreadyHaveBadges ?></div>
                         <small class="text-muted">Χωρίς badges ακόμα</small>
                     </div>
                 </div>
@@ -125,7 +125,7 @@ include __DIR__ . '/includes/header.php';
         <form method="post">
             <?= csrfField() ?>
             <button type="submit" class="btn btn-warning btn-lg">
-                <i class="bi bi-play-circle-fill me-2"></i>Εκτέλεση Backfill για <?= $totalVolunteers ?> εθελοντές
+                <i class="bi bi-play-circle-fill me-2"></i>Εκτέλεση Backfill για <?= $totalMembers ?> εθελοντές
             </button>
         </form>
     </div>
@@ -198,7 +198,7 @@ include __DIR__ . '/includes/header.php';
             <i class="bi bi-arrow-repeat me-1"></i>Εκτέλεση ξανά
         </button>
     </form>
-    <a href="volunteers.php" class="btn btn-outline-secondary">
+    <a href="members.php" class="btn btn-outline-secondary">
         <i class="bi bi-people me-1"></i>Λίστα Εθελοντών
     </a>
 </div>

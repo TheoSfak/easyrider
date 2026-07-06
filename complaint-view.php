@@ -66,7 +66,7 @@ if (isPost() && hasPagePermission('complaints_manage')) {
             
             logAudit('respond_complaint', 'complaints', $id);
             
-            // Notify the volunteer (in-app + email)
+            // Notify the member (in-app + email)
             sendNotification(
                 $complaint['user_id'],
                 'Απάντηση στο Παράπονο #' . $id,

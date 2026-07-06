@@ -138,7 +138,7 @@ $categories = dbFetchAll(
 );
 
 $skills = dbFetchAll(
-    "SELECT s.*, COUNT(us.user_id) AS volunteer_count
+    "SELECT s.*, COUNT(us.user_id) AS member_count
      FROM skills s
      LEFT JOIN user_skills us ON s.id = us.skill_id
      GROUP BY s.id
@@ -237,7 +237,7 @@ include __DIR__ . '/includes/header.php';
     </div>
     <div class="card border-0 bg-info bg-opacity-10 px-3 py-2">
         <small class="text-muted">Αναθέσεις σε εθελοντές</small>
-        <div class="fw-bold fs-5"><?= array_sum(array_column($skills, 'volunteer_count')) ?></div>
+        <div class="fw-bold fs-5"><?= array_sum(array_column($skills, 'member_count')) ?></div>
     </div>
 </div>
 
@@ -262,8 +262,8 @@ include __DIR__ . '/includes/header.php';
                 <tr>
                     <td class="fw-semibold"><?= h($sk['name']) ?></td>
                     <td class="text-center">
-                        <?php if ($sk['volunteer_count'] > 0): ?>
-                            <span class="badge bg-primary"><?= $sk['volunteer_count'] ?></span>
+                        <?php if ($sk['member_count'] > 0): ?>
+                            <span class="badge bg-primary"><?= $sk['member_count'] ?></span>
                         <?php else: ?>
                             <span class="text-muted small">—</span>
                         <?php endif; ?>
@@ -480,10 +480,10 @@ include __DIR__ . '/includes/header.php';
                 </div>
                 <div class="modal-body">
                     <p>Πρόκειται να διαγράψετε τη δεξιότητα <strong><?= h($sk['name']) ?></strong>.</p>
-                    <?php if ($sk['volunteer_count'] > 0): ?>
+                    <?php if ($sk['member_count'] > 0): ?>
                     <div class="alert alert-warning">
                         <i class="bi bi-exclamation-triangle me-1"></i>
-                        <strong><?= $sk['volunteer_count'] ?> εθελοντές</strong> έχουν αυτή τη δεξιότητα. Η ανάθεσή τους θα αφαιρεθεί.
+                        <strong><?= $sk['member_count'] ?> εθελοντές</strong> έχουν αυτή τη δεξιότητα. Η ανάθεσή τους θα αφαιρεθεί.
                     </div>
                     <?php else: ?>
                     <p class="text-muted">Δεν έχει ανατεθεί σε κανέναν εθελοντή.</p>

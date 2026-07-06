@@ -122,7 +122,7 @@ function handleInit(): void
                 $relFromUploads = str_replace('\\', '/', substr($file->getPathname(), strlen($uploadsPrefix)));
                 foreach ($skipFolders as $folder) {
                     $folder = rtrim($folder, '/');
-                    // Accept both 'uploads/volunteer-docs' (new) and 'volunteer-docs' (legacy)
+                    // Accept both 'uploads/member-docs' (new) and 'member-docs' (legacy)
                     $folderRel = str_starts_with($folder, 'uploads/') ? substr($folder, 8) : $folder;
                     if (str_starts_with($relFromUploads, $folderRel . '/') || $relFromUploads === $folderRel) {
                         continue 2;

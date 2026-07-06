@@ -41,9 +41,9 @@ $canManage = isAdmin() && !$missionCompleted;
 
 // Get participants
 $participants = dbFetchAll(
-    "SELECT pr.*, u.name, u.email, u.phone, u.volunteer_type
+    "SELECT pr.*, u.name, u.email, u.phone, u.member_type
      FROM participation_requests pr
-     JOIN users u ON pr.volunteer_id = u.id
+     JOIN users u ON pr.member_id = u.id
      WHERE pr.shift_id = ?
      ORDER BY pr.status ASC, pr.created_at ASC",
     [$id]
@@ -55,7 +55,7 @@ $qrEnabled = getSetting('qr_checkin_enabled', '0') === '1';
 // Check if current user has applied (checked for all roles including admin)
 $myParticipation = null;
 foreach ($participants as $p) {
-    if ($p['volunteer_id'] == $user['id']) {
+    if ($p['member_id'] == $user['id']) {
         $myParticipation = $p;
         break;
     }
@@ -68,7 +68,7 @@ if (isPost()) {
     $prId = post('participation_id');
 
     // Block all management actions when mission is COMPLETED
-    $adminActions = ['approve', 'reject', 'reactivate', 'mark_attended', 'delete', 'add_volunteer', 'update_notes', 'approve_swap', 'reject_swap'];
+    $adminActions = ['approve', 'reject', 'reactivate', 'mark_attended', 'delete', 'add_member', 'update_notes', 'approve_swap', 'reject_swap'];
     if ($missionCompleted && in_array($action, $adminActions)) {
         setFlash('error', 'Η αποστολή είναι ολοκληρωμένη. Αλλάξτε πρώτα την κατάσταση σε «Κλειστή» για να κάνετε αλλαγές.');
         redirect('shift-view.php?id=' . $id);
@@ -86,7 +86,7 @@ if (isPost()) {
             } else {
                 dbInsert(
                     "INSERT INTO participation_requests 
-                     (shift_id, volunteer_id, status, notes, created_at, updated_at)
+                     (shift_id, member_id, status, notes, created_at, updated_at)
                      VALUES (?, ?, ?, ?, NOW(), NOW())",
                     [$id, $user['id'], PARTICIPATION_PENDING, post('notes')]
                 );
@@ -108,11 +108,11 @@ if (isPost()) {
             
         case 'approve':
             if ($canManage) {
-                // Get participation and volunteer info for notification
+                // Get participation and member info for notification
                 $prInfo = dbFetchOne(
-                    "SELECT pr.volunteer_id, u.name, u.email 
+                    "SELECT pr.member_id, u.name, u.email 
                      FROM participation_requests pr 
-                     JOIN users u ON pr.volunteer_id = u.id 
+                     JOIN users u ON pr.member_id = u.id 
                      WHERE pr.id = ?",
                     [$prId]
                 );
@@ -137,7 +137,7 @@ if (isPost()) {
                     
                     // Send in-app notification
                     sendNotification(
-                        $prInfo['volunteer_id'],
+                        $prInfo['member_id'],
                         'Η αίτησή σας εγκρίθηκε',
                         'Η αίτησή σας για τη βάρδια "' . $shift['mission_title'] . '" στις ' . 
                         formatDateTime($shift['start_time']) . ' εγκρίθηκε.'
@@ -153,9 +153,9 @@ if (isPost()) {
             if ($canManage) {
                 $reason = post('reason');
                 
-                // Get volunteer info for notification
+                // Get member info for notification
                 $prInfo = dbFetchOne(
-                    "SELECT pr.volunteer_id, u.name FROM participation_requests pr JOIN users u ON pr.volunteer_id = u.id WHERE pr.id = ?",
+                    "SELECT pr.member_id, u.name FROM participation_requests pr JOIN users u ON pr.member_id = u.id WHERE pr.id = ?",
                     [$prId]
                 );
                 
@@ -164,14 +164,14 @@ if (isPost()) {
                     [$reason, $user['id'], $prId]
                 );
                 
-                // Send notification to volunteer
+                // Send notification to member
                 if ($prInfo && isNotificationEnabled('participation_rejected')) {
-                    // Get volunteer email
-                    $volunteer = dbFetchOne("SELECT name, email FROM users WHERE id = ?", [$prInfo['volunteer_id']]);
+                    // Get member email
+                    $member = dbFetchOne("SELECT name, email FROM users WHERE id = ?", [$prInfo['member_id']]);
                     
                     // Send email
-                    sendNotificationEmail('participation_rejected', $volunteer['email'], [
-                        'user_name' => $volunteer['name'],
+                    sendNotificationEmail('participation_rejected', $member['email'], [
+                        'user_name' => $member['name'],
                         'mission_title' => $shift['mission_title'],
                         'shift_date' => formatDateTime($shift['start_time'], 'd/m/Y'),
                         'rejection_reason' => $reason ?: 'Δεν αναφέρθηκε λόγος'
@@ -185,7 +185,7 @@ if (isPost()) {
                     dbInsert(
                         "INSERT INTO notifications (user_id, type, title, message, data, created_at) VALUES (?, 'participation_rejected', ?, ?, ?, NOW())",
                         [
-                            $prInfo['volunteer_id'],
+                            $prInfo['member_id'],
                             'Απόρριψη Αίτησης',
                             $message,
                             json_encode(['shift_id' => $id, 'reason' => $reason])
@@ -201,7 +201,7 @@ if (isPost()) {
         case 'reactivate':
             if ($canManage) {
                 $pr = dbFetchOne(
-                    "SELECT pr.*, u.name, u.email FROM participation_requests pr JOIN users u ON pr.volunteer_id = u.id WHERE pr.id = ?",
+                    "SELECT pr.*, u.name, u.email FROM participation_requests pr JOIN users u ON pr.member_id = u.id WHERE pr.id = ?",
                     [$prId]
                 );
 
@@ -228,12 +228,12 @@ if (isPost()) {
 
                     // In-app notification
                     sendNotification(
-                        (int) $pr['volunteer_id'],
+                        (int) $pr['member_id'],
                         'Επανενεργοποίηση Συμμετοχής',
                         'Η συμμετοχή σας στη βάρδια "' . $shift['mission_title'] . '" (' . formatDateTime($shift['start_time']) . ') επανενεργοποιήθηκε και είναι πλέον εγκεκριμένη.'
                     );
 
-                    logAudit('reactivate', 'participation_requests', $prId, "Volunteer: {$pr['volunteer_id']}");
+                    logAudit('reactivate', 'participation_requests', $prId, "Member: {$pr['member_id']}");
                     setFlash('success', 'Ο εθελοντής επανενεργοποιήθηκε και ειδοποιήθηκε.');
                 }
             }
@@ -257,24 +257,24 @@ if (isPost()) {
                         $points = calculatePoints($shift, $hours);
 
                         dbInsert(
-                            "INSERT INTO volunteer_points 
+                            "INSERT INTO member_points 
                              (user_id, points, reason, description, pointable_type, pointable_id, created_at)
                              VALUES (?, ?, ?, ?, 'App\\\\Models\\\\Shift', ?, NOW())",
-                            [$pr['volunteer_id'], $points, 'shift_attendance', "Βάρδια: " . $shift['mission_title'], $id]
+                            [$pr['member_id'], $points, 'shift_attendance', "Βάρδια: " . $shift['mission_title'], $id]
                         );
 
                         dbExecute(
                             "UPDATE users SET total_points = total_points + ? WHERE id = ?",
-                            [$points, $pr['volunteer_id']]
+                            [$points, $pr['member_id']]
                         );
 
                         logAudit('mark_attended', 'participation_requests', $prId, "Points: $points");
                     }
                     db()->commit();
 
-                    // Check and award any newly earned achievements for the volunteer
+                    // Check and award any newly earned achievements for the member
                     if ($pr) {
-                        checkAndAwardAchievements((int)$pr['volunteer_id']);
+                        checkAndAwardAchievements((int)$pr['member_id']);
                     }
 
                     setFlash('success', getSetting('points_enabled', '1') === '1' ? 'Η παρουσία καταγράφηκε και δόθηκαν πόντοι.' : 'Η παρουσία καταγράφηκε επιτυχώς.');
@@ -289,7 +289,7 @@ if (isPost()) {
             // Shift leader or admin self check-in via the "Είμαι Παρών" button
             if ($qrEnabled && isAdmin()) {
                 $selfPr = dbFetchOne(
-                    "SELECT * FROM participation_requests WHERE shift_id = ? AND volunteer_id = ? AND status = ?",
+                    "SELECT * FROM participation_requests WHERE shift_id = ? AND member_id = ? AND status = ?",
                     [$id, $user['id'], PARTICIPATION_APPROVED]
                 );
                 if ($selfPr && empty($selfPr['attendance_confirmed_at'])) {
@@ -319,16 +319,16 @@ if (isPost()) {
                 $affectedParticipants = dbFetchAll(
                     "SELECT pr.*, u.name, u.email 
                      FROM participation_requests pr 
-                     JOIN users u ON pr.volunteer_id = u.id 
+                     JOIN users u ON pr.member_id = u.id 
                      WHERE pr.shift_id = ? AND pr.status IN (?, ?)",
                     [$id, PARTICIPATION_PENDING, PARTICIPATION_APPROVED]
                 );
                 
                 db()->beginTransaction();
                 try {
-                    // Send bulk notification to affected volunteers
+                    // Send bulk notification to affected members
                     if (isNotificationEnabled('mission_cancelled') && !empty($affectedParticipants)) {
-                        $userIds = array_column($affectedParticipants, 'volunteer_id');
+                        $userIds = array_column($affectedParticipants, 'member_id');
                         sendBulkNotifications(
                             $userIds,
                             'Ακύρωση Βάρδιας',
@@ -341,7 +341,7 @@ if (isPost()) {
                     
                     // Delete the shift
                     dbExecute("DELETE FROM shifts WHERE id = ?", [$id]);
-                    logAudit('delete', 'shifts', $id, 'Notified ' . count($affectedParticipants) . ' volunteers');
+                    logAudit('delete', 'shifts', $id, 'Notified ' . count($affectedParticipants) . ' members');
                     
                     db()->commit();
                     
@@ -358,15 +358,15 @@ if (isPost()) {
             }
             break;
             
-        case 'add_volunteer':
+        case 'add_member':
             if ($canManage) {
-                $volunteerId = post('volunteer_id');
+                $memberId = post('member_id');
                 $notes = post('admin_notes');
                 
                 // Check if already in this shift (any status)
                 $exists = dbFetchOne(
-                    "SELECT id, status FROM participation_requests WHERE shift_id = ? AND volunteer_id = ?",
-                    [$id, $volunteerId]
+                    "SELECT id, status FROM participation_requests WHERE shift_id = ? AND member_id = ?",
+                    [$id, $memberId]
                 );
                 
                 if ($exists && in_array($exists['status'], [PARTICIPATION_APPROVED, PARTICIPATION_PENDING])) {
@@ -386,23 +386,23 @@ if (isPost()) {
                         // Insert new record
                         dbInsert(
                             "INSERT INTO participation_requests 
-                             (shift_id, volunteer_id, status, admin_notes, decided_by, decided_at, created_at, updated_at)
+                             (shift_id, member_id, status, admin_notes, decided_by, decided_at, created_at, updated_at)
                              VALUES (?, ?, ?, ?, ?, NOW(), NOW(), NOW())",
-                            [$id, $volunteerId, PARTICIPATION_APPROVED, $notes, $user['id']]
+                            [$id, $memberId, PARTICIPATION_APPROVED, $notes, $user['id']]
                         );
                     }
                     
-                    // Fetch volunteer info for notification
-                    $volunteerInfo = dbFetchOne("SELECT name, email FROM users WHERE id = ?", [$volunteerId]);
+                    // Fetch member info for notification
+                    $memberInfo = dbFetchOne("SELECT name, email FROM users WHERE id = ?", [$memberId]);
                     
                     // Send email notification
-                    if ($volunteerInfo && !empty($volunteerInfo['email']) && isNotificationEnabled('admin_added_volunteer')) {
+                    if ($memberInfo && !empty($memberInfo['email']) && isNotificationEnabled('admin_added_member')) {
                         $gcalLink = buildGcalLink($shift['mission_title'], $shift['start_time'], $shift['end_time'], $shift['location'] ?: '');
                         sendNotificationEmail(
-                            'admin_added_volunteer',
-                            $volunteerInfo['email'],
+                            'admin_added_member',
+                            $memberInfo['email'],
                             [
-                                'user_name'     => $volunteerInfo['name'],
+                                'user_name'     => $memberInfo['name'],
                                 'mission_title' => $shift['mission_title'],
                                 'shift_date'    => formatDateTime($shift['start_time'], 'd/m/Y'),
                                 'shift_time'    => formatDateTime($shift['start_time'], 'H:i') . ' - ' . formatDateTime($shift['end_time'], 'H:i'),
@@ -415,23 +415,23 @@ if (isPost()) {
                     
                     // In-app notification
                     sendNotification(
-                        (int) $volunteerId,
+                        (int) $memberId,
                         'Τοποθετήθηκατε σε βάρδια',
                         'Ο διαχειριστής σας τοποθέτησε στη βάρδια: ' . $shift['mission_title'] . ' - ' . formatDateTime($shift['start_time'])
                     );
                     
-                    logAudit('add_volunteer', 'participation_requests', null, "Shift $id, User $volunteerId");
+                    logAudit('add_member', 'participation_requests', null, "Shift $id, User $memberId");
                     setFlash('success', 'Ο εθελοντής προστέθηκε στη βάρδια και ενημερώθηκε με email.');
                 }
             }
             break;
             
-        case 'mass_add_volunteers':
+        case 'mass_add_members':
             if ($canManage) {
-                $volunteerIds = post('volunteer_ids');
+                $memberIds = post('member_ids');
                 $notes = post('admin_notes');
                 
-                if (empty($volunteerIds) || !is_array($volunteerIds)) {
+                if (empty($memberIds) || !is_array($memberIds)) {
                     setFlash('error', 'Δεν επιλέξατε κανέναν εθελοντή.');
                     redirect('shift-view.php?id=' . $id);
                 }
@@ -439,14 +439,14 @@ if (isPost()) {
                 $addedCount = 0;
                 $skippedCount = 0;
                 
-                foreach ($volunteerIds as $volunteerId) {
-                    $volunteerId = (int) $volunteerId;
-                    if (!$volunteerId) continue;
+                foreach ($memberIds as $memberId) {
+                    $memberId = (int) $memberId;
+                    if (!$memberId) continue;
                     
                     // Check if already in this shift (any status)
                     $exists = dbFetchOne(
-                        "SELECT id, status FROM participation_requests WHERE shift_id = ? AND volunteer_id = ?",
-                        [$id, $volunteerId]
+                        "SELECT id, status FROM participation_requests WHERE shift_id = ? AND member_id = ?",
+                        [$id, $memberId]
                     );
                     
                     if ($exists && in_array($exists['status'], [PARTICIPATION_APPROVED, PARTICIPATION_PENDING])) {
@@ -468,25 +468,25 @@ if (isPost()) {
                         // Insert new record
                         dbInsert(
                             "INSERT INTO participation_requests 
-                             (shift_id, volunteer_id, status, admin_notes, decided_by, decided_at, created_at, updated_at)
+                             (shift_id, member_id, status, admin_notes, decided_by, decided_at, created_at, updated_at)
                              VALUES (?, ?, ?, ?, ?, NOW(), NOW(), NOW())",
-                            [$id, $volunteerId, PARTICIPATION_APPROVED, $notes, $user['id']]
+                            [$id, $memberId, PARTICIPATION_APPROVED, $notes, $user['id']]
                         );
                     }
                     
                     $addedCount++;
                     
-                    // Fetch volunteer info for notification
-                    $volunteerInfo = dbFetchOne("SELECT name, email FROM users WHERE id = ?", [$volunteerId]);
+                    // Fetch member info for notification
+                    $memberInfo = dbFetchOne("SELECT name, email FROM users WHERE id = ?", [$memberId]);
                     
                     // Send email notification
-                    if ($volunteerInfo && !empty($volunteerInfo['email']) && isNotificationEnabled('admin_added_volunteer')) {
+                    if ($memberInfo && !empty($memberInfo['email']) && isNotificationEnabled('admin_added_member')) {
                         $gcalLink = buildGcalLink($shift['mission_title'], $shift['start_time'], $shift['end_time'], $shift['location'] ?: '');
                         sendNotificationEmail(
-                            'admin_added_volunteer',
-                            $volunteerInfo['email'],
+                            'admin_added_member',
+                            $memberInfo['email'],
                             [
-                                'user_name'     => $volunteerInfo['name'],
+                                'user_name'     => $memberInfo['name'],
                                 'mission_title' => $shift['mission_title'],
                                 'shift_date'    => formatDateTime($shift['start_time'], 'd/m/Y'),
                                 'shift_time'    => formatDateTime($shift['start_time'], 'H:i') . ' - ' . formatDateTime($shift['end_time'], 'H:i'),
@@ -499,14 +499,14 @@ if (isPost()) {
                     
                     // In-app notification
                     sendNotification(
-                        (int) $volunteerId,
+                        (int) $memberId,
                         'Τοποθετήθηκατε σε βάρδια',
                         'Ο διαχειριστής σας τοποθέτησε στη βάρδια: ' . $shift['mission_title'] . ' - ' . formatDateTime($shift['start_time'])
                     );
                 }
                 
                 if ($addedCount > 0) {
-                    logAudit('mass_add_volunteers', 'participation_requests', null, "Shift $id, Added $addedCount users");
+                    logAudit('mass_add_members', 'participation_requests', null, "Shift $id, Added $addedCount users");
                     $msg = "Προστέθηκαν επιτυχώς $addedCount εθελοντές.";
                     if ($skippedCount > 0) {
                         $msg .= " Παραλείφθηκαν $skippedCount που ήταν ήδη στη βάρδια.";
@@ -536,8 +536,8 @@ if (isPost()) {
                 $swap = dbFetchOne(
                     "SELECT ssr.*, fu.name as from_name, fu.email as from_email, tu.name as to_name, tu.email as to_email
                      FROM shift_swap_requests ssr
-                     JOIN users fu ON ssr.from_volunteer_id = fu.id
-                     JOIN users tu ON ssr.to_volunteer_id = tu.id
+                     JOIN users fu ON ssr.from_member_id = fu.id
+                     JOIN users tu ON ssr.to_member_id = tu.id
                      WHERE ssr.id = ? AND ssr.shift_id = ? AND ssr.status = ?",
                     [$swapId, $id, SWAP_ACCEPTED]
                 );
@@ -545,15 +545,15 @@ if (isPost()) {
                     $db = db();
                     $db->beginTransaction();
                     try {
-                        // Cancel original volunteer's participation
+                        // Cancel original member's participation
                         dbExecute(
                             "UPDATE participation_requests SET status = ?, updated_at = NOW() WHERE id = ?",
                             [PARTICIPATION_CANCELED_BY_USER, $swap['participation_id']]
                         );
-                        // Approve replacement volunteer (upsert)
+                        // Approve replacement member (upsert)
                         $existingPr = dbFetchOne(
-                            "SELECT id FROM participation_requests WHERE shift_id = ? AND volunteer_id = ?",
-                            [$id, $swap['to_volunteer_id']]
+                            "SELECT id FROM participation_requests WHERE shift_id = ? AND member_id = ?",
+                            [$id, $swap['to_member_id']]
                         );
                         if ($existingPr) {
                             dbExecute(
@@ -562,8 +562,8 @@ if (isPost()) {
                             );
                         } else {
                             dbInsert(
-                                "INSERT INTO participation_requests (shift_id, volunteer_id, status, decided_by, decided_at, created_at, updated_at) VALUES (?,?,?,?,NOW(),NOW(),NOW())",
-                                [$id, $swap['to_volunteer_id'], PARTICIPATION_APPROVED, $user['id']]
+                                "INSERT INTO participation_requests (shift_id, member_id, status, decided_by, decided_at, created_at, updated_at) VALUES (?,?,?,?,NOW(),NOW(),NOW())",
+                                [$id, $swap['to_member_id'], PARTICIPATION_APPROVED, $user['id']]
                             );
                         }
                         // Mark swap as approved
@@ -574,7 +574,7 @@ if (isPost()) {
                         $db->commit();
                         logAudit('approve_swap', 'shift_swap_requests', $swapId);
 
-                        // Notify both volunteers
+                        // Notify both members
                         $shiftInfo = $shift['start_time'];
                         $missionTitle = $shift['mission_title'] ?? 'Αποστολή';
                         $vars = [
@@ -590,9 +590,9 @@ if (isPost()) {
                             sendNotificationEmail('shift_swap_approved', $swap['to_email'],
                                 array_merge($vars, ['user_name' => $swap['to_name'], 'replacement_name' => $swap['to_name']]));
                         }
-                        sendNotification($swap['from_volunteer_id'], 'Αντικατάσταση Εγκρίθηκε',
+                        sendNotification($swap['from_member_id'], 'Αντικατάσταση Εγκρίθηκε',
                             'Η αντικατάστασή σας από τον/την ' . $swap['to_name'] . ' εγκρίθηκε από τον διαχειριστή.');
-                        sendNotification($swap['to_volunteer_id'], 'Εγκρίθηκε η Συμμετοχή σας',
+                        sendNotification($swap['to_member_id'], 'Εγκρίθηκε η Συμμετοχή σας',
                             'Εγκριθήκατε ως αντικατάσταση για τη βάρδια της αποστολής: ' . $missionTitle . '.');
 
                         setFlash('success', 'Η αντικατάσταση εγκρίθηκε επιτυχώς.');
@@ -612,8 +612,8 @@ if (isPost()) {
                 $swap = dbFetchOne(
                     "SELECT ssr.*, fu.name as from_name, tu.name as to_name
                      FROM shift_swap_requests ssr
-                     JOIN users fu ON ssr.from_volunteer_id = fu.id
-                     JOIN users tu ON ssr.to_volunteer_id = tu.id
+                     JOIN users fu ON ssr.from_member_id = fu.id
+                     JOIN users tu ON ssr.to_member_id = tu.id
                      WHERE ssr.id = ? AND ssr.shift_id = ? AND ssr.status = ?",
                     [$swapId, $id, SWAP_ACCEPTED]
                 );
@@ -624,9 +624,9 @@ if (isPost()) {
                     );
                     logAudit('reject_swap', 'shift_swap_requests', $swapId);
                     // Notify both
-                    sendNotification($swap['from_volunteer_id'], 'Αίτημα Αντικατάστασης Απορρίφθηκε',
+                    sendNotification($swap['from_member_id'], 'Αίτημα Αντικατάστασης Απορρίφθηκε',
                         'Ο διαχειριστής απέρριψε το αίτημα αντικατάστασης σας.');
-                    sendNotification($swap['to_volunteer_id'], 'Αίτημα Αντικατάστασης Απορρίφθηκε',
+                    sendNotification($swap['to_member_id'], 'Αίτημα Αντικατάστασης Απορρίφθηκε',
                         'Ο διαχειριστής απέρριψε το αίτημα αντικατάστασης.');
                     setFlash('warning', 'Το αίτημα αντικατάστασης απορρίφθηκε.');
                 }
@@ -676,8 +676,8 @@ $missionOverdue = in_array($shift['mission_status'], [STATUS_OPEN, STATUS_CLOSED
 $swapHistory = dbFetchAll(
     "SELECT ssr.*, fu.name as from_name, tu.name as to_name
      FROM shift_swap_requests ssr
-     JOIN users fu ON ssr.from_volunteer_id = fu.id
-     JOIN users tu ON ssr.to_volunteer_id = tu.id
+     JOIN users fu ON ssr.from_member_id = fu.id
+     JOIN users tu ON ssr.to_member_id = tu.id
      WHERE ssr.shift_id = ?
      ORDER BY ssr.created_at DESC",
     [$id]
@@ -688,20 +688,20 @@ if ($canManage) {
     $pendingSwaps = array_values(array_filter($swapHistory, fn($s) => $s['status'] === SWAP_ACCEPTED));
 }
 
-// Get available volunteers for manual add (exclude only PENDING/APPROVED — rejected/canceled can be re-added)
-$availableVolunteers = [];
+// Get available members for manual add (exclude only PENDING/APPROVED — rejected/canceled can be re-added)
+$availableMembers = [];
 if ($canManage) {
     $activeIds = [];
     foreach ($participants as $p) {
         if (in_array($p['status'], [PARTICIPATION_PENDING, PARTICIPATION_APPROVED])) {
-            $activeIds[] = (int) $p['volunteer_id'];
+            $activeIds[] = (int) $p['member_id'];
         }
     }
     $excludeClause = '';
     if (!empty($activeIds)) {
         $excludeClause = 'AND id NOT IN (' . implode(',', $activeIds) . ')';
     }
-    $availableVolunteers = dbFetchAll(
+    $availableMembers = dbFetchAll(
         "SELECT id, name, email, role FROM users 
          WHERE is_active = 1
            $excludeClause 
@@ -794,8 +794,8 @@ include __DIR__ . '/includes/header.php';
                 <?php endif; ?>
                 
                 <p><strong><i class="bi bi-people me-1"></i>Εθελοντές:</strong> 
-                    <?= $approvedCount ?> / <?= $shift['max_volunteers'] ?>
-                    (ελάχ. <?= $shift['min_volunteers'] ?>)
+                    <?= $approvedCount ?> / <?= $shift['max_members'] ?>
+                    (ελάχ. <?= $shift['min_members'] ?>)
                 </p>
                 
                 <?php if ($shift['notes'] && $canManage): ?>
@@ -842,13 +842,13 @@ include __DIR__ . '/includes/header.php';
                                     <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
                                         <div style="min-width:0;">
                                             <div class="fw-bold fs-6"><?= h($p['name']) ?></div>
-                                            <div><?= volunteerTypeBadge($p['volunteer_type'] ?? VTYPE_RESCUER) ?></div>
+                                            <div><?= memberTypeBadge($p['member_type'] ?? VTYPE_RESCUER) ?></div>
                                         </div>
                                         <div class="d-flex flex-column align-items-end gap-1" style="flex-shrink:0;min-width:max-content;">
                                             <?= statusBadge($p['status'], 'participation') ?>
                                             <?php if ($p['attended']): ?>
                                                 <span class="badge bg-success"><i class="bi bi-check2-circle me-1"></i>Παρών</span>
-                                            <?php elseif (!empty($p['attendance_confirmed_at']) && (int)($p['attendance_confirmed_by'] ?? 0) === (int)$p['volunteer_id']): ?>
+                                            <?php elseif (!empty($p['attendance_confirmed_at']) && (int)($p['attendance_confirmed_by'] ?? 0) === (int)$p['member_id']): ?>
                                                 <span class="badge bg-info text-dark" title="QR check-in: <?= h(formatDateTime($p['attendance_confirmed_at'])) ?>"><i class="bi bi-qr-code me-1"></i>QR ✓</span>
                                             <?php elseif (!empty($p['attendance_confirmed_at'])): ?>
                                                 <span class="badge bg-danger"><i class="bi bi-x-circle me-1"></i>Απών</span>
@@ -874,7 +874,7 @@ include __DIR__ . '/includes/header.php';
                                         <i class="bi bi-calendar3 me-1"></i><?= formatDate($p['created_at']) ?>
                                     </div>
 
-                                    <!-- Volunteer notes -->
+                                    <!-- Member notes -->
                                     <?php if ($p['notes']): ?>
                                     <div class="mt-2 p-2 rounded small" style="background:#f8f9fa;border-left:3px solid #adb5bd">
                                         <i class="bi bi-quote me-1 text-muted"></i><?= h($p['notes']) ?>
@@ -897,10 +897,10 @@ include __DIR__ . '/includes/header.php';
 
                                     <!-- Attendance confirmation timestamp (visible to admin/leader) -->
                                     <?php if ($canManage && !empty($p['attendance_confirmed_at'])): ?>
-                                    <?php $confirmedByVolunteer = (int)($p['attendance_confirmed_by'] ?? 0) === (int)$p['volunteer_id']; ?>
-                                    <div class="mt-2 small <?= $confirmedByVolunteer ? '' : 'text-muted' ?>" style="<?= $confirmedByVolunteer ? 'color:#0dcaf0;' : '' ?>">
-                                        <i class="bi <?= $confirmedByVolunteer ? 'bi-qr-code' : 'bi-clipboard-check' ?> me-1"></i>
-                                        <?= $confirmedByVolunteer ? 'QR check-in' : 'Έλεγχος παρουσίας' ?>:
+                                    <?php $confirmedByMember = (int)($p['attendance_confirmed_by'] ?? 0) === (int)$p['member_id']; ?>
+                                    <div class="mt-2 small <?= $confirmedByMember ? '' : 'text-muted' ?>" style="<?= $confirmedByMember ? 'color:#0dcaf0;' : '' ?>">
+                                        <i class="bi <?= $confirmedByMember ? 'bi-qr-code' : 'bi-clipboard-check' ?> me-1"></i>
+                                        <?= $confirmedByMember ? 'QR check-in' : 'Έλεγχος παρουσίας' ?>:
                                         <strong><?= h(formatDateTime($p['attendance_confirmed_at'])) ?></strong>
                                     </div>
                                     <?php endif; ?>
@@ -1024,7 +1024,7 @@ include __DIR__ . '/includes/header.php';
                             </div>
                         <?php endif; ?>
                     <?php elseif ($shift['mission_status'] === STATUS_OPEN && !$isPast && !$missionOverdue): ?>
-                        <?php if ($approvedCount >= $shift['max_volunteers']): ?>
+                        <?php if ($approvedCount >= $shift['max_members']): ?>
                             <div class="alert alert-warning mb-0">
                                 <i class="bi bi-exclamation-circle me-1"></i>
                                 Η βάρδια είναι πλήρης.
@@ -1086,7 +1086,7 @@ include __DIR__ . '/includes/header.php';
                                 <i class="bi bi-quote me-1"></i><?= h($sw['message']) ?>
                             </div>
                             <?php endif; ?>
-                            <small class="text-muted d-block mt-1">Απαντήθηκε: <?= $sw['to_volunteer_responded_at'] ? formatDateTime($sw['to_volunteer_responded_at']) : '&mdash;' ?></small>
+                            <small class="text-muted d-block mt-1">Απαντήθηκε: <?= $sw['to_member_responded_at'] ? formatDateTime($sw['to_member_responded_at']) : '&mdash;' ?></small>
                         </div>
                         <div class="d-flex gap-2">
                             <form method="post">
@@ -1140,7 +1140,7 @@ include __DIR__ . '/includes/header.php';
                         </small>
                         <span class="badge <?= $sl['class'] ?>"><?= $sl['label'] ?></span>
                     </div>
-                    <?php if ($sw['message'] && ($canManage || $sw['from_volunteer_id'] == getCurrentUserId() || $sw['to_volunteer_id'] == getCurrentUserId())): ?>
+                    <?php if ($sw['message'] && ($canManage || $sw['from_member_id'] == getCurrentUserId() || $sw['to_member_id'] == getCurrentUserId())): ?>
                     <div class="p-2 rounded mt-1" style="background:#fff8e1;font-size:.8rem;border-left:3px solid #f0ad4e">
                         <i class="bi bi-quote me-1 text-muted"></i><?= h($sw['message']) ?>
                     </div>
@@ -1159,16 +1159,16 @@ include __DIR__ . '/includes/header.php';
                     <h5 class="mb-0"><i class="bi bi-person-plus me-1"></i>Προσθήκη Εθελοντών</h5>
                 </div>
                 <div class="card-body">
-                    <?php if (empty($availableVolunteers)): ?>
+                    <?php if (empty($availableMembers)): ?>
                         <p class="text-muted mb-0">Δεν υπάρχουν διαθέσιμοι εθελοντές.</p>
-                    <?php elseif ($approvedCount >= $shift['max_volunteers']): ?>
+                    <?php elseif ($approvedCount >= $shift['max_members']): ?>
                         <p class="text-warning mb-0"><i class="bi bi-exclamation-triangle me-1"></i>Η βάρδια είναι πλήρης.</p>
                     <?php else: ?>
                         <div class="d-grid gap-2">
-                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addVolunteerModal">
+                            <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addMemberModal">
                                 <i class="bi bi-person-plus me-1"></i>Μεμονωμένη Προσθήκη
                             </button>
-                            <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#massAddVolunteerModal">
+                            <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#massAddMemberModal">
                                 <i class="bi bi-people me-1"></i>Μαζική Προσθήκη
                             </button>
                         </div>
@@ -1190,14 +1190,14 @@ include __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<!-- Add Volunteer Modal -->
-<?php if ($canManage && !empty($availableVolunteers)): ?>
-<div class="modal fade" id="addVolunteerModal" tabindex="-1">
+<!-- Add Member Modal -->
+<?php if ($canManage && !empty($availableMembers)): ?>
+<div class="modal fade" id="addMemberModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <form method="post">
                 <?= csrfField() ?>
-                <input type="hidden" name="action" value="add_volunteer">
+                <input type="hidden" name="action" value="add_member">
                 
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="bi bi-person-plus me-1"></i>Προσθήκη Εθελοντή</h5>
@@ -1208,9 +1208,9 @@ include __DIR__ . '/includes/header.php';
                     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
                     <div class="mb-3">
                         <label class="form-label">Επιλογή Χρήστη <span class="text-danger">*</span></label>
-                        <select class="form-select" name="volunteer_id" required id="volunteerSelect">
+                        <select class="form-select" name="member_id" required id="memberSelect">
                             <option value="">Αναζήτηση χρήστη...</option>
-                            <?php foreach ($availableVolunteers as $v): ?>
+                            <?php foreach ($availableMembers as $v): ?>
                                 <option value="<?= $v['id'] ?>"><?= h($v['name']) ?> (<?= h($v['email']) ?>) — <?= h(ROLE_LABELS[$v['role']] ?? $v['role']) ?></option>
                             <?php endforeach; ?>
                         </select>
@@ -1233,13 +1233,13 @@ include __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<!-- Mass Add Volunteers Modal -->
-<div class="modal fade" id="massAddVolunteerModal" tabindex="-1">
+<!-- Mass Add Members Modal -->
+<div class="modal fade" id="massAddMemberModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <form method="post">
                 <?= csrfField() ?>
-                <input type="hidden" name="action" value="mass_add_volunteers">
+                <input type="hidden" name="action" value="mass_add_members">
                 
                 <div class="modal-header">
                     <h5 class="modal-title"><i class="bi bi-people me-1"></i>Μαζική Προσθήκη Εθελοντών</h5>
@@ -1252,8 +1252,8 @@ include __DIR__ . '/includes/header.php';
                     
                     <div class="mb-3 d-flex justify-content-between align-items-center">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="selectAllVolunteers">
-                            <label class="form-check-label fw-bold" for="selectAllVolunteers">
+                            <input class="form-check-input" type="checkbox" id="selectAllMembers">
+                            <label class="form-check-label fw-bold" for="selectAllMembers">
                                 Επιλογή Όλων
                             </label>
                         </div>
@@ -1261,12 +1261,12 @@ include __DIR__ . '/includes/header.php';
                     </div>
                     
                     <div class="list-group mb-3" style="max-height: 300px; overflow-y: auto;" id="massAddList">
-                        <?php foreach ($availableVolunteers as $v): ?>
-                            <label class="list-group-item d-flex gap-2 align-items-center volunteer-item">
-                                <input class="form-check-input flex-shrink-0 volunteer-checkbox" type="checkbox" name="volunteer_ids[]" value="<?= $v['id'] ?>">
+                        <?php foreach ($availableMembers as $v): ?>
+                            <label class="list-group-item d-flex gap-2 align-items-center member-item">
+                                <input class="form-check-input flex-shrink-0 member-checkbox" type="checkbox" name="member_ids[]" value="<?= $v['id'] ?>">
                                 <span>
-                                    <span class="volunteer-name fw-bold"><?= h($v['name']) ?></span>
-                                    <small class="text-muted volunteer-email d-block"><?= h($v['email']) ?> — <?= h(ROLE_LABELS[$v['role']] ?? $v['role']) ?></small>
+                                    <span class="member-name fw-bold"><?= h($v['name']) ?></span>
+                                    <small class="text-muted member-email d-block"><?= h($v['email']) ?> — <?= h(ROLE_LABELS[$v['role']] ?? $v['role']) ?></small>
                                 </span>
                             </label>
                         <?php endforeach; ?>
@@ -1305,7 +1305,7 @@ include __DIR__ . '/includes/header.php';
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Σχόλιο για: <strong id="notesVolunteerName"></strong></p>
+                    <p>Σχόλιο για: <strong id="notesMemberName"></strong></p>
                     <textarea class="form-control" name="admin_notes" id="notesTextarea" rows="3" 
                               placeholder="Σχόλιο διαχειριστή..."></textarea>
                     <small class="text-muted">Αφήστε κενό για διαγραφή του σχολίου.</small>
@@ -1332,7 +1332,7 @@ include __DIR__ . '/includes/header.php';
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p id="rejectModalText">Απόρριψη αίτησης του <strong id="rejectVolunteerName"></strong>;</p>
+                    <p id="rejectModalText">Απόρριψη αίτησης του <strong id="rejectMemberName"></strong>;</p>
                     <div class="mb-3">
                         <label class="form-label">Αιτιολογία (προαιρετική)</label>
                         <textarea class="form-control" name="reason" id="rejectReason" rows="2"></textarea>
@@ -1360,7 +1360,7 @@ include __DIR__ . '/includes/header.php';
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Καταγραφή παρουσίας για <strong id="attendVolunteerName"></strong></p>
+                    <p>Καταγραφή παρουσίας για <strong id="attendMemberName"></strong></p>
                     <div class="mb-3">
                         <label class="form-label">Πραγματικές Ώρες</label>
                         <input type="number" step="0.5" class="form-control" name="actual_hours" id="attendHours">
@@ -1376,7 +1376,7 @@ include __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<!-- Reactivate Volunteer Modal -->
+<!-- Reactivate Member Modal -->
 <div class="modal fade" id="reactivateModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -1389,7 +1389,7 @@ include __DIR__ . '/includes/header.php';
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Θέλετε να επανενεργοποιήσετε τη συμμετοχή του <strong id="reactivateVolunteerName"></strong>;</p>
+                    <p>Θέλετε να επανενεργοποιήσετε τη συμμετοχή του <strong id="reactivateMemberName"></strong>;</p>
                     <div class="alert alert-info mb-0">
                         <i class="bi bi-info-circle me-1"></i>
                         Η αίτηση θα οριστεί ως <strong>ΕΓΚΕΚΡΙΜΕΝΗ</strong> και ο εθελοντής θα ειδοποιηθεί με email.
@@ -1548,7 +1548,7 @@ document.querySelectorAll('.edit-notes-btn').forEach(function(btn) {
         var notes = this.getAttribute('data-notes');
         
         document.getElementById('notesParticipationId').value = id;
-        document.getElementById('notesVolunteerName').textContent = name;
+        document.getElementById('notesMemberName').textContent = name;
         document.getElementById('notesTextarea').value = notes || '';
         
         var modal = new bootstrap.Modal(document.getElementById('editNotesModal'));
@@ -1567,7 +1567,7 @@ document.querySelectorAll('.reject-btn').forEach(function(btn) {
         var type = this.getAttribute('data-type');
         
         document.getElementById('rejectParticipationId').value = id;
-        document.getElementById('rejectVolunteerName').textContent = name;
+        document.getElementById('rejectMemberName').textContent = name;
         document.getElementById('rejectReason').value = '';
         
         if (type === 'cancel') {
@@ -1590,7 +1590,7 @@ document.querySelectorAll('.reactivate-btn').forEach(function(btn) {
         e.stopPropagation();
 
         document.getElementById('reactivateParticipationId').value = this.getAttribute('data-id');
-        document.getElementById('reactivateVolunteerName').textContent = this.getAttribute('data-name');
+        document.getElementById('reactivateMemberName').textContent = this.getAttribute('data-name');
 
         new bootstrap.Modal(document.getElementById('reactivateModal')).show();
     });
@@ -1607,7 +1607,7 @@ document.querySelectorAll('.attend-btn').forEach(function(btn) {
         var hours = this.getAttribute('data-hours');
         
         document.getElementById('attendParticipationId').value = id;
-        document.getElementById('attendVolunteerName').textContent = name;
+        document.getElementById('attendMemberName').textContent = name;
         document.getElementById('attendHours').value = hours;
         document.getElementById('attendScheduledHours').textContent = hours;
         
@@ -1618,13 +1618,13 @@ document.querySelectorAll('.attend-btn').forEach(function(btn) {
 </script>
 <?php endif; ?>
 
-<?php if ($canManage && !empty($availableVolunteers)): ?>
+<?php if ($canManage && !empty($availableMembers)): ?>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
 $(document).ready(function() {
-    $('#volunteerSelect').select2({
+    $('#memberSelect').select2({
         theme: 'bootstrap-5',
-        dropdownParent: $('#addVolunteerModal'),
+        dropdownParent: $('#addMemberModal'),
         placeholder: 'Πληκτρολογήστε για αναζήτηση...',
         allowClear: true,
         language: {
@@ -1634,23 +1634,23 @@ $(document).ready(function() {
     });
 });
 
-// Mass Add Volunteers Logic
+// Mass Add Members Logic
 document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('massAddSearch');
-    const selectAllCheckbox = document.getElementById('selectAllVolunteers');
-    const volunteerCheckboxes = document.querySelectorAll('.volunteer-checkbox');
-    const volunteerItems = document.querySelectorAll('.volunteer-item');
+    const selectAllCheckbox = document.getElementById('selectAllMembers');
+    const memberCheckboxes = document.querySelectorAll('.member-checkbox');
+    const memberItems = document.querySelectorAll('.member-item');
     const selectedCountBadge = document.getElementById('selectedCountBadge');
     const submitBtn = document.getElementById('massAddSubmitBtn');
 
     if (!searchInput) return;
 
-    // Filter volunteers
+    // Filter members
     searchInput.addEventListener('input', function() {
         const term = this.value.toLowerCase();
-        volunteerItems.forEach(item => {
-            const name = item.querySelector('.volunteer-name').textContent.toLowerCase();
-            const email = item.querySelector('.volunteer-email').textContent.toLowerCase();
+        memberItems.forEach(item => {
+            const name = item.querySelector('.member-name').textContent.toLowerCase();
+            const email = item.querySelector('.member-email').textContent.toLowerCase();
             if (name.includes(term) || email.includes(term)) {
                 item.style.display = '';
             } else {
@@ -1663,9 +1663,9 @@ document.addEventListener('DOMContentLoaded', function() {
     // Select All (only visible items)
     selectAllCheckbox.addEventListener('change', function() {
         const isChecked = this.checked;
-        volunteerItems.forEach(item => {
+        memberItems.forEach(item => {
             if (item.style.display !== 'none') {
-                const cb = item.querySelector('.volunteer-checkbox');
+                const cb = item.querySelector('.member-checkbox');
                 cb.checked = isChecked;
             }
         });
@@ -1673,7 +1673,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Individual checkbox change
-    volunteerCheckboxes.forEach(cb => {
+    memberCheckboxes.forEach(cb => {
         cb.addEventListener('change', function() {
             updateCount();
             updateSelectAllState();
@@ -1681,14 +1681,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function updateCount() {
-        const count = document.querySelectorAll('.volunteer-checkbox:checked').length;
+        const count = document.querySelectorAll('.member-checkbox:checked').length;
         selectedCountBadge.textContent = count + (count === 1 ? ' επιλεγμένος' : ' επιλεγμένοι');
         submitBtn.disabled = count === 0;
     }
 
     function updateSelectAllState() {
-        const visibleItems = Array.from(volunteerItems).filter(item => item.style.display !== 'none');
-        const visibleChecked = visibleItems.filter(item => item.querySelector('.volunteer-checkbox').checked);
+        const visibleItems = Array.from(memberItems).filter(item => item.style.display !== 'none');
+        const visibleChecked = visibleItems.filter(item => item.querySelector('.member-checkbox').checked);
         
         if (visibleItems.length === 0) {
             selectAllCheckbox.checked = false;

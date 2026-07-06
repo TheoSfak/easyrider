@@ -8,14 +8,14 @@ requireRole([ROLE_SYSTEM_ADMIN]);
 
 try {
     // Delete existing mission template
-    dbExecute("DELETE FROM email_templates WHERE code = 'mission_needs_volunteers'");
+    dbExecute("DELETE FROM email_templates WHERE code = 'mission_needs_members'");
     echo "Διαγραφή παλιού template... ✓\n";
     
     // Insert with proper Greek encoding
     dbExecute(
         "INSERT INTO email_templates (code, name, subject, body_html, available_variables, description) VALUES (?, ?, ?, ?, ?, ?)",
         [
-            'mission_needs_volunteers',
+            'mission_needs_members',
             'Αποστολή Χρειάζεται Εθελοντές',
             'Επείγον: Χρειάζονται Εθελοντές - {{mission_title}}',
             '<p>Γεια σας {{user_name}},</p>

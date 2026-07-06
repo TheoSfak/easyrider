@@ -38,8 +38,8 @@ if (isPost()) {
     $startHour = post('start_time_hour');
     $endDate = post('end_date');
     $endHour = post('end_time_hour');
-    $maxVolunteers = post('max_volunteers', 5);
-    $minVolunteers = post('min_volunteers', 1);
+    $maxMembers = post('max_members', 5);
+    $minMembers = post('min_members', 1);
     $notes = post('notes');
     
     // Validation using new helpers
@@ -48,16 +48,16 @@ if (isPost()) {
         ['validateRequired', $startHour, 'Ώρα έναρξης'],
         ['validateRequired', $endDate, 'Ημερομηνία λήξης'],
         ['validateRequired', $endHour, 'Ώρα λήξης'],
-        ['validateNumber', $maxVolunteers, 1, 100, 'Μέγιστος αριθμός εθελοντών'],
-        ['validateNumber', $minVolunteers, 1, 100, 'Ελάχιστος αριθμός εθελοντών'],
+        ['validateNumber', $maxMembers, 1, 100, 'Μέγιστος αριθμός εθελοντών'],
+        ['validateNumber', $minMembers, 1, 100, 'Ελάχιστος αριθμός εθελοντών'],
     ]);
     
     if (empty($errors)) {
         $data = [
             'start_time' => $startDate . ' ' . $startHour . ':00',
             'end_time' => $endDate . ' ' . $endHour . ':00',
-            'max_volunteers' => (int) $maxVolunteers,
-            'min_volunteers' => (int) $minVolunteers,
+            'max_members' => (int) $maxMembers,
+            'min_members' => (int) $minMembers,
             'notes' => $notes,
         ];
         
@@ -65,7 +65,7 @@ if (isPost()) {
         if ($data['start_time'] >= $data['end_time']) {
             $errors[] = 'Η λήξη πρέπει να είναι μετά την έναρξη.';
         }
-        if ($data['min_volunteers'] > $data['max_volunteers']) {
+        if ($data['min_members'] > $data['max_members']) {
             $errors[] = 'Ο ελάχιστος αριθμός δεν μπορεί να υπερβαίνει τον μέγιστο.';
         }
     }
@@ -75,12 +75,12 @@ if (isPost()) {
             // Update
             dbExecute(
                 "UPDATE shifts SET 
-                 start_time = ?, end_time = ?, max_volunteers = ?, min_volunteers = ?, notes = ?,
+                 start_time = ?, end_time = ?, max_members = ?, min_members = ?, notes = ?,
                  updated_at = NOW()
                  WHERE id = ?",
                 [
-                    $data['start_time'], $data['end_time'], $data['max_volunteers'],
-                    $data['min_volunteers'], $data['notes'], $id
+                    $data['start_time'], $data['end_time'], $data['max_members'],
+                    $data['min_members'], $data['notes'], $id
                 ]
             );
             logAudit('update', 'shifts', $id);
@@ -89,11 +89,11 @@ if (isPost()) {
             // Create
             $id = dbInsert(
                 "INSERT INTO shifts 
-                 (mission_id, start_time, end_time, max_volunteers, min_volunteers, notes, created_at, updated_at)
+                 (mission_id, start_time, end_time, max_members, min_members, notes, created_at, updated_at)
                  VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())",
                 [
-                    $missionId, $data['start_time'], $data['end_time'], $data['max_volunteers'],
-                    $data['min_volunteers'], $data['notes']
+                    $missionId, $data['start_time'], $data['end_time'], $data['max_members'],
+                    $data['min_members'], $data['notes']
                 ]
             );
             logAudit('create', 'shifts', $id);
@@ -108,8 +108,8 @@ $defaultDate = isset($mission['start_datetime']) ? substr($mission['start_dateti
 $form = $shift ?: [
     'start_time' => $defaultDate . ' 09:00:00',
     'end_time' => $defaultDate . ' 17:00:00',
-    'max_volunteers' => 5,
-    'min_volunteers' => 1,
+    'max_members' => 5,
+    'min_members' => 1,
     'notes' => '',
 ];
 
@@ -173,13 +173,13 @@ include __DIR__ . '/includes/header.php';
             <div class="row">
                 <div class="col-md-3 mb-3">
                     <label class="form-label">Ελάχ. Εθελοντές</label>
-                    <input type="number" class="form-control" name="min_volunteers" 
-                           value="<?= $form['min_volunteers'] ?>" min="1" required>
+                    <input type="number" class="form-control" name="min_members" 
+                           value="<?= $form['min_members'] ?>" min="1" required>
                 </div>
                 <div class="col-md-3 mb-3">
                     <label class="form-label">Μέγ. Εθελοντές</label>
-                    <input type="number" class="form-control" name="max_volunteers" 
-                           value="<?= $form['max_volunteers'] ?>" min="1" required>
+                    <input type="number" class="form-control" name="max_members" 
+                           value="<?= $form['max_members'] ?>" min="1" required>
                 </div>
             </div>
             

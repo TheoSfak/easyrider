@@ -1,7 +1,7 @@
 <?php
 /**
  * VolunteerOps - Θέσεις/Ρόλοι Εθελοντών
- * Admin CRUD for volunteer organizational positions.
+ * Admin CRUD for member organizational positions.
  */
 
 require_once __DIR__ . '/bootstrap.php';
@@ -26,43 +26,43 @@ if (isPost()) {
 
         if (empty($name)) {
             setFlash('error', 'Το όνομα είναι υποχρεωτικό.');
-            redirect('volunteer-positions.php');
+            redirect('member-positions.php');
         }
 
         $validColors = ['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'dark'];
         if (!in_array($color, $validColors)) $color = 'secondary';
 
         if ($action === 'add') {
-            $maxSort = (int) dbFetchValue("SELECT COALESCE(MAX(sort_order), 0) FROM volunteer_positions");
+            $maxSort = (int) dbFetchValue("SELECT COALESCE(MAX(sort_order), 0) FROM member_positions");
             dbInsert(
-                "INSERT INTO volunteer_positions (name, color, icon, description, is_active, sort_order) VALUES (?, ?, ?, ?, ?, ?)",
+                "INSERT INTO member_positions (name, color, icon, description, is_active, sort_order) VALUES (?, ?, ?, ?, ?, ?)",
                 [$name, $color, $icon ?: null, $description ?: null, $isActive, $sortOrder ?: $maxSort + 1]
             );
-            logAudit('create', 'volunteer_positions', 0);
+            logAudit('create', 'member_positions', 0);
             setFlash('success', 'Η θέση "' . $name . '" δημιουργήθηκε.');
         } else {
             $id = (int) post('id');
             dbExecute(
-                "UPDATE volunteer_positions SET name = ?, color = ?, icon = ?, description = ?, is_active = ?, sort_order = ? WHERE id = ?",
+                "UPDATE member_positions SET name = ?, color = ?, icon = ?, description = ?, is_active = ?, sort_order = ? WHERE id = ?",
                 [$name, $color, $icon ?: null, $description ?: null, $isActive, $sortOrder, $id]
             );
-            logAudit('update', 'volunteer_positions', $id);
+            logAudit('update', 'member_positions', $id);
             setFlash('success', 'Η θέση ενημερώθηκε.');
         }
-        redirect('volunteer-positions.php');
+        redirect('member-positions.php');
     }
 
     if ($action === 'delete') {
         $id = (int) post('id');
-        $pos = dbFetchOne("SELECT name FROM volunteer_positions WHERE id = ?", [$id]);
+        $pos = dbFetchOne("SELECT name FROM member_positions WHERE id = ?", [$id]);
         if ($pos) {
-            // Unassign volunteers first
+            // Unassign members first
             dbExecute("UPDATE users SET position_id = NULL WHERE position_id = ?", [$id]);
-            dbExecute("DELETE FROM volunteer_positions WHERE id = ?", [$id]);
-            logAudit('delete', 'volunteer_positions', $id);
+            dbExecute("DELETE FROM member_positions WHERE id = ?", [$id]);
+            logAudit('delete', 'member_positions', $id);
             setFlash('success', 'Η θέση "' . $pos['name'] . '" διαγράφηκε.');
         }
-        redirect('volunteer-positions.php');
+        redirect('member-positions.php');
     }
 }
 
@@ -72,14 +72,14 @@ if (isPost()) {
 $editId = get('edit') ? (int) get('edit') : null;
 
 $positions = dbFetchAll("
-    SELECT vp.*, COUNT(u.id) AS volunteer_count
-    FROM volunteer_positions vp
+    SELECT vp.*, COUNT(u.id) AS member_count
+    FROM member_positions vp
     LEFT JOIN users u ON u.position_id = vp.id AND u.is_active = 1
     GROUP BY vp.id
     ORDER BY vp.sort_order ASC, vp.name ASC
 ");
 
-$editPos = $editId ? dbFetchOne("SELECT * FROM volunteer_positions WHERE id = ?", [$editId]) : null;
+$editPos = $editId ? dbFetchOne("SELECT * FROM member_positions WHERE id = ?", [$editId]) : null;
 
 $colorOptions = [
     'primary'   => 'Μπλε',
@@ -150,7 +150,7 @@ include __DIR__ . '/includes/header.php';
                                 <?php endif; ?>
                             </td>
                             <td class="text-center">
-                                <span class="badge bg-secondary rounded-pill"><?= $pos['volunteer_count'] ?></span>
+                                <span class="badge bg-secondary rounded-pill"><?= $pos['member_count'] ?></span>
                             </td>
                             <td class="text-center">
                                 <?php if ($pos['is_active']): ?>
@@ -160,11 +160,11 @@ include __DIR__ . '/includes/header.php';
                                 <?php endif; ?>
                             </td>
                             <td class="text-center">
-                                <a href="volunteer-positions.php?edit=<?= $pos['id'] ?>"
+                                <a href="member-positions.php?edit=<?= $pos['id'] ?>"
                                    class="btn btn-outline-primary btn-sm" title="Επεξεργασία">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <?php if ($pos['volunteer_count'] == 0): ?>
+                                <?php if ($pos['member_count'] == 0): ?>
                                     <button class="btn btn-outline-danger btn-sm" title="Διαγραφή"
                                             data-bs-toggle="modal" data-bs-target="#deleteModal"
                                             data-id="<?= $pos['id'] ?>" data-name="<?= h($pos['name']) ?>">
@@ -172,7 +172,7 @@ include __DIR__ . '/includes/header.php';
                                     </button>
                                 <?php else: ?>
                                     <button class="btn btn-outline-secondary btn-sm" disabled
-                                            title="Δεν μπορεί να διαγραφεί — έχει <?= $pos['volunteer_count'] ?> εθελοντές">
+                                            title="Δεν μπορεί να διαγραφεί — έχει <?= $pos['member_count'] ?> εθελοντές">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 <?php endif; ?>
@@ -220,7 +220,7 @@ include __DIR__ . '/includes/header.php';
                 <div class="modal-header bg-primary text-white">
                     <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>Επεξεργασία Θέσης</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
-                            onclick="window.location='volunteer-positions.php'"></button>
+                            onclick="window.location='member-positions.php'"></button>
                 </div>
                 <div class="modal-body">
                     <?php
@@ -235,7 +235,7 @@ include __DIR__ . '/includes/header.php';
                     ?>
                 </div>
                 <div class="modal-footer">
-                    <a href="volunteer-positions.php" class="btn btn-secondary">Ακύρωση</a>
+                    <a href="member-positions.php" class="btn btn-secondary">Ακύρωση</a>
                     <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Αποθήκευση</button>
                 </div>
             </form>
@@ -246,7 +246,7 @@ include __DIR__ . '/includes/header.php';
 document.addEventListener('DOMContentLoaded', function() {
     new bootstrap.Modal(document.getElementById('editModal')).show();
     document.getElementById('editModal').addEventListener('hidden.bs.modal', function() {
-        window.location = 'volunteer-positions.php';
+        window.location = 'member-positions.php';
     });
 });
 </script>

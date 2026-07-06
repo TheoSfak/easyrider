@@ -47,9 +47,9 @@ if (isPost()) {
             ", [$timeLimit, $id]);
             logAudit('launch', 'training_exams', $id);
             
-            // Send notification to all active volunteers
-            $volunteers = dbFetchAll("SELECT id FROM users WHERE role = 'VOLUNTEER' AND is_active = 1");
-            foreach ($volunteers as $vol) {
+            // Send notification to all active members
+            $members = dbFetchAll("SELECT id FROM users WHERE role = 'VOLUNTEER' AND is_active = 1");
+            foreach ($members as $vol) {
                 sendNotification(
                     $vol['id'],
                     '📝 Νέο Διαγώνισμα Ξεκίνησε!',
@@ -58,7 +58,7 @@ if (isPost()) {
                 );
             }
             
-            setFlash('success', 'Το διαγώνισμα "' . h($exam['title']) . '" ξεκίνησε! Λήγει σε ' . $timeLimit . ' λεπτά. Ειδοποιήθηκαν ' . count($volunteers) . ' εθελοντές.');
+            setFlash('success', 'Το διαγώνισμα "' . h($exam['title']) . '" ξεκίνησε! Λήγει σε ' . $timeLimit . ' λεπτά. Ειδοποιήθηκαν ' . count($members) . ' εθελοντές.');
         }
         redirect('exam-admin.php');
         

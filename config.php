@@ -35,7 +35,7 @@ if (!defined('BASE_URL')) {
 // Database defaults - overridden by config.local.php
 if (!defined('DB_HOST')) define('DB_HOST', 'localhost');
 if (!defined('DB_PORT')) define('DB_PORT', '3306');
-if (!defined('DB_NAME')) define('DB_NAME', 'volunteer_ops');
+if (!defined('DB_NAME')) define('DB_NAME', 'member_ops');
 if (!defined('DB_USER')) define('DB_USER', 'root');
 if (!defined('DB_PASS')) define('DB_PASS', '');
 define('DB_CHARSET', 'utf8mb4');
@@ -78,7 +78,7 @@ define('MEDICAL_MULTIPLIER', 2.0);
 define('ROLE_SYSTEM_ADMIN', 'SYSTEM_ADMIN');
 define('ROLE_DEPARTMENT_ADMIN', 'DEPARTMENT_ADMIN');
 define('ROLE_SHIFT_LEADER', 'SHIFT_LEADER');
-define('ROLE_VOLUNTEER', 'VOLUNTEER');
+define('ROLE_MEMBER', 'VOLUNTEER');
 
 // Mission statuses
 define('STATUS_DRAFT', 'DRAFT');
@@ -112,7 +112,7 @@ define('QUESTION_TYPE_MC', 'MULTIPLE_CHOICE');
 define('QUESTION_TYPE_TF', 'TRUE_FALSE');
 define('QUESTION_TYPE_OPEN', 'OPEN_ENDED');
 
-// Volunteer types (2 categories: full rescuer or trainee)
+// Member types (2 categories: full rescuer or trainee)
 define('VTYPE_TRAINEE', 'TRAINEE_RESCUER');
 define('VTYPE_RESCUER', 'RESCUER');
 
@@ -121,7 +121,7 @@ define('ROLE_LABELS', [
     ROLE_SYSTEM_ADMIN => 'Διαχειριστής Συστήματος',
     ROLE_DEPARTMENT_ADMIN => 'Διαχειριστής Τμήματος',
     ROLE_SHIFT_LEADER => 'Road Captain',
-    ROLE_VOLUNTEER => 'Μέλος',
+    ROLE_MEMBER => 'Μέλος',
 ]);
 
 define('STATUS_LABELS', [
@@ -151,17 +151,17 @@ define('MISSION_TYPES', [
     'MEDICAL' => 'Υποστήριξη',
 ]);
 
-define('VOLUNTEER_TYPE_LABELS', [
+define('MEMBER_TYPE_LABELS', [
     VTYPE_TRAINEE => 'Υποψήφιο Μέλος',
     VTYPE_RESCUER => 'Μέλος Λέσχης',
 ]);
 
-define('VOLUNTEER_TYPE_COLORS', [
+define('MEMBER_TYPE_COLORS', [
     VTYPE_TRAINEE => 'warning',
     VTYPE_RESCUER => 'success',
 ]);
 
-define('VOLUNTEER_TYPE_ICONS', [
+define('MEMBER_TYPE_ICONS', [
     VTYPE_TRAINEE => '📚',
     VTYPE_RESCUER => '⛑️',
 ]);
@@ -188,9 +188,9 @@ $GLOBALS['STATUS_LABELS'] = STATUS_LABELS;
 $GLOBALS['PARTICIPATION_LABELS'] = PARTICIPATION_LABELS;
 $GLOBALS['STATUS_COLORS'] = STATUS_COLORS;
 $GLOBALS['PARTICIPATION_COLORS'] = PARTICIPATION_COLORS;
-$GLOBALS['VOLUNTEER_TYPE_LABELS'] = VOLUNTEER_TYPE_LABELS;
-$GLOBALS['VOLUNTEER_TYPE_COLORS'] = VOLUNTEER_TYPE_COLORS;
-$GLOBALS['VOLUNTEER_TYPE_ICONS'] = VOLUNTEER_TYPE_ICONS;
+$GLOBALS['MEMBER_TYPE_LABELS'] = MEMBER_TYPE_LABELS;
+$GLOBALS['MEMBER_TYPE_COLORS'] = MEMBER_TYPE_COLORS;
+$GLOBALS['MEMBER_TYPE_ICONS'] = MEMBER_TYPE_ICONS;
 
 // Complaint statuses
 define('COMPLAINT_NEW', 'NEW');

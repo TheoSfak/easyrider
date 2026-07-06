@@ -12,7 +12,7 @@ $pageTitle = 'Ημερολόγιο Βάρδιων';
 // Data for filter dropdowns
 $missionTypes = dbFetchAll("SELECT id, name FROM mission_types ORDER BY name");
 
-// Default: volunteers see only their own shifts; admins see all
+// Default: members see only their own shifts; admins see all
 $defaultMine = isAdmin() ? '0' : '1';
 
 include __DIR__ . '/includes/header.php';
@@ -372,7 +372,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Compute fill pct from raw counts when ep.fill_pct is missing
         const pct = (ep.fill_pct !== undefined && ep.fill_pct !== null)
             ? ep.fill_pct
-            : (ep.max_volunteers > 0 ? Math.round((ep.approved_count / ep.max_volunteers) * 100) : 0);
+            : (ep.max_members > 0 ? Math.round((ep.approved_count / ep.max_members) * 100) : 0);
         if (pct >= 80) return '#146c43';
         if (pct >= 50) return '#cc6c0a';
         return '#b02a37';
@@ -407,17 +407,17 @@ document.addEventListener('DOMContentLoaded', function () {
         },
         buttonText: { today:'Σήμερα', month:'Μήνας', week:'Εβδομάδα', day:'Ημέρα', list:'Λίστα' },
 
-        /* Custom event HTML — fill bar + volunteer count (background applied directly here) */
+        /* Custom event HTML — fill bar + member count (background applied directly here) */
         eventContent: function (arg) {
             const ep  = arg.event.extendedProps;
             const pct = Math.min(
                 (ep.fill_pct !== undefined && ep.fill_pct !== null)
                     ? ep.fill_pct
-                    : (ep.max_volunteers > 0 ? Math.round((ep.approved_count / ep.max_volunteers) * 100) : 0),
+                    : (ep.max_members > 0 ? Math.round((ep.approved_count / ep.max_members) * 100) : 0),
                 100);
             const bg  = shiftColor(ep);
-            const countStr = ep.max_volunteers > 0
-                ? ep.approved_count + '/' + ep.max_volunteers
+            const countStr = ep.max_members > 0
+                ? ep.approved_count + '/' + ep.max_members
                 : String(ep.approved_count);
             const urgentIcon = ep.is_urgent ? '<span style="color:#ffe066;margin-right:2px;">⚡</span>' : '';
             const cleanTitle = arg.event.title.replace(/^🔴 /, '');
@@ -458,12 +458,12 @@ document.addEventListener('DOMContentLoaded', function () {
             const pct      = Math.min(
                 (ep.fill_pct !== undefined && ep.fill_pct !== null)
                     ? ep.fill_pct
-                    : (ep.max_volunteers > 0 ? Math.round((ep.approved_count / ep.max_volunteers) * 100) : 0),
+                    : (ep.max_members > 0 ? Math.round((ep.approved_count / ep.max_members) * 100) : 0),
                 100);
             const barColor = shiftColor(ep);
 
-            const countStr = ep.max_volunteers > 0
-                ? ep.approved_count + '/' + ep.max_volunteers + ' εθελοντές'
+            const countStr = ep.max_members > 0
+                ? ep.approved_count + '/' + ep.max_members + ' εθελοντές'
                 : ep.approved_count + ' εθελοντές';
             const pendStr  = ep.pending_count > 0
                 ? ' <span style="color:#cc6c0a;font-size:0.75rem;">(+' + ep.pending_count + ' εκκρεμείς)</span>' : '';

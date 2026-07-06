@@ -284,14 +284,14 @@ include __DIR__ . '/includes/header.php';
                     <div class="mb-4">
                         <label class="form-label">Ανάθεση σε Εθελοντές</label>
                         <div class="input-group">
-                            <input type="text" class="form-control" id="selectedVolunteersDisplay" 
+                            <input type="text" class="form-control" id="selectedMembersDisplay" 
                                    placeholder="Πατήστε για επιλογή εθελοντών..." readonly 
-                                   style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#volunteerModal">
-                            <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#volunteerModal">
+                                   style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#memberModal">
+                            <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#memberModal">
                                 <i class="bi bi-search"></i>
                             </button>
                         </div>
-                        <div id="selectedVolunteersList" class="mt-2"></div>
+                        <div id="selectedMembersList" class="mt-2"></div>
                         <small class="text-muted">Αναζητήστε και επιλέξτε εθελοντές - Μπορείτε να επιλέξετε πολλαπλούς</small>
                     </div>
                     
@@ -318,8 +318,8 @@ include __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<!-- Volunteer Selection Modal (outside form, using form attribute) -->
-<div class="modal fade" id="volunteerModal" tabindex="-1">
+<!-- Member Selection Modal (outside form, using form attribute) -->
+<div class="modal fade" id="memberModal" tabindex="-1">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -328,13 +328,13 @@ include __DIR__ . '/includes/header.php';
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <input type="text" class="form-control" id="volunteerSearch" placeholder="Αναζήτηση εθελοντή...">
+                    <input type="text" class="form-control" id="memberSearch" placeholder="Αναζήτηση εθελοντή...">
                 </div>
-                <div class="list-group" id="volunteerList" style="max-height: 400px; overflow-y: auto;">
+                <div class="list-group" id="memberList" style="max-height: 400px; overflow-y: auto;">
                     <?php foreach ($allUsers as $u): ?>
                         <label class="list-group-item list-group-item-action" style="cursor: pointer;">
                             <div class="d-flex align-items-center">
-                                <input class="form-check-input me-2 volunteer-checkbox" type="checkbox" 
+                                <input class="form-check-input me-2 member-checkbox" type="checkbox" 
                                        form="taskForm"
                                        name="assigned_to[]" value="<?= $u['id'] ?>" 
                                        data-name="<?= h($u['name']) ?>"
@@ -362,8 +362,8 @@ include __DIR__ . '/includes/header.php';
 </div>
 
 <script>
-// Selected volunteers management
-const selectedVolunteers = new Set(<?= json_encode($assignedUsers) ?>);
+// Selected members management
+const selectedMembers = new Set(<?= json_encode($assignedUsers) ?>);
 const initialResponsible = <?= json_encode($task['responsible_user_id'] ?? '') ?>;
 const allUsersData = <?php 
     $roleLabels = $GLOBALS['ROLE_LABELS'];
@@ -379,8 +379,8 @@ function updateResponsibleDropdown() {
     // Clear options except first
     responsibleSelect.innerHTML = '<option value="">Χωρίς υπεύθυνο</option>';
     
-    // Add options for selected volunteers only
-    const checked = document.querySelectorAll('.volunteer-checkbox:checked');
+    // Add options for selected members only
+    const checked = document.querySelectorAll('.member-checkbox:checked');
     checked.forEach(cb => {
         const option = document.createElement('option');
         option.value = cb.value;
@@ -393,10 +393,10 @@ function updateResponsibleDropdown() {
 }
 
 function updateSelectedDisplay() {
-    const display = document.getElementById('selectedVolunteersDisplay');
-    const list = document.getElementById('selectedVolunteersList');
+    const display = document.getElementById('selectedMembersDisplay');
+    const list = document.getElementById('selectedMembersList');
     
-    const checked = document.querySelectorAll('.volunteer-checkbox:checked');
+    const checked = document.querySelectorAll('.member-checkbox:checked');
     
     if (checked.length === 0) {
         display.value = 'Πατήστε για επιλογή εθελοντών...';
@@ -408,7 +408,7 @@ function updateSelectedDisplay() {
         checked.forEach(cb => {
             const badge = document.createElement('span');
             badge.className = 'badge bg-primary me-2 mb-2';
-            badge.innerHTML = cb.dataset.name + ' <i class="bi bi-x-circle ms-1" style="cursor:pointer;" onclick="removeVolunteer(' + cb.value + ')"></i>';
+            badge.innerHTML = cb.dataset.name + ' <i class="bi bi-x-circle ms-1" style="cursor:pointer;" onclick="removeMember(' + cb.value + ')"></i>';
             list.appendChild(badge);
         });
     }
@@ -416,8 +416,8 @@ function updateSelectedDisplay() {
     updateResponsibleDropdown();
 }
 
-function removeVolunteer(id) {
-    const checkbox = document.querySelector('.volunteer-checkbox[value="' + id + '"]');
+function removeMember(id) {
+    const checkbox = document.querySelector('.member-checkbox[value="' + id + '"]');
     if (checkbox) {
         checkbox.checked = false;
         updateSelectedDisplay();
@@ -425,16 +425,16 @@ function removeVolunteer(id) {
 }
 
 // Search functionality
-document.getElementById('volunteerSearch').addEventListener('input', function(e) {
+document.getElementById('memberSearch').addEventListener('input', function(e) {
     const search = e.target.value.toLowerCase();
-    document.querySelectorAll('#volunteerList label').forEach(label => {
+    document.querySelectorAll('#memberList label').forEach(label => {
         const text = label.textContent.toLowerCase();
         label.style.display = text.includes(search) ? '' : 'none';
     });
 });
 
 // Update display on checkbox change
-document.querySelectorAll('.volunteer-checkbox').forEach(cb => {
+document.querySelectorAll('.member-checkbox').forEach(cb => {
     cb.addEventListener('change', updateSelectedDisplay);
 });
 

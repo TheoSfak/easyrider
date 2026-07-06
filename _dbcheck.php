@@ -37,7 +37,7 @@ $tables = [
     'users', 'missions', 'shifts', 'participation_requests',
     'settings', 'email_templates', 'notification_settings', 'audit_logs',
     'citizens', 'citizen_certificates', 'citizen_certificate_types',
-    'volunteer_points', 'notifications',
+    'member_points', 'notifications',
 ];
 
 foreach ($tables as $table) {

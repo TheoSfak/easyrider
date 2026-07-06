@@ -187,7 +187,7 @@ function roleBadge($role) {
         ROLE_SYSTEM_ADMIN     => 'danger',
         ROLE_DEPARTMENT_ADMIN => 'warning',
         ROLE_SHIFT_LEADER     => 'info',
-        ROLE_VOLUNTEER        => 'primary',
+        ROLE_MEMBER        => 'primary',
     ];
 
     $color = $colors[$role] ?? 'secondary';
@@ -197,15 +197,15 @@ function roleBadge($role) {
 }
 
 /**
- * Get volunteer type badge HTML (returns empty string for plain VOLUNTEER)
+ * Get member type badge HTML (returns empty string for plain MEMBER)
  */
-function volunteerTypeBadge($type) {
+function memberTypeBadge($type) {
     if (empty($type)) {
         return '';
     }
-    $color = VOLUNTEER_TYPE_COLORS[$type] ?? 'secondary';
-    $icon = VOLUNTEER_TYPE_ICONS[$type] ?? '';
-    $label = VOLUNTEER_TYPE_LABELS[$type] ?? $type;
+    $color = MEMBER_TYPE_COLORS[$type] ?? 'secondary';
+    $icon = MEMBER_TYPE_ICONS[$type] ?? '';
+    $label = MEMBER_TYPE_LABELS[$type] ?? $type;
     
     return ' <span class="badge bg-' . $color . '">' . $icon . ' ' . h($label) . '</span>';
 }
@@ -222,7 +222,7 @@ function isTraineeRescuer($user = null) {
     if ($user === null) {
         $user = getCurrentUser();
     }
-    return ($user['volunteer_type'] ?? VTYPE_RESCUER) === VTYPE_TRAINEE;
+    return ($user['member_type'] ?? VTYPE_RESCUER) === VTYPE_TRAINEE;
 }
 
 /**
@@ -232,7 +232,7 @@ function isRescuer($user = null) {
     if ($user === null) {
         $user = getCurrentUser();
     }
-    return ($user['volunteer_type'] ?? VTYPE_RESCUER) === VTYPE_RESCUER;
+    return ($user['member_type'] ?? VTYPE_RESCUER) === VTYPE_RESCUER;
 }
 
 /**

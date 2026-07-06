@@ -89,10 +89,10 @@ class AppTester {
             ['url' => '/shift-view.php?id=19', 'name' => 'Shift View', 'expect' => 'Εθελοντές'],
             ['url' => '/shift-form.php?mission_id=11', 'name' => 'New Shift Form', 'expect' => 'Νέα Βάρδια'],
             
-            // Volunteer management
-            ['url' => '/volunteers.php', 'name' => 'Volunteers List', 'expect' => 'Εθελοντές'],
-            ['url' => '/volunteer-view.php?id=7', 'name' => 'Volunteer View', 'expect' => 'Μαρία'],
-            ['url' => '/volunteer-form.php?id=7', 'name' => 'Volunteer Edit Form', 'expect' => 'Επεξεργασία'],
+            // Member management
+            ['url' => '/members.php', 'name' => 'Members List', 'expect' => 'Εθελοντές'],
+            ['url' => '/member-view.php?id=7', 'name' => 'Member View', 'expect' => 'Μαρία'],
+            ['url' => '/member-form.php?id=7', 'name' => 'Member Edit Form', 'expect' => 'Επεξεργασία'],
             
             // Gamification
             ['url' => '/leaderboard.php', 'name' => 'Leaderboard', 'expect' => 'Κατάταξη'],
@@ -160,7 +160,7 @@ class AppTester {
             $this->fail('Leaderboard Data', 'No user data found');
         }
         
-        // Test 4: Check volunteer points page
+        // Test 4: Check member points page
         $myPoints = $this->httpGet('/my-points.php');
         // Look for actual PHP errors, not just the word "error" anywhere
         if ($myPoints['success'] && !preg_match('/<b>(Fatal error|Warning|Notice|Parse error)<\/b>|SQLSTATE\[/i', $myPoints['body'])) {

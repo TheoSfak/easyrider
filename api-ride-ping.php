@@ -67,7 +67,7 @@ try {
     $columns = dbFetchAll(
         "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
          WHERE TABLE_SCHEMA = DATABASE()
-           AND TABLE_NAME = 'volunteer_pings'"
+           AND TABLE_NAME = 'member_pings'"
     );
     $existing = array_flip(array_column($columns, 'COLUMN_NAME'));
 
@@ -94,7 +94,7 @@ try {
     $placeholders[] = 'NOW()';
 
     dbInsert(
-        'INSERT INTO volunteer_pings (' . implode(',', $insertColumns) . ') VALUES (' . implode(',', $placeholders) . ')',
+        'INSERT INTO member_pings (' . implode(',', $insertColumns) . ') VALUES (' . implode(',', $placeholders) . ')',
         $values
     );
 

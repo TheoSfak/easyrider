@@ -56,7 +56,7 @@ $typeLabels = [
 
 $shifts = dbFetchAll(
     "SELECT s.*,
-            COUNT(DISTINCT CASE WHEN pr.status = ? THEN pr.volunteer_id END) as approved_count
+            COUNT(DISTINCT CASE WHEN pr.status = ? THEN pr.member_id END) as approved_count
      FROM shifts s
      LEFT JOIN participation_requests pr ON pr.shift_id = s.id
      WHERE s.mission_id = ?
@@ -72,12 +72,12 @@ if (!empty($shiftIds)) {
         $placeholders = implode(',', array_fill(0, count($shiftIds), '?'));
         $latestPings = dbFetchAll(
             "SELECT vp.user_id, u.name, vp.lat, vp.lng, vp.created_at
-             FROM volunteer_pings vp
+             FROM member_pings vp
              JOIN users u ON u.id = vp.user_id
              WHERE vp.shift_id IN ($placeholders)
                AND vp.id = (
                    SELECT MAX(vp2.id)
-                   FROM volunteer_pings vp2
+                   FROM member_pings vp2
                    WHERE vp2.user_id = vp.user_id
                      AND vp2.shift_id IN ($placeholders)
                )

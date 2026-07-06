@@ -1,7 +1,7 @@
 <?php
 /**
- * VolunteerOps - QR Self Check-in for Volunteers
- * Volunteer scans the QR code printed/shown by their shift leader → self check-in.
+ * VolunteerOps - QR Self Check-in for Members
+ * Member scans the QR code printed/shown by their shift leader → self check-in.
  */
 
 require_once __DIR__ . '/bootstrap.php';
@@ -101,9 +101,9 @@ if ($shift['mission_status'] !== STATUS_OPEN) {
 
 $userId = getCurrentUserId();
 
-// Find the volunteer's APPROVED participation request for this shift
+// Find the member's APPROVED participation request for this shift
 $pr = dbFetchOne(
-    "SELECT * FROM participation_requests WHERE shift_id = ? AND volunteer_id = ? AND status = ?",
+    "SELECT * FROM participation_requests WHERE shift_id = ? AND member_id = ? AND status = ?",
     [$shift['id'], $userId, PARTICIPATION_APPROVED]
 );
 
@@ -168,7 +168,7 @@ include __DIR__ . '/includes/header.php';
                 </div>
 
                 <?php if (!$pr): ?>
-                    <!-- Volunteer has no approved participation -->
+                    <!-- Member has no approved participation -->
                     <div class="alert alert-warning mb-0">
                         <i class="bi bi-exclamation-triangle me-2"></i>
                         <strong>Δεν βρέθηκε εγκεκριμένη συμμετοχή</strong>

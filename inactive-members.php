@@ -1,11 +1,11 @@
 <?php
 /**
- * VolunteerOps - Inactive Volunteers
- * Shows volunteers with is_active = 0 and not soft-deleted
+ * VolunteerOps - Inactive Members
+ * Shows members with is_active = 0 and not soft-deleted
  */
 
 require_once __DIR__ . '/bootstrap.php';
-requirePermission('inactive_volunteers');
+requirePermission('inactive_members');
 
 $pageTitle = 'Ανενεργοί Εθελοντές';
 $user = getCurrentUser();
@@ -42,19 +42,19 @@ $whereClause = implode(' AND ', $where);
 $total      = dbFetchValue("SELECT COUNT(*) FROM users u WHERE $whereClause", $params);
 $pagination = paginate($total, $page, $perPage);
 
-$volunteers = dbFetchAll(
+$members = dbFetchAll(
     "SELECT u.*,
             COALESCE(pr_stats.shifts_count, 0) AS shifts_count,
             COALESCE(pr_stats.total_hours, 0)  AS total_hours
      FROM users u
      LEFT JOIN (
-         SELECT volunteer_id,
+         SELECT member_id,
                 COUNT(*) AS shifts_count,
                 COALESCE(SUM(actual_hours), 0) AS total_hours
          FROM participation_requests
          WHERE status = '" . PARTICIPATION_APPROVED . "' OR attended = 1
-         GROUP BY volunteer_id
-     ) pr_stats ON u.id = pr_stats.volunteer_id
+         GROUP BY member_id
+     ) pr_stats ON u.id = pr_stats.member_id
      WHERE $whereClause
      ORDER BY u.name ASC
      LIMIT {$pagination['offset']}, {$pagination['per_page']}",
@@ -104,7 +104,7 @@ if (isPost()) {
             break;
     }
 
-    redirect('inactive-volunteers.php?' . http_build_query(array_filter([
+    redirect('inactive-members.php?' . http_build_query(array_filter([
         'search'        => $search,
         'role'          => $role,
         'page'          => $page > 1 ? $page : null,
@@ -118,7 +118,7 @@ include __DIR__ . '/includes/header.php';
     <h1 class="h3 mb-0">
         <i class="bi bi-person-x me-2 text-secondary"></i>Ανενεργοί Εθελοντές
     </h1>
-    <a href="volunteers.php" class="btn btn-outline-primary">
+    <a href="members.php" class="btn btn-outline-primary">
         <i class="bi bi-people me-1"></i>Ενεργοί Εθελοντές
     </a>
 </div>
@@ -152,7 +152,7 @@ include __DIR__ . '/includes/header.php';
 
 <?= showFlash() ?>
 
-<?php if (empty($volunteers)): ?>
+<?php if (empty($members)): ?>
     <div class="alert alert-info">
         <i class="bi bi-info-circle me-2"></i>Δεν υπάρχουν ανενεργοί εθελοντές.
     </div>
@@ -172,12 +172,12 @@ include __DIR__ . '/includes/header.php';
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($volunteers as $v): ?>
+                <?php foreach ($members as $v): ?>
                     <tr class="table-secondary">
                         <td>
-                            <a href="volunteer-view.php?id=<?= $v['id'] ?>" class="text-decoration-none text-dark">
+                            <a href="member-view.php?id=<?= $v['id'] ?>" class="text-decoration-none text-dark">
                                 <strong><?= h($v['name']) ?></strong>
-                                <?= volunteerTypeBadge($v['volunteer_type'] ?? VTYPE_VOLUNTEER) ?>
+                                <?= memberTypeBadge($v['member_type'] ?? VTYPE_MEMBER) ?>
                             </a>
                             <br><small class="text-muted"><?= h($v['email']) ?></small>
                             <?php if ($v['phone']): ?>
@@ -203,12 +203,12 @@ include __DIR__ . '/includes/header.php';
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li>
-                                        <a class="dropdown-item" href="volunteer-view.php?id=<?= $v['id'] ?>">
+                                        <a class="dropdown-item" href="member-view.php?id=<?= $v['id'] ?>">
                                             <i class="bi bi-eye me-1"></i>Προβολή
                                         </a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" href="volunteer-form.php?id=<?= $v['id'] ?>">
+                                        <a class="dropdown-item" href="member-form.php?id=<?= $v['id'] ?>">
                                             <i class="bi bi-pencil me-1"></i>Επεξεργασία
                                         </a>
                                     </li>

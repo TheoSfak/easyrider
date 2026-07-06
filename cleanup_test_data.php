@@ -25,8 +25,8 @@ if ($action === 'delete_users') {
             
             // Delete related data
             dbExecute("DELETE FROM notifications WHERE user_id IN ($placeholders)", $userIds);
-            dbExecute("DELETE FROM volunteer_points WHERE user_id IN ($placeholders)", $userIds);
-            dbExecute("DELETE FROM participation_requests WHERE volunteer_id IN ($placeholders)", $userIds);
+            dbExecute("DELETE FROM member_points WHERE user_id IN ($placeholders)", $userIds);
+            dbExecute("DELETE FROM participation_requests WHERE member_id IN ($placeholders)", $userIds);
             
             // Delete users
             dbExecute("DELETE FROM users WHERE id IN ($placeholders)", $userIds);
@@ -59,8 +59,8 @@ if ($action === 'delete_missions') {
                 // Delete participation requests
                 dbExecute("DELETE FROM participation_requests WHERE shift_id IN ($shiftPlaceholders)", $shiftIdArray);
                 
-                // Delete volunteer points
-                dbExecute("DELETE FROM volunteer_points WHERE shift_id IN ($shiftPlaceholders)", $shiftIdArray);
+                // Delete member points
+                dbExecute("DELETE FROM member_points WHERE shift_id IN ($shiftPlaceholders)", $shiftIdArray);
             }
             
             // Delete shifts
@@ -97,8 +97,8 @@ $testUserStats = [];
 if (!empty($testUsers)) {
     foreach ($testUsers as $user) {
         $testUserStats[$user['id']] = [
-            'participations' => dbFetchValue("SELECT COUNT(*) FROM participation_requests WHERE volunteer_id = ?", [$user['id']]),
-            'points' => dbFetchValue("SELECT COUNT(*) FROM volunteer_points WHERE user_id = ?", [$user['id']]),
+            'participations' => dbFetchValue("SELECT COUNT(*) FROM participation_requests WHERE member_id = ?", [$user['id']]),
+            'points' => dbFetchValue("SELECT COUNT(*) FROM member_points WHERE user_id = ?", [$user['id']]),
             'notifications' => dbFetchValue("SELECT COUNT(*) FROM notifications WHERE user_id = ?", [$user['id']])
         ];
     }
@@ -220,7 +220,7 @@ include __DIR__ . '/includes/header.php';
                             <button type="submit" class="btn btn-danger">
                                 <i class="bi bi-trash"></i> Διαγραφή Επιλεγμένων Χρηστών
                             </button>
-                            <a href="volunteers.php" class="btn btn-secondary">Ακύρωση</a>
+                            <a href="members.php" class="btn btn-secondary">Ακύρωση</a>
                         </div>
                     </form>
                 <?php endif; ?>

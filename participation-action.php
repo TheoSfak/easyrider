@@ -6,7 +6,7 @@
  */
 
 require_once __DIR__ . '/bootstrap.php';
-requirePermission('volunteers_manage');
+requirePermission('members_manage');
 
 if (!isPost()) {
     setFlash('error', 'Μη έγκυρη ενέργεια.');
@@ -24,10 +24,10 @@ if (!$id || !in_array($action, ['approve', 'reject'])) {
 }
 
 $request = dbFetchOne(
-    "SELECT pr.*, u.name as volunteer_name, u.email as volunteer_email, 
+    "SELECT pr.*, u.name as member_name, u.email as member_email, 
             s.start_time, s.end_time, m.title as mission_title, m.department_id, m.location
      FROM participation_requests pr
-     JOIN users u ON pr.volunteer_id = u.id
+     JOIN users u ON pr.member_id = u.id
      JOIN shifts s ON pr.shift_id = s.id
      JOIN missions m ON s.mission_id = m.id
      WHERE pr.id = ?",
@@ -65,12 +65,12 @@ try {
                 [$request['shift_id'], PARTICIPATION_APPROVED]
             );
             
-            $maxVolunteers = dbFetchValue(
-                "SELECT max_volunteers FROM shifts WHERE id = ?",
+            $maxMembers = dbFetchValue(
+                "SELECT max_members FROM shifts WHERE id = ?",
                 [$request['shift_id']]
             );
             
-            if ($currentCount >= $maxVolunteers) {
+            if ($currentCount >= $maxMembers) {
                 db()->rollBack();
                 setFlash('error', 'Η βάρδια είναι πλήρης.');
                 redirect('dashboard.php');
@@ -91,10 +91,10 @@ try {
         
         // Send notification
         if (isNotificationEnabled('participation_approved')) {
-            $volunteer = dbFetchOne("SELECT name, email FROM users WHERE id = ?", [$request['volunteer_id']]);
+            $member = dbFetchOne("SELECT name, email FROM users WHERE id = ?", [$request['member_id']]);
             
-            sendNotificationEmail('participation_approved', $volunteer['email'], [
-                'user_name' => $volunteer['name'],
+            sendNotificationEmail('participation_approved', $member['email'], [
+                'user_name' => $member['name'],
                 'mission_title' => $request['mission_title'],
                 'shift_date' => formatDateTime($request['start_time'], 'd/m/Y'),
                 'shift_time' => formatDateTime($request['start_time'], 'H:i'),
@@ -102,7 +102,7 @@ try {
             ]);
             
             sendNotification(
-                $request['volunteer_id'],
+                $request['member_id'],
                 'Η αίτησή σας εγκρίθηκε',
                 'Η αίτησή σας για τη βάρδια "' . $request['mission_title'] . '" στις ' . 
                 formatDateTime($request['start_time']) . ' εγκρίθηκε.'
@@ -121,17 +121,17 @@ try {
         );
         
         if (isNotificationEnabled('participation_rejected')) {
-            $volunteer = dbFetchOne("SELECT name, email FROM users WHERE id = ?", [$request['volunteer_id']]);
+            $member = dbFetchOne("SELECT name, email FROM users WHERE id = ?", [$request['member_id']]);
             
-            sendNotificationEmail('participation_rejected', $volunteer['email'], [
-                'user_name' => $volunteer['name'],
+            sendNotificationEmail('participation_rejected', $member['email'], [
+                'user_name' => $member['name'],
                 'mission_title' => $request['mission_title'],
                 'shift_date' => formatDateTime($request['start_time'], 'd/m/Y'),
                 'rejection_reason' => 'Η αίτηση απορρίφθηκε από τον διαχειριστή'
             ]);
             
             sendNotification(
-                $request['volunteer_id'],
+                $request['member_id'],
                 'Η αίτησή σας απορρίφθηκε',
                 'Η αίτησή σας για τη βάρδια "' . $request['mission_title'] . '" στις ' . 
                 formatDateTime($request['start_time']) . ' απορρίφθηκε. Λόγος: Η αίτηση απορρίφθηκε από τον διαχειριστή'

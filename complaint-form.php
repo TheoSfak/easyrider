@@ -68,7 +68,7 @@ if (isPost()) {
             if (isNotificationEnabled('complaint_submitted')) {
                 sendNotificationEmail('complaint_submitted', $admin['email'], [
                     'admin_name'          => $admin['name'],
-                    'volunteer_name'      => $currentUser['name'],
+                    'member_name'      => $currentUser['name'],
                     'complaint_subject'   => $subject,
                     'complaint_category'  => COMPLAINT_CATEGORY_LABELS[$category] ?? $category,
                     'complaint_priority'  => COMPLAINT_PRIORITY_LABELS[$priority] ?? $priority,
@@ -89,7 +89,7 @@ $userMissions = dbFetchAll(
     "SELECT DISTINCT m.id, m.title, m.start_datetime
      FROM missions m
      LEFT JOIN shifts s ON s.mission_id = m.id
-     LEFT JOIN participation_requests pr ON pr.shift_id = s.id AND pr.volunteer_id = ?
+     LEFT JOIN participation_requests pr ON pr.shift_id = s.id AND pr.member_id = ?
      WHERE pr.id IS NOT NULL OR m.status IN (?, ?)
      ORDER BY m.start_datetime DESC
      LIMIT 100",

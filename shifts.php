@@ -52,7 +52,7 @@ if ($date) {
 // Non-admins: only see shifts from open/closed missions or their own participations
 if (!isAdmin()) {
     $where[] = "(m.status IN ('OPEN', 'CLOSED', 'COMPLETED') OR 
-                EXISTS (SELECT 1 FROM participation_requests pr2 WHERE pr2.shift_id = s.id AND pr2.volunteer_id = ?))";
+                EXISTS (SELECT 1 FROM participation_requests pr2 WHERE pr2.shift_id = s.id AND pr2.member_id = ?))";
     $params[] = getCurrentUser()['id'];
 }
 
@@ -193,7 +193,7 @@ include __DIR__ . '/includes/header.php';
                             </small>
                         </td>
                         <td>
-                            <span class="badge bg-success"><?= $shift['approved_count'] ?>/<?= $shift['max_volunteers'] ?></span>
+                            <span class="badge bg-success"><?= $shift['approved_count'] ?>/<?= $shift['max_members'] ?></span>
                             <?php if ($shift['pending_count'] > 0): ?>
                                 <span class="badge bg-warning"><?= $shift['pending_count'] ?> εκκρεμεί</span>
                             <?php endif; ?>
@@ -276,7 +276,7 @@ include __DIR__ . '/includes/header.php';
                     
                     <div class="mobile-card-row">
                         <div class="mobile-card-label">Εθελοντές</div>
-                        <span class="badge bg-success"><?= $shift['approved_count'] ?>/<?= $shift['max_volunteers'] ?></span>
+                        <span class="badge bg-success"><?= $shift['approved_count'] ?>/<?= $shift['max_members'] ?></span>
                         <?php if ($shift['pending_count'] > 0): ?>
                             <span class="badge bg-warning ms-1"><?= $shift['pending_count'] ?> εκκρεμεί</span>
                         <?php endif; ?>

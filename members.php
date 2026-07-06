@@ -4,7 +4,7 @@
  */
 
 require_once __DIR__ . '/bootstrap.php';
-requirePermission('volunteers_manage');
+requirePermission('members_manage');
 
 $pageTitle = 'Μέλη';
 $user = getCurrentUser();
@@ -44,33 +44,33 @@ if ($user['role'] === ROLE_DEPARTMENT_ADMIN) {
 }
 
 $whereClause = implode(' AND ', $where);
-$volunteerSurnameOrder = "LOWER(TRIM(SUBSTRING_INDEX(TRIM(u.name), ' ', 1)))";
-$volunteerNameOrder = "LOWER(TRIM(u.name))";
+$memberSurnameOrder = "LOWER(TRIM(SUBSTRING_INDEX(TRIM(u.name), ' ', 1)))";
+$memberNameOrder = "LOWER(TRIM(u.name))";
 
 // Count total
 $total = dbFetchValue("SELECT COUNT(*) FROM users u WHERE $whereClause", $params);
 $pagination = paginate($total, $page, $perPage);
 
-// Get volunteers (optimized with JOINs)
-$volunteers = dbFetchAll(
+// Get members (optimized with JOINs)
+$members = dbFetchAll(
     "SELECT u.*,
             vp.name as position_name,
             cr.name as custom_role_name, cr.color as custom_role_color,
             COALESCE(pr_stats.shifts_count, 0) as shifts_count,
             COALESCE(pr_stats.total_hours, 0) as total_hours
      FROM users u
-     LEFT JOIN volunteer_positions vp ON u.position_id = vp.id
+     LEFT JOIN member_positions vp ON u.position_id = vp.id
      LEFT JOIN custom_roles cr ON u.custom_role_id = cr.id
      LEFT JOIN (
-         SELECT volunteer_id, 
+         SELECT member_id, 
                 COUNT(*) as shifts_count,
                 COALESCE(SUM(actual_hours), 0) as total_hours
          FROM participation_requests 
          WHERE status = ? OR attended = 1
-         GROUP BY volunteer_id
-     ) pr_stats ON u.id = pr_stats.volunteer_id
+         GROUP BY member_id
+     ) pr_stats ON u.id = pr_stats.member_id
      WHERE $whereClause
-     ORDER BY {$volunteerSurnameOrder} ASC, {$volunteerNameOrder} ASC, u.id ASC
+     ORDER BY {$memberSurnameOrder} ASC, {$memberNameOrder} ASC, u.id ASC
      LIMIT {$pagination['offset']}, {$pagination['per_page']}",
     array_merge([PARTICIPATION_APPROVED], $params)
 );
@@ -103,7 +103,7 @@ if (isPost()) {
             $newRole = post('new_role');
             $targetUser = dbFetchOne("SELECT * FROM users WHERE id = ?", [$userId]);
             
-            if ($targetUser && in_array($newRole, [ROLE_VOLUNTEER, ROLE_SHIFT_LEADER, ROLE_DEPARTMENT_ADMIN, ROLE_SYSTEM_ADMIN])) {
+            if ($targetUser && in_array($newRole, [ROLE_MEMBER, ROLE_SHIFT_LEADER, ROLE_DEPARTMENT_ADMIN, ROLE_SYSTEM_ADMIN])) {
                 // Only system admin can create other system admins
                 if ($newRole === ROLE_SYSTEM_ADMIN && $user['role'] !== ROLE_SYSTEM_ADMIN) {
                     setFlash('error', 'Μόνο διαχειριστές συστήματος μπορούν να δημιουργήσουν άλλους.');
@@ -208,7 +208,7 @@ if (isPost()) {
             break;
     }
     
-    redirect('volunteers.php?' . http_build_query($_GET));
+    redirect('members.php?' . http_build_query($_GET));
 }
 
 // Pending approval users (for system admin only)
@@ -240,14 +240,14 @@ include __DIR__ . '/includes/header.php';
         <i class="bi bi-people me-2"></i>Μέλη
     </h1>
     <div class="d-flex gap-2">
-        <a href="import-volunteers.php" class="btn btn-outline-primary">
+        <a href="import-members.php" class="btn btn-outline-primary">
             <i class="bi bi-upload me-1"></i>Εισαγωγή CSV
         </a>
-        <a href="exports/export-volunteers.php?role=<?= h($role) ?>" 
+        <a href="exports/export-members.php?role=<?= h($role) ?>" 
            class="btn btn-outline-success">
             <i class="bi bi-download me-1"></i>Εξαγωγή CSV
         </a>
-        <a href="volunteer-form.php" class="btn btn-primary">
+        <a href="member-form.php" class="btn btn-primary">
             <i class="bi bi-plus-lg me-1"></i>Νέο Μέλος
         </a>
     </div>
@@ -334,7 +334,7 @@ include __DIR__ . '/includes/header.php';
             </div>
             <?php if ($search || $role || $departmentId || $warehouseId): ?>
             <div class="col-md-1 d-flex align-items-end">
-                <a href="volunteers.php" class="btn btn-outline-secondary w-100" title="Καθαρισμός φίλτρων">
+                <a href="members.php" class="btn btn-outline-secondary w-100" title="Καθαρισμός φίλτρων">
                     <i class="bi bi-x-lg"></i>
                 </a>
             </div>
@@ -352,7 +352,7 @@ include __DIR__ . '/includes/header.php';
 
 <?= showFlash() ?>
 
-<?php if (empty($volunteers)): ?>
+<?php if (empty($members)): ?>
     <div class="alert alert-info">
         <i class="bi bi-info-circle me-2"></i>Δεν βρέθηκαν μέλη.
     </div>
@@ -377,12 +377,12 @@ include __DIR__ . '/includes/header.php';
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($volunteers as $v): ?>
+                <?php foreach ($members as $v): ?>
                     <tr class="<?= !$v['is_active'] ? 'table-secondary text-muted' : '' ?>">
                         <td>
-                            <a href="volunteer-view.php?id=<?= $v['id'] ?>" class="text-decoration-none fw-semibold">
+                            <a href="member-view.php?id=<?= $v['id'] ?>" class="text-decoration-none fw-semibold">
                                 <?= h($v['name']) ?>
-                            </a><?= volunteerTypeBadge($v['volunteer_type'] ?? VTYPE_RESCUER) ?><?= positionBadge($v['position_name'] ?? '') ?>
+                            </a><?= memberTypeBadge($v['member_type'] ?? VTYPE_RESCUER) ?><?= positionBadge($v['position_name'] ?? '') ?>
                             <br><small class="text-muted"><?= h($v['email']) ?><?= $v['phone'] ? ' · ' . h($v['phone']) : '' ?></small>
                         </td>
                         <td>
@@ -426,17 +426,17 @@ include __DIR__ . '/includes/header.php';
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li>
-                                        <a class="dropdown-item" href="volunteer-view.php?id=<?= $v['id'] ?>">
+                                        <a class="dropdown-item" href="member-view.php?id=<?= $v['id'] ?>">
                                             <i class="bi bi-eye me-1"></i>Προβολή
                                         </a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" href="volunteer-report.php?id=<?= $v['id'] ?>" target="_blank">
+                                        <a class="dropdown-item" href="member-report.php?id=<?= $v['id'] ?>" target="_blank">
                                             <i class="bi bi-file-earmark-text me-1"></i>Αναφορά
                                         </a>
                                     </li>
                                     <li>
-                                        <a class="dropdown-item" href="volunteer-form.php?id=<?= $v['id'] ?>">
+                                        <a class="dropdown-item" href="member-form.php?id=<?= $v['id'] ?>">
                                             <i class="bi bi-pencil me-1"></i>Επεξεργασία
                                         </a>
                                     </li>

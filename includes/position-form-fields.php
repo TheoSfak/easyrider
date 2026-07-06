@@ -1,6 +1,6 @@
 <?php
 /**
- * Partial: Position form fields (used by add + edit modals in volunteer-positions.php)
+ * Partial: Position form fields (used by add + edit modals in member-positions.php)
  * Variables: $pfName, $pfColor, $pfIcon, $pfDesc, $pfActive, $pfSort (all optional, default empty)
  */
 $pfName   = $pfName   ?? '';

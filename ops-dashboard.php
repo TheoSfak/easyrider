@@ -43,13 +43,13 @@ if (isPost()) {
             $mission = dbFetchOne("SELECT title FROM missions WHERE id = ?", [$missionId]);
             if ($mission) {
                 $vols = dbFetchAll(
-                    "SELECT DISTINCT pr.volunteer_id FROM participation_requests pr
+                    "SELECT DISTINCT pr.member_id FROM participation_requests pr
                      JOIN shifts s ON pr.shift_id = s.id
                      WHERE s.mission_id = ? AND pr.status = '" . PARTICIPATION_APPROVED . "'",
                     [$missionId]
                 );
                 
-                $userIds = array_column($vols, 'volunteer_id');
+                $userIds = array_column($vols, 'member_id');
                 if (!empty($userIds)) {
                     sendBulkNotifications($userIds, '📢 ' . h($mission['title']), $broadcastMsg, 'info');
                 }
@@ -71,7 +71,7 @@ if (isPost()) {
             $isParticipant = (bool) dbFetchValue(
                 "SELECT COUNT(*) FROM participation_requests pr
                  JOIN shifts s ON s.id = pr.shift_id
-                 WHERE s.mission_id = ? AND pr.volunteer_id = ? AND pr.status = ?",
+                 WHERE s.mission_id = ? AND pr.member_id = ? AND pr.status = ?",
                 [$missionId, $currentUser['id'], PARTICIPATION_APPROVED]
             );
             $canWriteChat = isSystemAdmin() || $isResponsible || $isParticipant;
@@ -112,7 +112,7 @@ $missionRows = dbFetchAll(
             m.latitude, m.longitude, m.type as mission_type,
             d.name as department_name,
             s.id as shift_id, s.start_time, s.end_time,
-            s.max_volunteers, s.min_volunteers, s.notes as shift_notes,
+            s.max_members, s.min_members, s.notes as shift_notes,
             COALESCE(SUM(pr.status = '" . PARTICIPATION_APPROVED . "'), 0)     as approved,
             COALESCE(SUM(pr.status = '" . PARTICIPATION_PENDING . "'), 0)      as pending,
             COALESCE(SUM(pr.status = '" . PARTICIPATION_APPROVED . "' AND pr.attended = 1), 0) as attended
@@ -157,8 +157,8 @@ foreach ($missionRows as $row) {
         'shift_id'    => $row['shift_id'],
         'start_time'  => $row['start_time'],
         'end_time'    => $row['end_time'],
-        'max_volunteers' => (int)$row['max_volunteers'],
-        'min_volunteers' => (int)$row['min_volunteers'],
+        'max_members' => (int)$row['max_members'],
+        'min_members' => (int)$row['min_members'],
         'shift_notes' => $row['shift_notes'],
         'approved'    => (int)$row['approved'],
         'pending'     => (int)$row['pending'],
@@ -166,7 +166,7 @@ foreach ($missionRows as $row) {
     ];
 }
 
-// ── Pre-compute shiftIds, approvedVolunteers (needed by ajax + alerts) ─────────
+// ── Pre-compute shiftIds, approvedMembers (needed by ajax + alerts) ─────────
 $shiftIds = !empty($missions)
     ? array_merge(...array_map(fn($m) => array_column($m['shifts'], 'shift_id'), array_values($missions)))
     : [];
@@ -207,7 +207,7 @@ $hasFieldStatus = !empty($shiftIds) && (bool) dbFetchValue(
 );
 $hasPingsTable = (bool) dbFetchValue(
     "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
-     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'volunteer_pings'"
+     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'member_pings'"
 );
 
 $rideStatusLabels = [
@@ -220,7 +220,7 @@ $rideStatusLabels = [
 ];
 $rideCriticalStatuses = ['needs_help', 'breakdown', 'left_behind'];
 
-$approvedVolunteers = [];
+$approvedMembers = [];
 if (!empty($shiftIds)) {
     $placeholders = implode(',', array_fill(0, count($shiftIds), '?'));
     $fsSelect = $hasFieldStatus
@@ -230,13 +230,13 @@ if (!empty($shiftIds)) {
         "SELECT pr.id as pr_id, pr.shift_id, pr.attended{$fsSelect},
                 u.id as user_id, u.name, u.phone
          FROM participation_requests pr
-         JOIN users u ON pr.volunteer_id = u.id
+         JOIN users u ON pr.member_id = u.id
          WHERE pr.shift_id IN ($placeholders) AND pr.status = '" . PARTICIPATION_APPROVED . "'
          ORDER BY u.name",
         $shiftIds
     );
     foreach ($rows as $r) {
-        $approvedVolunteers[$r['shift_id']][] = $r;
+        $approvedMembers[$r['shift_id']][] = $r;
     }
 }
 
@@ -255,7 +255,7 @@ if (!empty($missionIds) && !isSystemAdmin()) {
          FROM participation_requests pr
          JOIN shifts s ON s.id = pr.shift_id
          WHERE s.mission_id IN ($missionPlaceholders)
-           AND pr.volunteer_id = ?
+           AND pr.member_id = ?
            AND pr.status = ?",
         array_merge($missionIds, [$currentUser['id'], PARTICIPATION_APPROVED])
     );
@@ -301,8 +301,8 @@ if (get('ajax') === '1') {
                 'approved' => $s['approved'],
                 'pending'  => $s['pending'],
                 'attended' => $s['attended'],
-                'max'      => $s['max_volunteers'],
-                'min'      => $s['min_volunteers'],
+                'max'      => $s['max_members'],
+                'min'      => $s['min_members'],
             ];
         }
     }
@@ -315,12 +315,12 @@ if (get('ajax') === '1') {
             $fsCol = $hasFieldStatus ? ', pr.field_status' : ', NULL as field_status';
             $pingRowsAjax = dbFetchAll(
                 "SELECT vp.user_id, vp.shift_id, vp.lat, vp.lng, vp.created_at, u.name{$fsCol}
-                 FROM volunteer_pings vp
+                 FROM member_pings vp
                  JOIN users u ON vp.user_id = u.id
-                 LEFT JOIN participation_requests pr ON pr.volunteer_id = vp.user_id AND pr.shift_id = vp.shift_id
+                 LEFT JOIN participation_requests pr ON pr.member_id = vp.user_id AND pr.shift_id = vp.shift_id
                  WHERE vp.shift_id IN ($ph)
                    AND vp.created_at >= DATE_SUB(NOW(), INTERVAL 2 HOUR)
-                   AND vp.id = (SELECT MAX(vp2.id) FROM volunteer_pings vp2
+                   AND vp.id = (SELECT MAX(vp2.id) FROM member_pings vp2
                                 WHERE vp2.user_id = vp.user_id AND vp2.shift_id = vp.shift_id)",
                 $shiftIds
             );
@@ -351,7 +351,7 @@ if (get('ajax') === '1') {
     }
     // Ride Mode alerts for real-time banner update
     $alertsAjax = [];
-    foreach ($approvedVolunteers as $shiftId => $vols) {
+    foreach ($approvedMembers as $shiftId => $vols) {
         foreach ($vols as $v) {
             $fieldStatus = $v['field_status'] ?? '';
             if (in_array($fieldStatus, $rideCriticalStatuses, true)) {
@@ -375,7 +375,7 @@ if (get('ajax') === '1') {
     foreach ($missions as $m) {
         foreach ($m['shifts'] as $s) {
             $secsToStart = strtotime($s['start_time']) - time();
-            $isUnderstaffed = $s['approved'] < $s['min_volunteers'];
+            $isUnderstaffed = $s['approved'] < $s['min_members'];
             $startingSoon   = $secsToStart > 0 && $secsToStart < 7200;
             $alreadyActive  = $secsToStart <= 0 && strtotime($s['end_time']) > time();
             if ($isUnderstaffed && ($startingSoon || $alreadyActive)) {
@@ -385,7 +385,7 @@ if (get('ajax') === '1') {
                     'shift_id'      => $s['shift_id'],
                     'start_time'    => $s['start_time'],
                     'approved'      => $s['approved'],
-                    'min'           => $s['min_volunteers'],
+                    'min'           => $s['min_members'],
                 ];
             }
         }
@@ -394,13 +394,13 @@ if (get('ajax') === '1') {
     exit;
 }
 
-// ── Compute alerts (understaffed shifts + volunteers needing help) ────────────
+// ── Compute alerts (understaffed shifts + members needing help) ────────────
 $alerts = [];
 $now = time();
 foreach ($missions as $m) {
     foreach ($m['shifts'] as $s) {
         $secsToStart = strtotime($s['start_time']) - $now;
-        $isUnderstaffed = $s['approved'] < $s['min_volunteers'];
+        $isUnderstaffed = $s['approved'] < $s['min_members'];
         $startingSoon   = $secsToStart > 0 && $secsToStart < 7200; // < 2 hours
         $alreadyActive  = $secsToStart <= 0 && strtotime($s['end_time']) > $now;
         if ($isUnderstaffed && ($startingSoon || $alreadyActive)) {
@@ -410,13 +410,13 @@ foreach ($missions as $m) {
                 'shift_id'      => $s['shift_id'],
                 'start_time'    => $s['start_time'],
                 'approved'      => $s['approved'],
-                'min'           => $s['min_volunteers'],
+                'min'           => $s['min_members'],
             ];
         }
     }
 }
 // Ride Mode alerts from field_status
-foreach ($approvedVolunteers as $shiftId => $vols) {
+foreach ($approvedMembers as $shiftId => $vols) {
     foreach ($vols as $v) {
         $fieldStatus = $v['field_status'] ?? '';
         if (in_array($fieldStatus, $rideCriticalStatuses, true)) {
@@ -496,8 +496,8 @@ foreach ($missions as $m) {
         // Determine pin color based on worst shift
         $worstColor = 'green';
         foreach ($m['shifts'] as $s) {
-            $pct = $s['max_volunteers'] > 0 ? $s['approved'] / $s['max_volunteers'] : 0;
-            if ($s['approved'] < $s['min_volunteers']) { $worstColor = 'red'; break; }
+            $pct = $s['max_members'] > 0 ? $s['approved'] / $s['max_members'] : 0;
+            if ($s['approved'] < $s['min_members']) { $worstColor = 'red'; break; }
             if ($pct < 0.5) { $worstColor = 'orange'; }
         }
         $pinLat = $m['latitude'] ?: $routePoints[0]['lat'];
@@ -515,27 +515,27 @@ foreach ($missions as $m) {
     }
 }
 
-// ── Latest GPS pings per volunteer (last 2 hours, active shifts only) ───────
-$volunteerPins = [];
+// ── Latest GPS pings per member (last 2 hours, active shifts only) ───────
+$memberPins = [];
 if ($hasPingsTable && !empty($shiftIds)) {
     try {
         $placeholders2 = implode(',', array_fill(0, count($shiftIds), '?'));
         $fsCol2 = $hasFieldStatus ? ', pr.field_status' : ', NULL as field_status';
         $pingRows = dbFetchAll(
             "SELECT vp.user_id, vp.shift_id, vp.lat, vp.lng, vp.created_at, u.name{$fsCol2}
-             FROM volunteer_pings vp
+             FROM member_pings vp
              JOIN users u ON vp.user_id = u.id
-             LEFT JOIN participation_requests pr ON pr.volunteer_id = vp.user_id AND pr.shift_id = vp.shift_id
+             LEFT JOIN participation_requests pr ON pr.member_id = vp.user_id AND pr.shift_id = vp.shift_id
              WHERE vp.shift_id IN ($placeholders2)
                AND vp.created_at >= DATE_SUB(NOW(), INTERVAL 2 HOUR)
                AND vp.id = (
-                   SELECT MAX(vp2.id) FROM volunteer_pings vp2
+                   SELECT MAX(vp2.id) FROM member_pings vp2
                    WHERE vp2.user_id = vp.user_id AND vp2.shift_id = vp.shift_id
                )",
             $shiftIds
         );
         foreach ($pingRows as $pr) {
-            $volunteerPins[] = [
+            $memberPins[] = [
                 'lat'          => (float)$pr['lat'],
                 'lng'          => (float)$pr['lng'],
                 'name'         => $pr['name'],
@@ -700,10 +700,10 @@ include __DIR__ . '/includes/header.php';
                     <button type="button" class="btn btn-sm btn-outline-secondary" id="toggleRoutesBtn">
                         <i class="bi bi-signpost-split me-1"></i>Διαδρομές
                     </button>
-                    <?php if (empty($mapPins) && empty($volunteerPins)): ?>
+                    <?php if (empty($mapPins) && empty($memberPins)): ?>
                     <small class="text-muted">Δεν υπάρχουν δεδομένα</small>
                     <?php else: ?>
-                    <small class="text-muted"><?= count($volunteerPins) ?> μέλη στον χάρτη</small>
+                    <small class="text-muted"><?= count($memberPins) ?> μέλη στον χάρτη</small>
                     <?php endif; ?>
                 </div>
             </div>
@@ -791,7 +791,7 @@ include __DIR__ . '/includes/header.php';
         <?php
             $isUrgent = (bool)$m['is_urgent'];
             $totalApproved = array_sum(array_column($m['shifts'], 'approved'));
-            $totalMax      = array_sum(array_column($m['shifts'], 'max_volunteers'));
+            $totalMax      = array_sum(array_column($m['shifts'], 'max_members'));
         ?>
         <div class="card mb-4 ops-mission-card <?= $isUrgent ? 'urgent' : '' ?>">
             <div class="card-header d-flex align-items-center justify-content-between">
@@ -833,9 +833,9 @@ include __DIR__ . '/includes/header.php';
                     $nowTs    = time();
                     $isActive = $startTs <= $nowTs && $endTs > $nowTs;
                     $isEnded  = $endTs <= $nowTs;
-                    $pct      = $s['max_volunteers'] > 0 ? round(($s['approved'] / $s['max_volunteers']) * 100) : 0;
-                    $barColor = $s['approved'] < $s['min_volunteers'] ? 'danger' : ($pct < 60 ? 'warning' : 'success');
-                    $shiftVols = $approvedVolunteers[$s['shift_id']] ?? [];
+                    $pct      = $s['max_members'] > 0 ? round(($s['approved'] / $s['max_members']) * 100) : 0;
+                    $barColor = $s['approved'] < $s['min_members'] ? 'danger' : ($pct < 60 ? 'warning' : 'success');
+                    $shiftVols = $approvedMembers[$s['shift_id']] ?? [];
                 ?>
                 <div class="shift-row <?= $isActive ? 'active-shift' : ($isEnded ? 'ended-shift' : '') ?>"
                      id="shift-<?= $s['shift_id'] ?>">
@@ -864,17 +864,17 @@ include __DIR__ . '/includes/header.php';
                     </div>
 
                     <!-- Progress bar -->
-                    <div class="progress mt-2" style="height:6px;" title="<?= $s['approved'] ?>/<?= $s['max_volunteers'] ?> εγκεκριμένοι">
+                    <div class="progress mt-2" style="height:6px;" title="<?= $s['approved'] ?>/<?= $s['max_members'] ?> εγκεκριμένοι">
                         <div class="progress-bar bg-<?= $barColor ?>"
                              id="bar-<?= $s['shift_id'] ?>"
                              style="width:<?= min($pct,100) ?>%"></div>
                     </div>
                     <div class="d-flex justify-content-between mt-1">
-                        <small class="text-muted"><?= $s['approved'] ?>/<?= $s['max_volunteers'] ?> (min: <?= $s['min_volunteers'] ?>)</small>
+                        <small class="text-muted"><?= $s['approved'] ?>/<?= $s['max_members'] ?> (min: <?= $s['min_members'] ?>)</small>
                         <small class="text-muted"><?= $pct ?>%</small>
                     </div>
 
-                    <!-- Volunteer chips + quick attendance -->
+                    <!-- Member chips + quick attendance -->
                     <?php if (!empty($shiftVols)): ?>
                     <?php
                     $fsIcon  = ['on_way' => '🚗', 'on_site' => '✅', 'needs_help' => '🆘', 'breakdown' => '🔧', 'left_behind' => '↩', 'ok' => '✓'];
@@ -932,7 +932,7 @@ include __DIR__ . '/includes/header.php';
         <?php
             $isUrgent = (bool)$m['is_urgent'];
             $totalApproved = array_sum(array_column($m['shifts'], 'approved'));
-            $totalMax      = array_sum(array_column($m['shifts'], 'max_volunteers'));
+            $totalMax      = array_sum(array_column($m['shifts'], 'max_members'));
         ?>
         <div class="card mb-4 ops-mission-card <?= $isUrgent ? 'urgent' : '' ?>" style="opacity:0.85;">
             <div class="card-header d-flex align-items-center justify-content-between">
@@ -962,8 +962,8 @@ include __DIR__ . '/includes/header.php';
                 </div>
                 <?php foreach ($m['shifts'] as $s): ?>
                 <?php
-                    $pct = $s['max_volunteers'] > 0 ? round(($s['approved'] / $s['max_volunteers']) * 100) : 0;
-                    $barColor = $s['approved'] < $s['min_volunteers'] ? 'danger' : ($pct < 60 ? 'warning' : 'success');
+                    $pct = $s['max_members'] > 0 ? round(($s['approved'] / $s['max_members']) * 100) : 0;
+                    $barColor = $s['approved'] < $s['min_members'] ? 'danger' : ($pct < 60 ? 'warning' : 'success');
                 ?>
                 <div class="shift-row mb-2">
                     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
@@ -983,7 +983,7 @@ include __DIR__ . '/includes/header.php';
                     <div class="progress mt-2" style="height:6px;">
                         <div class="progress-bar bg-<?= $barColor ?>" style="width:<?= min($pct,100) ?>%"></div>
                     </div>
-                    <small class="text-muted"><?= $s['approved'] ?>/<?= $s['max_volunteers'] ?> (min: <?= $s['min_volunteers'] ?>)</small>
+                    <small class="text-muted"><?= $s['approved'] ?>/<?= $s['max_members'] ?> (min: <?= $s['min_members'] ?>)</small>
                 </div>
                 <?php endforeach; ?>
                 <?php $renderMissionChat($m); ?>
@@ -1041,7 +1041,7 @@ const fieldStatusColor = { on_way: '#fd7e14', on_site: '#198754', needs_help: '#
 const fsIcon  = { on_way: '🚗', on_site: '✅', needs_help: '🆘', breakdown: '🔧', left_behind: '↩', ok: '✓' };
 const fsBg    = { on_way: '#fff3cd', on_site: '#d1e7dd', needs_help: '#f8d7da', breakdown: '#ede7f6', left_behind: '#cff4fc', ok: '#d1f2eb' };
 
-// Pulsing volunteer dot HTML
+// Pulsing member dot HTML
 function pulseHtml(color) {
     return '<div style="position:relative;width:22px;height:22px;">'
         + '<div style="position:absolute;top:3px;left:3px;width:16px;height:16px;'
@@ -1051,12 +1051,12 @@ function pulseHtml(color) {
         + '</div>';
 }
 
-function renderVolunteerPins(pins) {
-    if (!volunteerLayerGroup) return;
-    volunteerLayerGroup.clearLayers();
+function renderMemberPins(pins) {
+    if (!memberLayerGroup) return;
+    memberLayerGroup.clearLayers();
     const statusLabel = { on_way: '🚗 Σε Κίνηση', on_site: '✅ Επί Τόπου', needs_help: '🆘 Χρειάζεται Βοήθεια', breakdown: '🔧 Βλάβη', left_behind: '↩ Έμεινε πίσω', ok: '✓ Είναι ΟΚ' };
 
-    // Group pins by location (round to ~11m precision to catch nearby volunteers)
+    // Group pins by location (round to ~11m precision to catch nearby members)
     const groups = {};
     pins.forEach(p => {
         const key = parseFloat(p.lat).toFixed(4) + ',' + parseFloat(p.lng).toFixed(4);
@@ -1097,23 +1097,23 @@ function renderVolunteerPins(pins) {
         const icon = L.divIcon({ className: '', html: dotHtml, iconSize: [22, 22], iconAnchor: [11, 11] });
         const avg = { lat: group[0].lat, lng: group[0].lng };
         L.marker([avg.lat, avg.lng], { icon })
-         .addTo(volunteerLayerGroup)
+         .addTo(memberLayerGroup)
          .bindPopup(popupLines, { maxWidth: 300 });
     });
 }
 
 // ── Map initialization ────────────────────────────────────────────────────────
 let opsMap = null;
-let volunteerLayerGroup = null;
+let memberLayerGroup = null;
 let routeLayerGroup = null;
 
 (function() {
     const missionPins = <?= json_encode(array_values($mapPins)) ?>;
-    const volPins     = <?= json_encode(array_values($volunteerPins)) ?>;
+    const volPins     = <?= json_encode(array_values($memberPins)) ?>;
     const routeStorageKey = 'easyride.ops.routes.visible';
     let routesVisible = localStorage.getItem(routeStorageKey) === '1';
 
-    // Determine map center: missions first, then volunteer GPS, then Greece default
+    // Determine map center: missions first, then member GPS, then Greece default
     let center = [37.97, 23.73], zoom = 7;
     if (missionPins.length)   { center = [missionPins[0].lat, missionPins[0].lng]; zoom = 10; }
     else if (volPins.length)  { center = [volPins[0].lat,     volPins[0].lng];     zoom = 13; }
@@ -1183,10 +1183,10 @@ let routeLayerGroup = null;
     }
     applyRouteVisibility();
 
-    volunteerLayerGroup = L.layerGroup().addTo(opsMap);
-    renderVolunteerPins(volPins);
+    memberLayerGroup = L.layerGroup().addTo(opsMap);
+    renderMemberPins(volPins);
 
-    // Fit bounds to include ALL pins (missions + volunteers)
+    // Fit bounds to include ALL pins (missions + members)
     const allCoords = [
         ...missionPins.map(p => [p.lat, p.lng]),
         ...(routesVisible ? missionPins.flatMap(p => Array.isArray(p.route) ? p.route.map(point => [point.lat, point.lng]) : []) : []),
@@ -1253,7 +1253,7 @@ function liveRefresh() {
                 if (bar) { bar.style.width = pct + '%'; bar.className = 'progress-bar bg-' + color; }
             });
 
-            // Update volunteer chip background from field_status
+            // Update member chip background from field_status
             if (data.field_status) {
                 Object.entries(data.field_status).forEach(([key, fs]) => {
                     const prId = key.replace('pr_', '');
@@ -1262,15 +1262,15 @@ function liveRefresh() {
                 });
             }
 
-            // Refresh GPS volunteer pins on map + re-center if needed
+            // Refresh GPS member pins on map + re-center if needed
             if (data.pins && data.pins.length) {
-                renderVolunteerPins(data.pins);
-                // If map is at default Greece view (zoom 7), center on the first volunteer
+                renderMemberPins(data.pins);
+                // If map is at default Greece view (zoom 7), center on the first member
                 if (opsMap && opsMap.getZoom() <= 7) {
                     opsMap.setView([data.pins[0].lat, data.pins[0].lng], 14);
                 }
             } else if (data.pins) {
-                renderVolunteerPins(data.pins);
+                renderMemberPins(data.pins);
             }
 
             // Real-time alert banner update
@@ -1314,7 +1314,7 @@ function updateAlertBanner(alerts) {
         }
     });
     banner.innerHTML = html;
-    // Flash banner red if new needs_help volunteer appeared
+    // Flash banner red if new needs_help member appeared
     newNeedsHelp.forEach(name => {
         if (!_prevNeedsHelp.has(name)) {
             banner.style.transition = 'background 0.5s';

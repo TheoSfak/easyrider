@@ -23,7 +23,7 @@ if (isPost()) {
     
     if (empty($testUsers)) {
         setFlash('info', 'Δεν βρέθηκαν χρήστες για διαγραφή.');
-        redirect('volunteers.php');
+        redirect('members.php');
     }
     
     $deletedCount = 0;
@@ -35,12 +35,12 @@ if (isPost()) {
         }
         
         // Delete related data first
-        dbExecute("DELETE FROM volunteer_profiles WHERE user_id = ?", [$user['id']]);
+        dbExecute("DELETE FROM member_profiles WHERE user_id = ?", [$user['id']]);
         dbExecute("DELETE FROM user_skills WHERE user_id = ?", [$user['id']]);
         dbExecute("DELETE FROM user_achievements WHERE user_id = ?", [$user['id']]);
         dbExecute("DELETE FROM notifications WHERE user_id = ?", [$user['id']]);
-        dbExecute("DELETE FROM volunteer_points WHERE user_id = ?", [$user['id']]);
-        dbExecute("DELETE FROM participation_requests WHERE volunteer_id = ?", [$user['id']]);
+        dbExecute("DELETE FROM member_points WHERE user_id = ?", [$user['id']]);
+        dbExecute("DELETE FROM participation_requests WHERE member_id = ?", [$user['id']]);
         dbExecute("DELETE FROM task_assignments WHERE user_id = ?", [$user['id']]);
         
         // Delete user
@@ -51,7 +51,7 @@ if (isPost()) {
     }
     
     setFlash('success', "Διαγράφηκαν {$deletedCount} χρήστες δοκιμών.");
-    redirect('volunteers.php');
+    redirect('members.php');
 }
 
 $pageTitle = 'Διαγραφή Χρηστών Δοκιμών';
@@ -71,7 +71,7 @@ include __DIR__ . '/includes/header.php';
                             <i class="bi bi-info-circle me-2"></i>
                             Δεν βρέθηκαν χρήστες δοκιμών στη βάση δεδομένων.
                         </div>
-                        <a href="volunteers.php" class="btn btn-secondary">
+                        <a href="members.php" class="btn btn-secondary">
                             <i class="bi bi-arrow-left me-1"></i>Επιστροφή
                         </a>
                     <?php else: ?>
@@ -121,7 +121,7 @@ include __DIR__ . '/includes/header.php';
                                     <i class="bi bi-trash me-1"></i>Διαγραφή Όλων των Χρηστών Δοκιμών
                                 </button>
                             </form>
-                            <a href="volunteers.php" class="btn btn-secondary">
+                            <a href="members.php" class="btn btn-secondary">
                                 <i class="bi bi-x me-1"></i>Ακύρωση
                             </a>
                         </div>

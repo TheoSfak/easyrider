@@ -30,7 +30,7 @@ $now = date('Y-m-d H:i:s');
 $incompleteShifts = dbFetchAll(
     "SELECT s.*, m.title as mission_title, m.description as mission_description,
             COUNT(pr.id) as filled_spots,
-            (s.max_volunteers - COUNT(pr.id)) as available_spots
+            (s.max_members - COUNT(pr.id)) as available_spots
      FROM shifts s 
      INNER JOIN missions m ON s.mission_id = m.id 
      LEFT JOIN participation_requests pr ON s.id = pr.shift_id AND pr.status = ?
@@ -45,7 +45,7 @@ $sentCount = 0;
 
 foreach ($incompleteShifts as $shift) {
     // Check if notification is enabled
-    if (!isNotificationEnabled('mission_needs_volunteers')) {
+    if (!isNotificationEnabled('mission_needs_members')) {
         continue;
     }
     
@@ -62,22 +62,22 @@ foreach ($incompleteShifts as $shift) {
         continue; // Already sent alert in last 24 hours
     }
     
-    // Get all active volunteers (not just those in this mission)
-    $allVolunteers = dbFetchAll(
+    // Get all active members (not just those in this mission)
+    $allMembers = dbFetchAll(
         "SELECT * FROM users 
          WHERE role = ? 
          AND is_active = 1",
-        [ROLE_VOLUNTEER]
+        [ROLE_MEMBER]
     );
     
-    foreach ($allVolunteers as $user) {
+    foreach ($allMembers as $user) {
         if ($user['email']) {
-            $result = sendNotificationEmail('mission_needs_volunteers', $user['email'], [
+            $result = sendNotificationEmail('mission_needs_members', $user['email'], [
                 'user_name' => $user['name'],
                 'mission_title' => $shift['mission_title'],
                 'mission_date' => formatDateTime($shift['start_time']),
                 'available_spots' => $shift['available_spots'],
-                'total_spots' => $shift['max_volunteers']
+                'total_spots' => $shift['max_members']
             ]);
             
             if ($result['success']) {

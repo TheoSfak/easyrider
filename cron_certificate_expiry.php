@@ -30,7 +30,7 @@ try {
     // ── 30-day (first) reminders ────────────────────────────────────────────
     $firstReminders = dbFetchAll("
         SELECT vc.*, ct.name as type_name, u.id as uid, u.name as user_name, u.email as user_email
-        FROM volunteer_certificates vc
+        FROM member_certificates vc
         JOIN certificate_types ct ON vc.certificate_type_id = ct.id
         JOIN users u ON vc.user_id = u.id
         WHERE vc.expiry_date IS NOT NULL
@@ -67,7 +67,7 @@ try {
         );
 
         // Mark as sent
-        dbExecute("UPDATE volunteer_certificates SET reminder_sent_30 = 1 WHERE id = ?", [$cert['id']]);
+        dbExecute("UPDATE member_certificates SET reminder_sent_30 = 1 WHERE id = ?", [$cert['id']]);
     }
 
     echo "30-day reminders processed: " . count($firstReminders) . "\n";
@@ -75,7 +75,7 @@ try {
     // ── 7-day (urgent) reminders ────────────────────────────────────────────
     $urgentReminders = dbFetchAll("
         SELECT vc.*, ct.name as type_name, u.id as uid, u.name as user_name, u.email as user_email
-        FROM volunteer_certificates vc
+        FROM member_certificates vc
         JOIN certificate_types ct ON vc.certificate_type_id = ct.id
         JOIN users u ON vc.user_id = u.id
         WHERE vc.expiry_date IS NOT NULL
@@ -112,7 +112,7 @@ try {
         );
 
         // Mark as sent
-        dbExecute("UPDATE volunteer_certificates SET reminder_sent_7 = 1 WHERE id = ?", [$cert['id']]);
+        dbExecute("UPDATE member_certificates SET reminder_sent_7 = 1 WHERE id = ?", [$cert['id']]);
     }
 
     echo "7-day urgent reminders processed: " . count($urgentReminders) . "\n";

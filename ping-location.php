@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Volunteer GPS Ping Endpoint
+ * VolunteerOps - Member GPS Ping Endpoint
  * Εθελοντής στέλνει θέση GPS κατά τη διάρκεια βάρδιας.
  * AJAX POST only.
  */
@@ -36,7 +36,7 @@ if ($lat < -90 || $lat > 90 || $lng < -180 || $lng > 180 || ($lat == 0 && $lng =
 $pr = dbFetchOne(
     "SELECT pr.id FROM participation_requests pr
      JOIN shifts s ON pr.shift_id = s.id
-     WHERE pr.shift_id = ? AND pr.volunteer_id = ? AND pr.status = '" . PARTICIPATION_APPROVED . "'",
+     WHERE pr.shift_id = ? AND pr.member_id = ? AND pr.status = '" . PARTICIPATION_APPROVED . "'",
     [$shiftId, $userId]
 );
 
@@ -48,7 +48,7 @@ if (!$pr) {
 // Insert ping
 try {
     dbInsert(
-        "INSERT INTO volunteer_pings (user_id, shift_id, lat, lng, created_at) VALUES (?, ?, ?, ?, NOW())",
+        "INSERT INTO member_pings (user_id, shift_id, lat, lng, created_at) VALUES (?, ?, ?, ?, NOW())",
         [$userId, $shiftId, $lat, $lng]
     );
 } catch (Exception $e) {

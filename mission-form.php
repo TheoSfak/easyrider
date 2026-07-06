@@ -14,9 +14,9 @@ $pageTitle = $isEdit ? 'Επεξεργασία Δράσης' : 'Νέα Δράσ�
 $user = getCurrentUser();
 $missionTypes = dbFetchAll("SELECT id, name, color, icon FROM mission_types WHERE is_active = 1 ORDER BY sort_order");
 
-// Get all active volunteers for responsible selection
-$allVolunteers = dbFetchAll("SELECT id, name, role FROM users WHERE is_active = 1 AND role IN (?, ?, ?, ?) ORDER BY name", 
-    [ROLE_VOLUNTEER, ROLE_SHIFT_LEADER, ROLE_DEPARTMENT_ADMIN, ROLE_SYSTEM_ADMIN]);
+// Get all active members for responsible selection
+$allMembers = dbFetchAll("SELECT id, name, role FROM users WHERE is_active = 1 AND role IN (?, ?, ?, ?) ORDER BY name", 
+    [ROLE_MEMBER, ROLE_SHIFT_LEADER, ROLE_DEPARTMENT_ADMIN, ROLE_SYSTEM_ADMIN]);
 
 $mission = null;
 if ($isEdit) {
@@ -389,7 +389,7 @@ if (isPost()) {
                             ]
                         );
                         dbInsert(
-                            "INSERT INTO shifts (mission_id, start_time, end_time, max_volunteers, min_volunteers, created_at, updated_at)
+                            "INSERT INTO shifts (mission_id, start_time, end_time, max_members, min_members, created_at, updated_at)
                              VALUES (?, ?, ?, 5, 1, NOW(), NOW())",
                             [$missionId, $instStart, $instEnd]
                         );
@@ -422,7 +422,7 @@ if (isPost()) {
                         $data['is_urgent'], $data['status'], $data['responsible_user_id'], $user['id']
                     ]);
                     dbInsert(
-                        "INSERT INTO shifts (mission_id, start_time, end_time, max_volunteers, min_volunteers, created_at, updated_at)
+                        "INSERT INTO shifts (mission_id, start_time, end_time, max_members, min_members, created_at, updated_at)
                          VALUES (?, ?, ?, 5, 1, NOW(), NOW())",
                         [$newId, $data['start_datetime'], $data['end_datetime']]
                     );
@@ -737,7 +737,7 @@ include __DIR__ . '/includes/header.php';
                         <label for="responsible_user_id" class="form-label">Υπεύθυνος Δράσης</label>
                         <select class="form-select" id="responsible_user_id" name="responsible_user_id">
                             <option value="">Χωρίς υπεύθυνο</option>
-                            <?php foreach ($allVolunteers as $v): ?>
+                            <?php foreach ($allMembers as $v): ?>
                                 <option value="<?= $v['id'] ?>" <?= ($mission['responsible_user_id'] ?? '') == $v['id'] ? 'selected' : '' ?>>
                                     <?= h($v['name']) ?> (<?= h($GLOBALS['ROLE_LABELS'][$v['role']]) ?>)
                                 </option>
