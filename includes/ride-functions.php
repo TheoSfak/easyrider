@@ -360,6 +360,44 @@ function rideMissionRouteMetrics(array $mission, ?array $routePoints = null): ar
     return $metrics;
 }
 
+function resolveActiveMissionDayRoute(array $mission): array {
+    $missionDays = dbFetchAll(
+        "SELECT * FROM mission_days WHERE mission_id = ? ORDER BY day_number",
+        [$mission['id']]
+    );
+
+    if (empty($missionDays)) {
+        return $mission + ['is_multiday' => false, 'active_day_label' => null];
+    }
+
+    $today = date('Y-m-d');
+    $activeDay = null;
+    foreach ($missionDays as $day) {
+        if ($day['day_date'] === $today) {
+            $activeDay = $day;
+            break;
+        }
+    }
+    if ($activeDay === null) {
+        $activeDay = $today < $missionDays[0]['day_date']
+            ? $missionDays[0]
+            : $missionDays[count($missionDays) - 1];
+    }
+
+    $label = ($activeDay['title'] ?: 'Μέρα ' . (int)$activeDay['day_number'])
+        . ' · ' . date('d/m', strtotime($activeDay['day_date']));
+
+    return array_merge($mission, [
+        'route_points'           => $activeDay['route_points'],
+        'route_geometry'         => $activeDay['route_geometry'],
+        'route_distance_meters'  => $activeDay['route_distance_meters'],
+        'route_duration_seconds' => $activeDay['route_duration_seconds'],
+        'route_provider'         => $activeDay['route_provider'],
+        'is_multiday'            => true,
+        'active_day_label'       => $label,
+    ]);
+}
+
 function rideEventTableExists(): bool {
     try {
         return (bool) dbFetchValue(
