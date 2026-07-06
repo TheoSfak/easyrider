@@ -75,6 +75,12 @@ if (isPost()) {
         }
     }
     
+    // Resolve motorcycle brand/model names to ids (creates pending rows if new)
+    $motoBrandName = trim((string) post('moto_brand'));
+    $motoModelName = trim((string) post('moto_model'));
+    $motorcycleBrandId = resolveMotorcycleBrandId($motoBrandName, getCurrentUserId());
+    $motorcycleModelId = resolveMotorcycleModelId($motoModelName, $motorcycleBrandId, getCurrentUserId());
+
     // Validation
     if (empty($data['name'])) {
         $errors[] = 'Το όνομα είναι υποχρεωτικό.';
@@ -128,14 +134,14 @@ if (isPost()) {
                  name = ?, email = ?, phone = ?, role = ?, custom_role_id = ?, department_id = ?, warehouse_id = ?, is_active = ?,
                  member_type = ?, cohort_year = ?, position_id = ?,
                  id_card = ?, afm = ?, amka = ?, driving_license = ?, vehicle_plate = ?,
-                 club_registry_number = ?, updated_at = NOW()
+                 club_registry_number = ?, motorcycle_brand_id = ?, motorcycle_model_id = ?, updated_at = NOW()
                  WHERE id = ?",
                 [
                     $data['name'], $data['email'], $data['phone'],
                     $data['role'], $data['custom_role_id'], $data['department_id'], $data['warehouse_id'], $data['is_active'],
                     $memberType, $cohortYear, $data['position_id'],
                     $data['id_card'], $data['afm'], $data['amka'], $data['driving_license'], $data['vehicle_plate'],
-                    $data['club_registry_number'], $id
+                    $data['club_registry_number'], $motorcycleBrandId, $motorcycleModelId, $id
                 ]
             );
             
@@ -154,14 +160,14 @@ if (isPost()) {
             $id = dbInsert(
                 "INSERT INTO users
                  (name, email, password, phone, role, custom_role_id, department_id, warehouse_id, is_active, member_type, cohort_year, position_id,
-                  id_card, afm, amka, driving_license, vehicle_plate, club_registry_number, total_points, created_at, updated_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW(), NOW())",
+                  id_card, afm, amka, driving_license, vehicle_plate, club_registry_number, motorcycle_brand_id, motorcycle_model_id, total_points, created_at, updated_at)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, NOW(), NOW())",
                 [
                     $data['name'], $data['email'], password_hash($password, PASSWORD_DEFAULT),
                     $data['phone'], $data['role'], $data['custom_role_id'], $data['department_id'], $data['warehouse_id'], $data['is_active'],
                     $memberType, $cohortYear, $data['position_id'],
                     $data['id_card'], $data['afm'], $data['amka'], $data['driving_license'], $data['vehicle_plate'],
-                    $data['club_registry_number']
+                    $data['club_registry_number'], $motorcycleBrandId, $motorcycleModelId
                 ]
             );
             logAudit('create', 'users', $id);
@@ -233,6 +239,30 @@ $form = $member ?: [
     'club_registry_number' => '',
     'custom_role_id' => null,
 ];
+
+// $member is the raw users row (numeric FK ids) — resolve to display names for the inputs
+$form['moto_brand'] = '';
+$form['moto_model'] = '';
+if ($member && !empty($member['motorcycle_brand_id'])) {
+    $form['moto_brand'] = (string) dbFetchValue("SELECT name FROM motorcycle_brands WHERE id = ?", [$member['motorcycle_brand_id']]);
+}
+if ($member && !empty($member['motorcycle_model_id'])) {
+    $form['moto_model'] = (string) dbFetchValue("SELECT name FROM motorcycle_models WHERE id = ?", [$member['motorcycle_model_id']]);
+}
+
+// Datalist data: approved brands, and a brand -> approved models JSON map for the JS below
+$approvedBrands = dbFetchAll("SELECT id, name FROM motorcycle_brands WHERE is_approved = 1 ORDER BY name ASC");
+$approvedModelRows = dbFetchAll(
+    "SELECT m.name AS model_name, b.name AS brand_name
+     FROM motorcycle_models m
+     JOIN motorcycle_brands b ON m.brand_id = b.id
+     WHERE m.is_approved = 1
+     ORDER BY b.name ASC, m.name ASC"
+);
+$brandModelMap = [];
+foreach ($approvedModelRows as $row) {
+    $brandModelMap[$row['brand_name']][] = $row['model_name'];
+}
 
 include __DIR__ . '/includes/header.php';
 ?>
@@ -411,6 +441,23 @@ include __DIR__ . '/includes/header.php';
                 </div>
             </div>
 
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Μάρκα Μηχανής</label>
+                    <input type="text" class="form-control" list="brandOptions" id="motoBrand" name="moto_brand" value="<?= h($form['moto_brand'] ?? '') ?>" placeholder="π.χ. Honda">
+                    <datalist id="brandOptions">
+                        <?php foreach ($approvedBrands as $b): ?>
+                            <option value="<?= h($b['name']) ?>">
+                        <?php endforeach; ?>
+                    </datalist>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Μοντέλο</label>
+                    <input type="text" class="form-control" list="modelOptions" id="motoModel" name="moto_model" value="<?= h($form['moto_model'] ?? '') ?>" placeholder="π.χ. CBR 600">
+                    <datalist id="modelOptions"></datalist>
+                </div>
+            </div>
+
             <hr>
             <h5 class="mb-3"><i class="bi bi-person-lines-fill me-2"></i>Προφίλ Μέλους</h5>
 
@@ -542,5 +589,32 @@ include __DIR__ . '/includes/header.php';
 })();
 </script>
 <?php endif; ?>
+
+<script>
+(function () {
+    const brandModelMap = <?= json_encode($brandModelMap, JSON_UNESCAPED_UNICODE) ?>;
+    const brandInput  = document.getElementById('motoBrand');
+    const modelInput  = document.getElementById('motoModel');
+    const modelOptions = document.getElementById('modelOptions');
+
+    function repopulateModels() {
+        if (!brandInput || !modelOptions) return;
+        modelOptions.innerHTML = '';
+        const typedBrand = brandInput.value.trim().toLowerCase();
+        const matchKey = Object.keys(brandModelMap).find(b => b.toLowerCase() === typedBrand);
+        if (!matchKey) return;
+        brandModelMap[matchKey].forEach(function (modelName) {
+            const opt = document.createElement('option');
+            opt.value = modelName;
+            modelOptions.appendChild(opt);
+        });
+    }
+
+    if (brandInput) {
+        brandInput.addEventListener('input', repopulateModels);
+        repopulateModels();
+    }
+})();
+</script>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
