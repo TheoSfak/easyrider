@@ -23,6 +23,7 @@ if (!canAccessRideMission($mission, $currentUser)) {
 
 $isController = isRideController($mission, $currentUser);
 $participation = getRideParticipation($missionId, (int)$currentUser['id']);
+$mission = resolveActiveMissionDayRoute($mission);
 $routePoints = normalizeRideRoutePoints($mission['route_points'] ?? '[]');
 $routeMetrics = rideMissionRouteMetrics($mission, $routePoints);
 $routeGeometry = rideRouteGeometry($mission);
@@ -339,7 +340,12 @@ $pageTitle = $isController ? 'Ride Control' : 'Ride Mode';
 
         <div class="ride-card p-3">
             <div class="d-flex justify-content-between align-items-center mb-2">
-                <div class="fw-bold"><i class="bi bi-clock-history me-1"></i>Χρονοδιάγραμμα</div>
+                <div class="fw-bold">
+                    <i class="bi bi-clock-history me-1"></i>Χρονοδιάγραμμα
+                    <?php if ($mission['is_multiday']): ?>
+                        <span class="badge bg-light text-dark border ms-1"><?= h($mission['active_day_label']) ?></span>
+                    <?php endif; ?>
+                </div>
                 <?php if ($directionsUrl): ?>
                     <a href="<?= h($directionsUrl) ?>" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener noreferrer">
                         <i class="bi bi-sign-turn-right me-1"></i>Πλοήγηση
