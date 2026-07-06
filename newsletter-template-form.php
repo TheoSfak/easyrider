@@ -186,7 +186,7 @@ $(function() {
     var logoUrl  = <?= json_encode(getSetting('app_logo', '')) ?>;
     var logoHtml = logoUrl ? '<img src="uploads/logos/' + logoUrl + '" alt="" style="max-height:50px;margin-bottom:10px;">' : '';
 
-    var sampleContent = '<p style="color:#2c3e50;padding:10px 32px;line-height:1.6;">Αγαπητέ/ή εθελοντή/τρια,<br><br>Αυτό είναι <strong>δείγμα περιεχομένου</strong> newsletter. Εδώ θα εμφανίζεται το κείμενο που γράφετε στη φόρμα του ενημερωτικού δελτίου.<br><br>Με εκτίμηση,<br>' + fromName + '</p>';
+    var sampleContent = '<p style="color:#2c3e50;padding:10px 32px;line-height:1.6;">Αγαπητό μέλος,<br><br>Αυτό είναι <strong>δείγμα περιεχομένου</strong> newsletter. Εδώ θα εμφανίζεται το κείμενο που γράφετε στη φόρμα του ενημερωτικού δελτίου.<br><br>Με εκτίμηση,<br>' + fromName + '</p>';
 
     var snConfig = {
         lang: 'el-GR',

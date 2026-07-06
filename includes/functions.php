@@ -157,7 +157,7 @@ function buildGcalLink(string $title, string $startTime, string $endTime, string
     return 'https://calendar.google.com/calendar/render?action=TEMPLATE'
         . '&text=' . rawurlencode($title)
         . '&dates=' . date('Ymd\THis', strtotime($startTime)) . '/' . date('Ymd\THis', strtotime($endTime))
-        . '&details=' . rawurlencode('Βάρδια εθελοντισμού')
+        . '&details=' . rawurlencode('Βάρδια Λέσχης')
         . '&location=' . rawurlencode($location);
 }
 
@@ -545,7 +545,7 @@ function validateFields($validations) {
 function getSettings() {
     $defaults = [
         'app_name' => 'VolunteerOps',
-        'app_description' => 'Σύστημα Διαχείρισης Εθελοντών',
+        'app_description' => 'Σύστημα Διαχείρισης Μελών',
         'app_logo' => '',
         'admin_email' => '',
         'timezone' => 'Europe/Athens',
@@ -588,10 +588,10 @@ function getTepMissionTypeId(): int {
 }
 
 /**
- * Return the mission_type id for Επανεκπαίδευση Εθελοντών missions (cached per request).
+ * Return the mission_type id for Επανεκπαίδευση Μελών missions (cached per request).
  */
 function getEduMissionTypeId(): int {
-    $ids = getPrereqMissionTypeIds('prereq_edu_mission_types', "SELECT id FROM mission_types WHERE name = 'Επανεκπαίδευση Εθελοντών' LIMIT 1");
+    $ids = getPrereqMissionTypeIds('prereq_edu_mission_types', "SELECT id FROM mission_types WHERE name = 'Επανεκπαίδευση Μελών' LIMIT 1");
     return $ids[0] ?? 0;
 }
 

@@ -21,7 +21,7 @@ $member = dbFetchOne(
 );
 
 if (!$member) {
-    setFlash('error', 'Ο εθελοντής δεν βρέθηκε.');
+    setFlash('error', 'Το μέλος δεν βρέθηκε.');
     redirect('members.php');
 }
 
@@ -594,7 +594,7 @@ include __DIR__ . '/includes/header.php';
         <?php if ($missionAttendance < $attendanceGoal): ?>
             <small class="text-muted mt-1 d-block">Απομένουν <?= $attendanceGoal - $missionAttendance ?> παρουσίες για ολοκλήρωση του στόχου</small>
         <?php else: ?>
-            <small class="text-success mt-1 d-block"><i class="bi bi-check-lg"></i> Ο εθελοντής πληροί την προϋπόθεση παραμονής ενεργού μέλους για το <?= $currentYear + 1 ?></small>
+            <small class="text-success mt-1 d-block"><i class="bi bi-check-lg"></i> Το μέλος πληροί την προϋπόθεση παραμονής ενεργού μέλους για το <?= $currentYear + 1 ?></small>
         <?php endif; ?>
     </div>
 </div>
@@ -660,7 +660,7 @@ include __DIR__ . '/includes/header.php';
         <?php if ($eduMissions < $eduGoal): ?>
             <small class="text-muted mt-1 d-block">Απομένουν <strong><?= $eduGoal - $eduMissions ?></strong> εκπαιδευτικές αποστολές από τις <?= $eduGoal ?> απαιτούμενες</small>
         <?php else: ?>
-            <small class="text-success mt-1 d-block"><i class="bi bi-check-lg"></i> Ο εθελοντής πληροί την προϋπόθεση συμμετοχής σε <?= $eduGoal ?> εκπαιδευτικές αποστολές!</small>
+            <small class="text-success mt-1 d-block"><i class="bi bi-check-lg"></i> Το μέλος πληροί την προϋπόθεση συμμετοχής σε <?= $eduGoal ?> εκπαιδευτικές αποστολές!</small>
         <?php endif; ?>
     </div>
 </div>
@@ -772,7 +772,7 @@ include __DIR__ . '/includes/header.php';
 
                 <?php if ($profile): ?>
                 <hr>
-                <h6 class="text-muted mb-3"><i class="bi bi-person-lines-fill me-1"></i>Προφίλ Εθελοντή</h6>
+                <h6 class="text-muted mb-3"><i class="bi bi-person-lines-fill me-1"></i>Προφίλ Μέλους</h6>
                 <div class="row">
                     <div class="col-md-6">
                         <p><strong>Ομάδα Αίματος:</strong> <?= h(($profile['blood_type'] ?? '') ?: '-') ?></p>
@@ -805,7 +805,7 @@ include __DIR__ . '/includes/header.php';
                 </div>
                 <?php else: ?>
                 <hr>
-                <h6 class="text-muted mb-3"><i class="bi bi-person-lines-fill me-1"></i>Προφίλ Εθελοντή</h6>
+                <h6 class="text-muted mb-3"><i class="bi bi-person-lines-fill me-1"></i>Προφίλ Μέλους</h6>
                 <div class="row">
                     <div class="col-md-6">
                         <p><strong>Ομάδα Αίματος:</strong> -</p>
@@ -1301,7 +1301,7 @@ include __DIR__ . '/includes/header.php';
                 <p><strong>Θα διαγραφούν τα ακόλουθα δεδομένα:</strong></p>
                 <ul>
                     <li>Όνομα και στοιχεία επικοινωνίας (θα αντικατασταθούν με "[Διαγραμμένος Χρήστης]")</li>
-                    <li>Προφίλ εθελοντή (βιογραφικό, διεύθυνση, επαφή έκτακτης ανάγκης)</li>
+                    <li>Προφίλ μέλους (βιογραφικό, διεύθυνση, επαφή έκτακτης ανάγκης)</li>
                     <li>Επιτεύγματα</li>
                     <li>Ειδοποιήσεις</li>
                 </ul>

@@ -181,7 +181,7 @@ foreach ($shifts as $s) {
     $desc  = $s['mission_title'];
     if ($s['type_name'])  $desc .= "\nΤύπος: " . $s['type_name'];
     if ($s['dept_name'])  $desc .= "\nΤμήμα: " . $s['dept_name'];
-    $desc .= "\nΕθελοντές: " . $s['approved_count'] . '/' . $s['max_members'];
+    $desc .= "\nΜέλη: " . $s['approved_count'] . '/' . $s['max_members'];
     if ($s['notes'])      $desc .= "\nΣημειώσεις: " . $s['notes'];
     $desc .= "\n\nΛεπτομέρειες: " . (isset($_SERVER['HTTP_HOST'])
         ? 'http' . ((!empty($_SERVER['HTTPS'])) ? 's' : '') . '://' . $_SERVER['HTTP_HOST']

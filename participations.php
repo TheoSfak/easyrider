@@ -214,7 +214,7 @@ include __DIR__ . '/includes/header.php';
             <div class="col-md-3">
                 <label class="form-label">Αναζήτηση</label>
                 <input type="text" class="form-control" name="search" value="<?= h($search) ?>" 
-                       placeholder="Αποστολή, εθελοντής...">
+                       placeholder="Αποστολή, μέλος...">
             </div>
             <div class="col-md-3">
                 <label class="form-label">Κατάσταση</label>
@@ -275,7 +275,7 @@ include __DIR__ . '/includes/header.php';
                         </th>
                     <?php endif; ?>
                     <?php if ($isAdmin || $isShiftLeader): ?>
-                        <th>Εθελοντής</th>
+                        <th>Μέλος</th>
                     <?php endif; ?>
                     <th>Αποστολή</th>
                     <th>Βάρδια</th>

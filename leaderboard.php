@@ -121,7 +121,7 @@ include __DIR__ . '/includes/header.php';
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">
-        <i class="bi bi-trophy me-2"></i>Κατάταξη Εθελοντών
+        <i class="bi bi-trophy me-2"></i>Κατάταξη Μελών
     </h1>
 </div>
 
@@ -185,7 +185,7 @@ include __DIR__ . '/includes/header.php';
                 <thead class="table-light">
                     <tr>
                         <th class="text-center" style="width: 60px;">#</th>
-                        <th>Εθελοντής</th>
+                        <th>Μέλος</th>
                         <th>Τμήμα</th>
                         <th class="text-center">Βάρδιες</th>
                         <?php if ($achievementsEnabled): ?>

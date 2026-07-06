@@ -7,7 +7,7 @@
 require_once __DIR__ . '/bootstrap.php';
 requirePermission('inactive_members');
 
-$pageTitle = 'Ανενεργοί Εθελοντές';
+$pageTitle = 'Ανενεργά Μέλη';
 $user = getCurrentUser();
 
 // Filters
@@ -116,10 +116,10 @@ include __DIR__ . '/includes/header.php';
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">
-        <i class="bi bi-person-x me-2 text-secondary"></i>Ανενεργοί Εθελοντές
+        <i class="bi bi-person-x me-2 text-secondary"></i>Ανενεργά Μέλη
     </h1>
     <a href="members.php" class="btn btn-outline-primary">
-        <i class="bi bi-people me-1"></i>Ενεργοί Εθελοντές
+        <i class="bi bi-people me-1"></i>Ενεργά Μέλη
     </a>
 </div>
 
@@ -154,15 +154,15 @@ include __DIR__ . '/includes/header.php';
 
 <?php if (empty($members)): ?>
     <div class="alert alert-info">
-        <i class="bi bi-info-circle me-2"></i>Δεν υπάρχουν ανενεργοί εθελοντές.
+        <i class="bi bi-info-circle me-2"></i>Δεν υπάρχουν ανενεργοί μέλη.
     </div>
 <?php else: ?>
-    <p class="text-muted">Σύνολο: <strong><?= $total ?></strong> ανενεργοί εθελοντές</p>
+    <p class="text-muted">Σύνολο: <strong><?= $total ?></strong> ανενεργοί μέλη</p>
     <div class="table-responsive">
         <table class="table table-hover align-middle">
             <thead>
                 <tr>
-                    <th>Εθελοντής</th>
+                    <th>Μέλος</th>
                     <th>Ρόλος</th>
                     <th class="text-center">Βάρδιες</th>
                     <?php if (getSetting('points_enabled', '1') === '1'): ?>
@@ -244,7 +244,7 @@ include __DIR__ . '/includes/header.php';
                                             <input type="hidden" name="action" value="delete_user">
                                             <input type="hidden" name="user_id" value="<?= $v['id'] ?>">
                                             <div class="modal-header bg-danger text-white">
-                                                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Διαγραφή Εθελοντή</h5>
+                                                <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-2"></i>Διαγραφή Μέλους</h5>
                                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                                             </div>
                                             <div class="modal-body">

@@ -1,13 +1,13 @@
 <?php
 /**
- * VolunteerOps - Θέσεις/Ρόλοι Εθελοντών
+ * VolunteerOps - Θέσεις/Ρόλοι Μελών
  * Admin CRUD for member organizational positions.
  */
 
 require_once __DIR__ . '/bootstrap.php';
 requirePermission('positions_manage');
 
-$pageTitle = 'Θέσεις Εθελοντών';
+$pageTitle = 'Θέσεις Μελών';
 
 // =============================================
 // Handle POST
@@ -112,7 +112,7 @@ include __DIR__ . '/includes/header.php';
                     <th>Θέση / Ρόλος</th>
                     <th style="width: 100px" class="text-center">Χρώμα</th>
                     <th>Εικονίδιο</th>
-                    <th style="width: 80px" class="text-center">Εθελοντές</th>
+                    <th style="width: 80px" class="text-center">Μέλη</th>
                     <th style="width: 90px" class="text-center">Κατάσταση</th>
                     <th style="width: 130px" class="text-center">Ενέργειες</th>
                 </tr>
@@ -172,7 +172,7 @@ include __DIR__ . '/includes/header.php';
                                     </button>
                                 <?php else: ?>
                                     <button class="btn btn-outline-secondary btn-sm" disabled
-                                            title="Δεν μπορεί να διαγραφεί — έχει <?= $pos['member_count'] ?> εθελοντές">
+                                            title="Δεν μπορεί να διαγραφεί — έχει <?= $pos['member_count'] ?> μέλη">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 <?php endif; ?>

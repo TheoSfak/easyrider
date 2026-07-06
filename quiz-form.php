@@ -147,7 +147,7 @@ include __DIR__ . '/includes/header.php';
                             <input class="form-check-input" type="checkbox" name="is_active" id="is_active" 
                                    <?= ($quiz['is_active'] ?? 1) ? 'checked' : '' ?>>
                             <label class="form-check-label" for="is_active">
-                                Ενεργό (ορατό σε εθελοντές)
+                                Ενεργό (ορατό σε μέλη)
                             </label>
                         </div>
                         

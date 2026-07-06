@@ -368,7 +368,7 @@ function installDemoData(PDO $pdo) {
     logDebug(count($departments) . ' τμήματα δημιουργήθηκαν', 'success');
     
     // Demo Members
-    logDebug('Δημιουργία demo εθελοντών...');
+    logDebug('Δημιουργία demo μελών...');
     $members = [
         ['name' => 'Μαρία Παπαδοπούλου', 'email' => 'maria.p@example.gr', 'phone' => '6971234567'],
         ['name' => 'Γιώργος Νικολάου', 'email' => 'giorgos.n@example.gr', 'phone' => '6972345678'],
@@ -387,7 +387,7 @@ function installDemoData(PDO $pdo) {
         $stmt->execute([$vol['name'], $vol['email'], $vol['phone'], $hashedPass]);
         $memberIds[] = $pdo->lastInsertId() ?: $pdo->query("SELECT id FROM users WHERE email = " . $pdo->quote($vol['email']))->fetchColumn();
     }
-    logDebug(count($members) . ' εθελοντές δημιουργήθηκαν (κωδικός: demo123)', 'success');
+    logDebug(count($members) . ' μέλη δημιουργήθηκαν (κωδικός: demo123)', 'success');
     
     // Demo Shift Leader
     $stmt = $pdo->prepare("INSERT INTO users (name, email, phone, password, role, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, 'SHIFT_LEADER', 1, NOW(), NOW()) ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id)");
@@ -400,7 +400,7 @@ function installDemoData(PDO $pdo) {
     $missions = [
         [
             'title' => 'Διανομή Τροφίμων - Κέντρο Πόλης',
-            'description' => 'Διανομή τροφίμων σε οικογένειες που έχουν ανάγκη στο κέντρο της πόλης. Θα χρειαστούμε εθελοντές για τη μεταφορά και διανομή.',
+            'description' => 'Διανομή τροφίμων σε οικογένειες που έχουν ανάγκη στο κέντρο της πόλης. Θα χρειαστούμε μέλη για τη μεταφορά και διανομή.',
             'location' => 'Πλατεία Συντάγματος, Αθήνα',
             'department_id' => $deptIds[1] ?? 1,
             'status' => 'OPEN',
@@ -409,7 +409,7 @@ function installDemoData(PDO $pdo) {
         ],
         [
             'title' => 'Καθαρισμός Παραλίας',
-            'description' => 'Εθελοντικός καθαρισμός της παραλίας από πλαστικά και σκουπίδια. Παρέχονται γάντια και σακούλες.',
+            'description' => 'Καθαρισμός της παραλίας από πλαστικά και σκουπίδια. Παρέχονται γάντια και σακούλες.',
             'location' => 'Παραλία Γλυφάδας',
             'department_id' => $deptIds[3] ?? 1,
             'status' => 'OPEN',
@@ -418,7 +418,7 @@ function installDemoData(PDO $pdo) {
         ],
         [
             'title' => 'Υποστήριξη Μαθητών - Κέντρο Μελέτης',
-            'description' => 'Βοήθεια σε μαθητές Γυμνασίου με τα μαθήματά τους. Χρειαζόμαστε εθελοντές με γνώσεις Μαθηματικών και Φυσικής.',
+            'description' => 'Βοήθεια σε μαθητές Γυμνασίου με τα μαθήματά τους. Χρειαζόμαστε μέλη με γνώσεις Μαθηματικών και Φυσικής.',
             'location' => 'Δημοτική Βιβλιοθήκη Αθηνών',
             'department_id' => $deptIds[2] ?? 1,
             'status' => 'DRAFT',
@@ -524,7 +524,7 @@ function installDemoData(PDO $pdo) {
         // Update user total points
         $pdo->exec("UPDATE users SET total_points = total_points + {$points} WHERE id = {$volId}");
     }
-    logDebug('Πόντοι εθελοντών ενημερώθηκαν', 'success');
+    logDebug('Πόντοι μελών ενημερώθηκαν', 'success');
     
     logDebug('=== DEMO DATA ΟΛΟΚΛΗΡΩΘΗΚΕ ===', 'success');
 }
@@ -836,7 +836,7 @@ if (!empty($_SESSION['debug_log'])) {
                             <div class="col-4">
                                 <div class="bg-white rounded p-2">
                                     <i class="bi bi-people text-primary demo-feature-icon"></i>
-                                    <div class="small"><strong>8</strong> Εθελοντές</div>
+                                    <div class="small"><strong>8</strong> Μέλη</div>
                                 </div>
                             </div>
                             <div class="col-4">
@@ -855,7 +855,7 @@ if (!empty($_SESSION['debug_log'])) {
                         
                         <div class="alert alert-info small mt-3 mb-0">
                             <i class="bi bi-info-circle me-1"></i>
-                            <strong>Κωδικός demo εθελοντών:</strong> demo123
+                            <strong>Κωδικός demo μελών:</strong> demo123
                         </div>
                     </div>
                     
@@ -904,7 +904,7 @@ if (!empty($_SESSION['debug_log'])) {
                         <div class="alert alert-success text-start">
                             <strong><i class="bi bi-box-seam me-1"></i>Demo Data εγκαταστάθηκε!</strong>
                             <ul class="mb-0 mt-2 small">
-                                <li>8 εθελοντές (κωδικός: <code>demo123</code>)</li>
+                                <li>8 μέλη (κωδικός: <code>demo123</code>)</li>
                                 <li>6 αποστολές σε διάφορες καταστάσεις</li>
                                 <li>Βάρδιες με αιτήσεις συμμετοχής</li>
                                 <li>5 τμήματα οργάνωσης</li>

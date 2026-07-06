@@ -58,7 +58,7 @@ if (isPost()) {
                 );
             }
             
-            setFlash('success', 'Το διαγώνισμα "' . h($exam['title']) . '" ξεκίνησε! Λήγει σε ' . $timeLimit . ' λεπτά. Ειδοποιήθηκαν ' . count($members) . ' εθελοντές.');
+            setFlash('success', 'Το διαγώνισμα "' . h($exam['title']) . '" ξεκίνησε! Λήγει σε ' . $timeLimit . ' λεπτά. Ειδοποιήθηκαν ' . count($members) . ' μέλη.');
         }
         redirect('exam-admin.php');
         
@@ -268,7 +268,7 @@ include __DIR__ . '/includes/header.php';
                                             $isLive = $exam['is_active'] && $examAvail['available'];
                                             ?>
                                             <?php if (!$isLive): ?>
-                                                <form method="post" class="d-inline" onsubmit="return confirm('Θα ξεκινήσει το διαγώνισμα ΤΩΡΑ και θα ειδοποιηθούν όλοι οι εθελοντές. Συνέχεια;');">
+                                                <form method="post" class="d-inline" onsubmit="return confirm('Θα ξεκινήσει το διαγώνισμα ΤΩΡΑ και θα ειδοποιηθούν όλα τα μέλη. Συνέχεια;');">
                                                     <?= csrfField() ?>
                                                     <input type="hidden" name="action" value="launch_exam">
                                                     <input type="hidden" name="id" value="<?= $exam['id'] ?>">

@@ -194,7 +194,7 @@ if (isPost()) {
                 }
                 
                 logAudit('reject', 'participation_requests', $prId, $reason);
-                setFlash('success', 'Η αίτηση απορρίφθηκε και ο εθελοντής ειδοποιήθηκε.');
+                setFlash('success', 'Η αίτηση απορρίφθηκε και το μέλος ειδοποιήθηκε.');
             }
             break;
 
@@ -234,7 +234,7 @@ if (isPost()) {
                     );
 
                     logAudit('reactivate', 'participation_requests', $prId, "Member: {$pr['member_id']}");
-                    setFlash('success', 'Ο εθελοντής επανενεργοποιήθηκε και ειδοποιήθηκε.');
+                    setFlash('success', 'Το μέλος επανενεργοποιήθηκε και ειδοποιήθηκε.');
                 }
             }
             break;
@@ -347,7 +347,7 @@ if (isPost()) {
                     
                     $msg = 'Η βάρδια διαγράφηκε.';
                     if (count($affectedParticipants) > 0) {
-                        $msg .= ' Ειδοποιήθηκαν ' . count($affectedParticipants) . ' εθελοντές.';
+                        $msg .= ' Ειδοποιήθηκαν ' . count($affectedParticipants) . ' μέλη.';
                     }
                     setFlash('success', $msg);
                 } catch (Exception $e) {
@@ -371,7 +371,7 @@ if (isPost()) {
                 
                 if ($exists && in_array($exists['status'], [PARTICIPATION_APPROVED, PARTICIPATION_PENDING])) {
                     // Already active — block
-                    setFlash('error', 'Ο εθελοντής έχει ήδη ενεργή αίτηση σε αυτή τη βάρδια.');
+                    setFlash('error', 'Το μέλος έχει ήδη ενεργή αίτηση σε αυτή τη βάρδια.');
                 } else {
                     if ($exists) {
                         // Reactivate existing rejected/canceled record
@@ -421,7 +421,7 @@ if (isPost()) {
                     );
                     
                     logAudit('add_member', 'participation_requests', null, "Shift $id, User $memberId");
-                    setFlash('success', 'Ο εθελοντής προστέθηκε στη βάρδια και ενημερώθηκε με email.');
+                    setFlash('success', 'Το μέλος προστέθηκε στη βάρδια και ενημερώθηκε με email.');
                 }
             }
             break;
@@ -432,7 +432,7 @@ if (isPost()) {
                 $notes = post('admin_notes');
                 
                 if (empty($memberIds) || !is_array($memberIds)) {
-                    setFlash('error', 'Δεν επιλέξατε κανέναν εθελοντή.');
+                    setFlash('error', 'Δεν επιλέξατε κανένα μέλος.');
                     redirect('shift-view.php?id=' . $id);
                 }
                 
@@ -507,13 +507,13 @@ if (isPost()) {
                 
                 if ($addedCount > 0) {
                     logAudit('mass_add_members', 'participation_requests', null, "Shift $id, Added $addedCount users");
-                    $msg = "Προστέθηκαν επιτυχώς $addedCount εθελοντές.";
+                    $msg = "Προστέθηκαν επιτυχώς $addedCount μέλη.";
                     if ($skippedCount > 0) {
                         $msg .= " Παραλείφθηκαν $skippedCount που ήταν ήδη στη βάρδια.";
                     }
                     setFlash('success', $msg);
                 } else {
-                    setFlash('warning', 'Δεν προστέθηκε κανένας εθελοντής (ήταν όλοι ήδη στη βάρδια).');
+                    setFlash('warning', 'Δεν προστέθηκε κανένας μέλος (ήταν όλοι ήδη στη βάρδια).');
                 }
             }
             break;
@@ -750,7 +750,7 @@ include __DIR__ . '/includes/header.php';
     <i class="bi bi-lock-fill fs-5"></i>
     <div>
         <strong>Η αποστολή είναι ολοκληρωμένη.</strong>
-        Δεν μπορείτε να προσθέσετε/αφαιρέσετε εθελοντές ή να αλλάξετε παρουσίες.
+        Δεν μπορείτε να προσθέσετε/αφαιρέσετε μέλη ή να αλλάξετε παρουσίες.
         <a href="mission-view.php?id=<?= $shift['mission_id'] ?>" class="alert-link">Αλλάξτε πρώτα την κατάσταση σε «Κλειστή»</a> για να κάνετε αλλαγές.
     </div>
 </div>
@@ -793,7 +793,7 @@ include __DIR__ . '/includes/header.php';
                     <p><strong><i class="bi bi-geo-alt me-1"></i>Τοποθεσία:</strong> <?= h($shift['location']) ?></p>
                 <?php endif; ?>
                 
-                <p><strong><i class="bi bi-people me-1"></i>Εθελοντές:</strong> 
+                <p><strong><i class="bi bi-people me-1"></i>Μέλη:</strong> 
                     <?= $approvedCount ?> / <?= $shift['max_members'] ?>
                     (ελάχ. <?= $shift['min_members'] ?>)
                 </p>
@@ -811,7 +811,7 @@ include __DIR__ . '/includes/header.php';
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">
-                    <i class="bi bi-people me-1"></i>Εθελοντές
+                    <i class="bi bi-people me-1"></i>Μέλη
                     <?php if ($pendingCount > 0): ?>
                         <span class="badge bg-warning"><?= $pendingCount ?> εκκρεμεί</span>
                     <?php endif; ?>
@@ -1156,11 +1156,11 @@ include __DIR__ . '/includes/header.php';
         <?php if ($canManage): ?>
             <div class="card mb-4">
                 <div class="card-header">
-                    <h5 class="mb-0"><i class="bi bi-person-plus me-1"></i>Προσθήκη Εθελοντών</h5>
+                    <h5 class="mb-0"><i class="bi bi-person-plus me-1"></i>Προσθήκη Μελών</h5>
                 </div>
                 <div class="card-body">
                     <?php if (empty($availableMembers)): ?>
-                        <p class="text-muted mb-0">Δεν υπάρχουν διαθέσιμοι εθελοντές.</p>
+                        <p class="text-muted mb-0">Δεν υπάρχουν διαθέσιμα μέλη.</p>
                     <?php elseif ($approvedCount >= $shift['max_members']): ?>
                         <p class="text-warning mb-0"><i class="bi bi-exclamation-triangle me-1"></i>Η βάρδια είναι πλήρης.</p>
                     <?php else: ?>
@@ -1200,7 +1200,7 @@ include __DIR__ . '/includes/header.php';
                 <input type="hidden" name="action" value="add_member">
                 
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-person-plus me-1"></i>Προσθήκη Εθελοντή</h5>
+                    <h5 class="modal-title"><i class="bi bi-person-plus me-1"></i>Προσθήκη Μέλους</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -1221,7 +1221,7 @@ include __DIR__ . '/includes/header.php';
                     </div>
                     <div class="alert alert-info mb-0">
                         <i class="bi bi-info-circle me-1"></i>
-                        Ο εθελοντής θα προστεθεί απευθείας ως <strong>ΕΓΚΕΚΡΙΜΕΝΟΣ</strong>.
+                        Το μέλος θα προστεθεί απευθείας ως <strong>ΕΓΚΕΚΡΙΜΕΝΟ</strong>.
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1242,7 +1242,7 @@ include __DIR__ . '/includes/header.php';
                 <input type="hidden" name="action" value="mass_add_members">
                 
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="bi bi-people me-1"></i>Μαζική Προσθήκη Εθελοντών</h5>
+                    <h5 class="modal-title"><i class="bi bi-people me-1"></i>Μαζική Προσθήκη Μελών</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -1278,7 +1278,7 @@ include __DIR__ . '/includes/header.php';
                     </div>
                     <div class="alert alert-info mb-0">
                         <i class="bi bi-info-circle me-1"></i>
-                        Οι εθελοντές θα προστεθούν απευθείας ως <strong>ΕΓΚΕΚΡΙΜΕΝΟΙ</strong> και θα λάβουν ειδοποίηση.
+                        Τα μέλη θα προστεθούν απευθείας ως <strong>ΕΓΚΕΚΡΙΜΕΝΑ</strong> και θα λάβουν ειδοποίηση.
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1385,14 +1385,14 @@ include __DIR__ . '/includes/header.php';
                 <input type="hidden" name="action" value="reactivate">
                 <input type="hidden" name="participation_id" id="reactivateParticipationId">
                 <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title"><i class="bi bi-arrow-clockwise me-1"></i>Επανενεργοποίηση Εθελοντή</h5>
+                    <h5 class="modal-title"><i class="bi bi-arrow-clockwise me-1"></i>Επανενεργοποίηση Μέλους</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <p>Θέλετε να επανενεργοποιήσετε τη συμμετοχή του <strong id="reactivateMemberName"></strong>;</p>
                     <div class="alert alert-info mb-0">
                         <i class="bi bi-info-circle me-1"></i>
-                        Η αίτηση θα οριστεί ως <strong>ΕΓΚΕΚΡΙΜΕΝΗ</strong> και ο εθελοντής θα ειδοποιηθεί με email.
+                        Η αίτηση θα οριστεί ως <strong>ΕΓΚΕΚΡΙΜΕΝΗ</strong> και το μέλος θα ειδοποιηθεί με email.
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1449,7 +1449,7 @@ $activeParticipants = array_filter($participants, function($p) {
                         </ul>
                         <p class="text-muted mb-0">
                             <i class="bi bi-bell me-1"></i>
-                            Οι εθελοντές θα ειδοποιηθούν αυτόματα για την ακύρωση.
+                            Τα μέλη θα ειδοποιηθούν αυτόματα για την ακύρωση.
                         </p>
                     <?php else: ?>
                         <p class="mb-0">Η βάρδια δεν έχει ενεργές αιτήσεις συμμετοχής.</p>

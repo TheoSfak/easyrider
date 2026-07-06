@@ -1,7 +1,7 @@
 <?php
 /**
  * VolunteerOps - Shift Swap / Cover Request
- * Εθελοντής ζητά αντικαταστάτη για εγκεκριμένη βάρδιά του
+ * Μέλος ζητά αντικαταστάτη για εγκεκριμένη βάρδιά του
  */
 
 require_once __DIR__ . '/bootstrap.php';
@@ -55,7 +55,7 @@ if (isPost()) {
     $message       = trim(post('message', ''));
 
     if (!$toMemberId) {
-        setFlash('error', 'Παρακαλώ επιλέξτε εθελοντή.');
+        setFlash('error', 'Παρακαλώ επιλέξτε μέλος.');
         redirect('shift-swap.php?participation_id=' . $prId);
     }
 
@@ -65,7 +65,7 @@ if (isPost()) {
     );
 
     if (!$replacement) {
-        setFlash('error', 'Μη έγκυρος εθελοντής.');
+        setFlash('error', 'Μη έγκυρο μέλος.');
         redirect('shift-swap.php?participation_id=' . $prId);
     }
 
@@ -191,26 +191,26 @@ include __DIR__ . '/includes/header.php';
         <?php if (empty($eligibleMembers)): ?>
             <div class="alert alert-warning">
                 <i class="bi bi-exclamation-triangle me-1"></i>
-                Δεν υπάρχουν διαθέσιμοι εθελοντές για αντικατάσταση σε αυτή τη βάρδια.
+                Δεν υπάρχουν διαθέσιμα μέλη για αντικατάσταση σε αυτή τη βάρδια.
             </div>
         <?php else: ?>
         <div class="alert alert-info d-flex gap-2">
             <i class="bi bi-info-circle-fill flex-shrink-0 mt-1"></i>
             <div>
-                Επιλέξτε έναν εθελοντή και στείλτε του αίτημα. Αν αποδεχτεί, ο διαχειριστής θα εγκρίνει τελικά την αλλαγή.
+                Επιλέξτε ένα μέλος και στείλτε του αίτημα. Αν αποδεχτεί, ο διαχειριστής θα εγκρίνει τελικά την αλλαγή.
             </div>
         </div>
         <form method="post">
             <?= csrfField() ?>
             <div class="mb-3">
-                <label for="to_member_id" class="form-label fw-semibold">Εθελοντής αντικατάστασης <span class="text-danger">*</span></label>
+                <label for="to_member_id" class="form-label fw-semibold">Μέλος αντικατάστασης <span class="text-danger">*</span></label>
                 <select name="to_member_id" id="to_member_id" class="form-select" required>
-                    <option value="">— Επιλέξτε εθελοντή —</option>
+                    <option value="">— Επιλέξτε μέλος —</option>
                     <?php foreach ($eligibleMembers as $v): ?>
                         <option value="<?= $v['id'] ?>"><?= h($v['name']) ?></option>
                     <?php endforeach; ?>
                 </select>
-                <div class="form-text">Εμφανίζονται μόνο ενεργοί εθελοντές που δεν συμμετέχουν ήδη στη βάρδια.</div>
+                <div class="form-text">Εμφανίζονται μόνο ενεργοί μέλη που δεν συμμετέχουν ήδη στη βάρδια.</div>
             </div>
             <div class="mb-4">
                 <label for="message" class="form-label fw-semibold">Μήνυμα <span class="text-muted">(προαιρετικό)</span></label>

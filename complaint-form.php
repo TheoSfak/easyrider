@@ -1,7 +1,7 @@
 <?php
 /**
  * VolunteerOps - Complaint Form
- * Φόρμα υποβολής παραπόνου εθελοντή
+ * Φόρμα υποβολής παραπόνου μέλους
  */
 
 require_once __DIR__ . '/bootstrap.php';

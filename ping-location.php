@@ -1,7 +1,7 @@
 <?php
 /**
  * VolunteerOps - Member GPS Ping Endpoint
- * Εθελοντής στέλνει θέση GPS κατά τη διάρκεια βάρδιας.
+ * Το μέλος στέλνει θέση GPS κατά τη διάρκεια βάρδιας.
  * AJAX POST only.
  */
 

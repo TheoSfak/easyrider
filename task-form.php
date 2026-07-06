@@ -282,17 +282,17 @@ include __DIR__ . '/includes/header.php';
                     </div>
                     
                     <div class="mb-4">
-                        <label class="form-label">Ανάθεση σε Εθελοντές</label>
+                        <label class="form-label">Ανάθεση σε Μέλη</label>
                         <div class="input-group">
                             <input type="text" class="form-control" id="selectedMembersDisplay" 
-                                   placeholder="Πατήστε για επιλογή εθελοντών..." readonly 
+                                   placeholder="Πατήστε για επιλογή μελών..." readonly 
                                    style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#memberModal">
                             <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#memberModal">
                                 <i class="bi bi-search"></i>
                             </button>
                         </div>
                         <div id="selectedMembersList" class="mt-2"></div>
-                        <small class="text-muted">Αναζητήστε και επιλέξτε εθελοντές - Μπορείτε να επιλέξετε πολλαπλούς</small>
+                        <small class="text-muted">Αναζητήστε και επιλέξτε μέλη - Μπορείτε να επιλέξετε πολλαπλούς</small>
                     </div>
                     
                     <div class="mb-4">
@@ -300,7 +300,7 @@ include __DIR__ . '/includes/header.php';
                         <select class="form-select" name="responsible_user_id" id="responsibleUser">
                             <option value="">Χωρίς υπεύθυνο</option>
                         </select>
-                        <small class="text-muted">Επιλέξτε έναν υπεύθυνο από τους ανατεθειμένους εθελοντές</small>
+                        <small class="text-muted">Επιλέξτε έναν υπεύθυνο από τα ανατεθειμένα μέλη</small>
                     </div>
                     
                     <div class="d-flex gap-2">
@@ -323,12 +323,12 @@ include __DIR__ . '/includes/header.php';
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Επιλογή Εθελοντών</h5>
+                <h5 class="modal-title">Επιλογή Μελών</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <input type="text" class="form-control" id="memberSearch" placeholder="Αναζήτηση εθελοντή...">
+                    <input type="text" class="form-control" id="memberSearch" placeholder="Αναζήτηση μέλους...">
                 </div>
                 <div class="list-group" id="memberList" style="max-height: 400px; overflow-y: auto;">
                     <?php foreach ($allUsers as $u): ?>
@@ -399,10 +399,10 @@ function updateSelectedDisplay() {
     const checked = document.querySelectorAll('.member-checkbox:checked');
     
     if (checked.length === 0) {
-        display.value = 'Πατήστε για επιλογή εθελοντών...';
+        display.value = 'Πατήστε για επιλογή μελών...';
         list.innerHTML = '';
     } else {
-        display.value = checked.length + ' εθελοντής/ές επιλεγμένος/οι';
+        display.value = checked.length + ' μέλος/ές επιλεγμένος/οι';
         list.innerHTML = '';
         
         checked.forEach(cb => {

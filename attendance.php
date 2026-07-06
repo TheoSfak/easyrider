@@ -276,9 +276,9 @@ if (isPost()) {
         }
 
         if ($pointsAwarded > 0) {
-            setFlash('success', "Απονεμήθηκαν πόντοι σε $pointsAwarded εθελοντές.");
+            setFlash('success', "Απονεμήθηκαν πόντοι σε $pointsAwarded μέλη.");
         } else {
-            setFlash('info', 'Δεν υπάρχουν εθελοντές για απονομή πόντων.');
+            setFlash('info', 'Δεν υπάρχουν μέλη για απονομή πόντων.');
         }
         redirect('attendance.php?mission_id=' . $missionId);
     }
@@ -396,7 +396,7 @@ include __DIR__ . '/includes/header.php';
                                                 <input type="checkbox" class="form-check-input" 
                                                        onchange="toggleAll(this, <?= $shift['id'] ?>)">
                                             </th>
-                                            <th>Εθελοντής</th>
+                                            <th>Μέλος</th>
                                             <th>Επικοινωνία</th>
                                             <th>Παρουσία</th>
                                             <?php if (getSetting('points_enabled', '1') === '1'): ?>

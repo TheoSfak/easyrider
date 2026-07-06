@@ -114,9 +114,9 @@ function validateMemberData(array $row, int $rowNumber): array {
         $errors[] = "Γραμμή $rowNumber: Πεδίο 'Ρόλος' — μη έγκυρη τιμή '$role'. Επιτρεπτοί: " . implode(', ', $validRoles);
     }
 
-    $vtype = _col($row, 'Τύπος Εθελοντή');
+    $vtype = _col($row, 'Τύπος Μέλους');
     if ($vtype !== null && $vtype !== '0' && !in_array($vtype, $validTypes)) {
-        $errors[] = "Γραμμή $rowNumber: Πεδίο 'Τύπος Εθελοντή' — μη έγκυρη τιμή '$vtype'. Επιτρεπτοί: " . implode(', ', $validTypes);
+        $errors[] = "Γραμμή $rowNumber: Πεδίο 'Τύπος Μέλους' — μη έγκυρη τιμή '$vtype'. Επιτρεπτοί: " . implode(', ', $validTypes);
     }
 
     return $errors;
@@ -162,7 +162,7 @@ function importMembersFromCsv(array $rows, bool $dryRun = false): array {
         if ($phone !== null) $phone = preg_replace('/[\s\-\.]+/', '', $phone);
         $deptId           = (int) trim($row['Τμήμα ID']);
         $role             = trim($row['Ρόλος']);
-        $rawType          = _col($row, 'Τύπος Εθελοντή');
+        $rawType          = _col($row, 'Τύπος Μέλους');
         $memberType    = ($rawType && $rawType !== '0') ? $rawType : 'VOLUNTEER';
         $idCard           = _col($row, 'Ταυτότητα');
         $afm              = _col($row, 'ΑΦΜ');

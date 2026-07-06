@@ -504,7 +504,7 @@ class VolunteerOpsFullTester {
         
         // LIST
         $response = $this->httpGet('/members.php');
-        if ($response['success'] && strpos($response['body'], 'Εθελοντές') !== false) {
+        if ($response['success'] && strpos($response['body'], 'Μέλη') !== false) {
             $this->pass('Members list loads');
         } else {
             $this->fail('Members list loads');

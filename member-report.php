@@ -24,7 +24,7 @@ $member = dbFetchOne(
     [$id]
 );
 if (!$member) {
-    setFlash('error', 'Ο εθελοντής δεν βρέθηκε.');
+    setFlash('error', 'Το μέλος δεν βρέθηκε.');
     redirect('members.php');
 }
 
@@ -94,7 +94,7 @@ $greekMonths = [
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Αναφορά Εθελοντή — <?= h($member['name']) ?></title>
+    <title>Αναφορά Μέλους — <?= h($member['name']) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -356,7 +356,7 @@ $greekMonths = [
         <!-- ── Footer ── -->
         <div class="mt-5 pt-3 border-top text-muted" style="font-size:11px;">
             <div class="d-flex justify-content-between">
-                <span><?= h($appName) ?> &bull; Σύστημα Διαχείρισης Εθελοντών</span>
+                <span><?= h($appName) ?> &bull; Σύστημα Διαχείρισης Μελών</span>
                 <span>Αυτόματη αναφορά &bull; <?= $printDate ?></span>
             </div>
         </div>

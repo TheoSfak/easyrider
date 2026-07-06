@@ -290,7 +290,7 @@ include __DIR__ . '/includes/header.php';
     <div style="position:relative;z-index:1;">
         <p class="cal-hero-sub mb-1"><i class="bi bi-calendar3 me-1"></i>Ημερολόγιο</p>
         <h1 class="cal-hero-title">Βάρδιες Αποστολών</h1>
-        <p class="cal-hero-sub">Εποπτεία και διαχείριση βαρδιών εθελοντισμού</p>
+        <p class="cal-hero-sub">Εποπτεία και διαχείριση βαρδιών μελών</p>
     </div>
     <div class="d-none d-md-flex align-items-center gap-2" style="position:relative;z-index:1;">
         <a href="shifts.php" class="btn btn-sm btn-light fw-semibold">
@@ -463,8 +463,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const barColor = shiftColor(ep);
 
             const countStr = ep.max_members > 0
-                ? ep.approved_count + '/' + ep.max_members + ' εθελοντές'
-                : ep.approved_count + ' εθελοντές';
+                ? ep.approved_count + '/' + ep.max_members + ' μέλη'
+                : ep.approved_count + ' μέλη';
             const pendStr  = ep.pending_count > 0
                 ? ' <span style="color:#cc6c0a;font-size:0.75rem;">(+' + ep.pending_count + ' εκκρεμείς)</span>' : '';
             const typeRow  = ep.type_name
@@ -482,7 +482,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const gcalUrl = 'https://calendar.google.com/calendar/render?action=TEMPLATE'
                 + '&text='     + encodeURIComponent(ep.mission_title + ' — Βάρδια #' + ep.shift_id)
                 + '&dates='    + gs + '/' + ge
-                + '&details='  + encodeURIComponent('Βάρδια εθελοντισμού - ' + ep.mission_title)
+                + '&details='  + encodeURIComponent('Βάρδια Λέσχης - ' + ep.mission_title)
                 + '&location=' + encodeURIComponent(ep.location || '');
 
             const viewLink = info.event.url

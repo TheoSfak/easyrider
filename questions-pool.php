@@ -554,7 +554,7 @@ include __DIR__ . '/includes/header.php';
                     
                     <div id="tfOptionsAdd" style="display:none;">
                         <div class="alert alert-info mb-3">
-                            <i class="bi bi-info-circle"></i> <strong>Σωστό/Λάθος:</strong> Ο εθελοντής θα επιλέξει αν η πρόταση είναι σωστή ή λανθασμένη.
+                            <i class="bi bi-info-circle"></i> <strong>Σωστό/Λάθος:</strong> Το μέλος θα επιλέξει αν η πρόταση είναι σωστή ή λανθασμένη.
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Σωστή Απάντηση *</label>

@@ -275,9 +275,9 @@ include __DIR__ . '/includes/header.php';
 
                         <?php if (isAdmin() && !empty($members)): ?>
                         <div class="mb-3">
-                            <label class="form-label">Εθελοντής *</label>
+                            <label class="form-label">Μέλος *</label>
                             <select class="form-select" name="user_id" required>
-                                <option value="">-- Επιλέξτε εθελοντή --</option>
+                                <option value="">-- Επιλέξτε μέλος --</option>
                                 <?php foreach ($members as $vol): ?>
                                     <option value="<?= $vol['id'] ?>" <?= $vol['id'] == getCurrentUserId() ? 'selected' : '' ?>>
                                         <?= h($vol['name']) ?> (<?= h($vol['email']) ?>)
@@ -361,7 +361,7 @@ include __DIR__ . '/includes/header.php';
                             </form>
                         <?php else: ?>
                             <div class="alert alert-danger mt-3">
-                                Το υλικό είναι χρεωμένο σε άλλον εθελοντή. Δεν έχετε δικαίωμα επιστροφής.
+                                Το υλικό είναι χρεωμένο σε άλλο μέλος. Δεν έχετε δικαίωμα επιστροφής.
                             </div>
                         <?php endif; ?>
                     <?php endif; ?>
@@ -385,9 +385,9 @@ include __DIR__ . '/includes/header.php';
 
                         <?php if (isAdmin() && !empty($members)): ?>
                         <div class="mb-3">
-                            <label class="form-label">Εθελοντής *</label>
+                            <label class="form-label">Μέλος *</label>
                             <select class="form-select" name="user_id" required>
-                                <option value="">-- Επιλέξτε εθελοντή --</option>
+                                <option value="">-- Επιλέξτε μέλος --</option>
                                 <?php foreach ($members as $vol): ?>
                                     <option value="<?= $vol['id'] ?>" <?= $vol['id'] == getCurrentUserId() ? 'selected' : '' ?>>
                                         <?= h($vol['name']) ?> (<?= h($vol['email']) ?>)
@@ -398,7 +398,7 @@ include __DIR__ . '/includes/header.php';
                         <?php else: ?>
                             <input type="hidden" name="user_id" value="<?= getCurrentUserId() ?>">
                             <div class="mb-3">
-                                <label class="form-label">Εθελοντής</label>
+                                <label class="form-label">Μέλος</label>
                                 <input type="text" class="form-control" value="<?= h($user['name']) ?>" disabled>
                             </div>
                         <?php endif; ?>

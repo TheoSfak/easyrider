@@ -848,7 +848,7 @@ if (isPost()) {
                     
                     $message = '';
                     if ($addedCount > 0) {
-                        $message = "Ο εθελοντής προστέθηκε σε {$addedCount} βάρδια/ες.";
+                        $message = "Το μέλος προστέθηκε σε {$addedCount} βάρδια/ες.";
                     }
                     if ($skippedCount > 0) {
                         $message .= " {$skippedCount} βάρδια/ες παραλείφθηκαν (ήδη συμμετέχει).";
@@ -945,7 +945,7 @@ include __DIR__ . '/includes/header.php';
     <i class="bi bi-lock-fill fs-5"></i>
     <div>
         <strong>Η αποστολή είναι ολοκληρωμένη.</strong>
-        Δεν μπορείτε να προσθέσετε εθελοντές ή να αλλάξετε παρουσίες. Αλλάξτε την κατάσταση σε «Κλειστή» για αλλαγές.
+        Δεν μπορείτε να προσθέσετε μέλη ή να αλλάξετε παρουσίες. Αλλάξτε την κατάσταση σε «Κλειστή» για αλλαγές.
     </div>
 </div>
 <?php endif; ?>
@@ -2029,7 +2029,7 @@ include __DIR__ . '/includes/header.php';
                 <div class="modal-body">
                     <div class="alert alert-warning">
                         <i class="bi bi-exclamation-triangle me-1"></i>
-                        Η ακύρωση θα ειδοποιήσει όλους τους εγγεγραμμένους εθελοντές.
+                        Η ακύρωση θα ειδοποιήσει όλα τα εγγεγραμμένα μέλη.
                     </div>
                     <div class="mb-3">
                         <label for="cancellation_reason" class="form-label">Λόγος Ακύρωσης</label>
@@ -2097,7 +2097,7 @@ if (!empty($shiftIds)) {
                         </ul>
                         <p class="text-muted mb-0">
                             <i class="bi bi-bell me-1"></i>
-                            Οι εθελοντές θα ειδοποιηθούν αυτόματα για την ακύρωση.
+                            Τα μέλη θα ειδοποιηθούν αυτόματα για την ακύρωση.
                         </p>
                     <?php else: ?>
                         <p>Η αποστολή δεν έχει ενεργές αιτήσεις συμμετοχής.</p>
@@ -2236,7 +2236,7 @@ document.querySelectorAll('.apply-btn').forEach(function(btn) {
                                             <small class="text-muted">
                                                 <?= formatDateTime($shift['start_time'], 'H:i') ?> - 
                                                 <?= formatDateTime($shift['end_time'], 'H:i') ?>
-                                                | <?= $shift['approved_count'] ?>/<?= $shift['max_members'] ?> εθελοντές
+                                                | <?= $shift['approved_count'] ?>/<?= $shift['max_members'] ?> μέλη
                                             </small>
                                         </div>
                                     </label>
@@ -2253,7 +2253,7 @@ document.querySelectorAll('.apply-btn').forEach(function(btn) {
                     
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle me-1"></i>
-                        Ο εθελοντής θα προστεθεί αυτόματα ως <strong>εγκεκριμένος</strong> σε όλες τις επιλεγμένες βάρδιες και θα λάβει ειδοποιήσεις.
+                        Το μέλος θα προστεθεί αυτόματα ως <strong>εγκεκριμένο</strong> σε όλες τις επιλεγμένες βάρδιες και θα λάβει ειδοποιήσεις.
                     </div>
                 </div>
                 <div class="modal-footer">

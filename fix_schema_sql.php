@@ -22,7 +22,7 @@ $templates = [
     </div>
     <div style="padding: 30px; background: #fff;">
         <h2>Καλώς ήρθατε, {{user_name}}!</h2>
-        <p>Ευχαριστούμε για την εγγραφή σας στην πλατφόρμα εθελοντισμού.</p>
+        <p>Ευχαριστούμε για την εγγραφή σας στην πλατφόρμα της λέσχης.</p>
         <p>Μπορείτε τώρα να:</p>
         <ul>
             <li>Δείτε τις διαθέσιμες αποστολές</li>
@@ -34,7 +34,7 @@ $templates = [
         </p>
     </div>
     <div style="padding: 15px; background: #f8f9fa; text-align: center; font-size: 12px; color: #666;">
-        {{app_name}} - Σύστημα Διαχείρισης Εθελοντών
+        {{app_name}} - Σύστημα Διαχείρισης Μελών
     </div>
 </div>',
         'description' => 'Αποστέλλεται σε νέους χρήστες μετά την εγγραφή',
@@ -62,7 +62,7 @@ $templates = [
         {{app_name}}
     </div>
 </div>',
-        'description' => 'Αποστέλλεται όταν εγκρίνεται η συμμετοχή εθελοντή σε βάρδια',
+        'description' => 'Αποστέλλεται όταν εγκρίνεται η συμμετοχή μέλους σε βάρδια',
         'available_variables' => '{{app_name}}, {{user_name}}, {{mission_title}}, {{shift_date}}, {{shift_time}}, {{location}}'
     ],
     [
@@ -87,7 +87,7 @@ $templates = [
         {{app_name}}
     </div>
 </div>',
-        'description' => 'Αποστέλλεται όταν απορρίπτεται η συμμετοχή εθελοντή',
+        'description' => 'Αποστέλλεται όταν απορρίπτεται η συμμετοχή μέλους',
         'available_variables' => '{{app_name}}, {{user_name}}, {{mission_title}}, {{shift_date}}, {{shift_time}}, {{rejection_reason}}'
     ]
 ];

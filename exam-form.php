@@ -143,7 +143,7 @@ include __DIR__ . '/includes/header.php';
                             <label class="form-label">Μέγιστος Αριθμός Προσπαθειών *</label>
                             <input type="number" name="max_attempts" class="form-control" min="1" max="10"
                                    value="<?= h($exam['max_attempts'] ?? 1) ?>" required>
-                            <small class="text-muted">Πόσες φορές μπορεί να δώσει ο εθελοντής αυτό το διαγώνισμα (1 = μία μόνο φορά)</small>
+                            <small class="text-muted">Πόσες φορές μπορεί να δώσει το μέλος αυτό το διαγώνισμα (1 = μία μόνο φορά)</small>
                         </div>
                         
                         <div class="form-check mb-3">
@@ -159,7 +159,7 @@ include __DIR__ . '/includes/header.php';
                             <input class="form-check-input" type="checkbox" name="is_active" id="is_active" 
                                    <?= ($exam['is_active'] ?? 1) ? 'checked' : '' ?>>
                             <label class="form-check-label" for="is_active">
-                                Ενεργό (ορατό σε εθελοντές)
+                                Ενεργό (ορατό σε μέλη)
                             </label>
                         </div>
                         

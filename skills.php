@@ -159,7 +159,7 @@ include __DIR__ . '/includes/header.php';
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h1 class="h3 mb-1"><i class="bi bi-stars me-2"></i>Δεξιότητες</h1>
-        <p class="text-muted mb-0">Διαχείριση κατηγοριών και δεξιοτήτων εθελοντών</p>
+        <p class="text-muted mb-0">Διαχείριση κατηγοριών και δεξιοτήτων μελών</p>
     </div>
     <?php if (isAdmin()): ?>
     <div class="d-flex gap-2">
@@ -236,7 +236,7 @@ include __DIR__ . '/includes/header.php';
         <div class="fw-bold fs-5"><?= count($categories) ?></div>
     </div>
     <div class="card border-0 bg-info bg-opacity-10 px-3 py-2">
-        <small class="text-muted">Αναθέσεις σε εθελοντές</small>
+        <small class="text-muted">Αναθέσεις σε μέλη</small>
         <div class="fw-bold fs-5"><?= array_sum(array_column($skills, 'member_count')) ?></div>
     </div>
 </div>
@@ -253,7 +253,7 @@ include __DIR__ . '/includes/header.php';
             <thead class="table-light">
                 <tr>
                     <th>Όνομα Δεξιότητας</th>
-                    <th class="text-center">Εθελοντές</th>
+                    <th class="text-center">Μέλη</th>
                     <?php if (isAdmin()): ?><th class="text-end pe-3">Ενέργειες</th><?php endif; ?>
                 </tr>
             </thead>
@@ -483,10 +483,10 @@ include __DIR__ . '/includes/header.php';
                     <?php if ($sk['member_count'] > 0): ?>
                     <div class="alert alert-warning">
                         <i class="bi bi-exclamation-triangle me-1"></i>
-                        <strong><?= $sk['member_count'] ?> εθελοντές</strong> έχουν αυτή τη δεξιότητα. Η ανάθεσή τους θα αφαιρεθεί.
+                        <strong><?= $sk['member_count'] ?> μέλη</strong> έχουν αυτή τη δεξιότητα. Η ανάθεσή τους θα αφαιρεθεί.
                     </div>
                     <?php else: ?>
-                    <p class="text-muted">Δεν έχει ανατεθεί σε κανέναν εθελοντή.</p>
+                    <p class="text-muted">Δεν έχει ανατεθεί σε κανένα μέλος.</p>
                     <?php endif; ?>
                 </div>
                 <div class="modal-footer">

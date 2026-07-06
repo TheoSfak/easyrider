@@ -1,7 +1,7 @@
 <?php
 /**
  * VolunteerOps - My Complaints
- * Τα παράπονα του εθελοντή
+ * Τα παράπονα του μέλους
  */
 
 require_once __DIR__ . '/bootstrap.php';

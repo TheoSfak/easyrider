@@ -473,7 +473,7 @@ include __DIR__ . '/includes/header.php';
                 <table class="table table-hover align-middle">
                     <thead>
                         <tr>
-                            <th>Εθελοντής</th>
+                            <th>Μέλος</th>
                             <th>Χρονιά</th>
                             <th>Τύπος</th>
                             <th>Τίτλος</th>

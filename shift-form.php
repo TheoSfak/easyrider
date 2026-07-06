@@ -48,8 +48,8 @@ if (isPost()) {
         ['validateRequired', $startHour, 'Ώρα έναρξης'],
         ['validateRequired', $endDate, 'Ημερομηνία λήξης'],
         ['validateRequired', $endHour, 'Ώρα λήξης'],
-        ['validateNumber', $maxMembers, 1, 100, 'Μέγιστος αριθμός εθελοντών'],
-        ['validateNumber', $minMembers, 1, 100, 'Ελάχιστος αριθμός εθελοντών'],
+        ['validateNumber', $maxMembers, 1, 100, 'Μέγιστος αριθμός μελών'],
+        ['validateNumber', $minMembers, 1, 100, 'Ελάχιστος αριθμός μελών'],
     ]);
     
     if (empty($errors)) {
@@ -172,12 +172,12 @@ include __DIR__ . '/includes/header.php';
             
             <div class="row">
                 <div class="col-md-3 mb-3">
-                    <label class="form-label">Ελάχ. Εθελοντές</label>
+                    <label class="form-label">Ελάχ. Μέλη</label>
                     <input type="number" class="form-control" name="min_members" 
                            value="<?= $form['min_members'] ?>" min="1" required>
                 </div>
                 <div class="col-md-3 mb-3">
-                    <label class="form-label">Μέγ. Εθελοντές</label>
+                    <label class="form-label">Μέγ. Μέλη</label>
                     <input type="number" class="form-control" name="max_members" 
                            value="<?= $form['max_members'] ?>" min="1" required>
                 </div>

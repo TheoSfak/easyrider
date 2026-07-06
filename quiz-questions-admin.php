@@ -233,7 +233,7 @@ include __DIR__ . '/includes/header.php';
                     <!-- Multiple Choice Options -->
                     <div id="mcOptions" style="display: none;">
                         <div class="alert alert-info mb-3">
-                            <i class="bi bi-info-circle"></i> <strong>Πολλαπλή Επιλογή:</strong> Συμπληρώστε 4 πιθανές απαντήσεις. Ο εθελοντής θα επιλέξει μία.
+                            <i class="bi bi-info-circle"></i> <strong>Πολλαπλή Επιλογή:</strong> Συμπληρώστε 4 πιθανές απαντήσεις. Το μέλος θα επιλέξει μία.
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Επιλογή A *</label>
@@ -266,7 +266,7 @@ include __DIR__ . '/includes/header.php';
                     <!-- True/False Options -->
                     <div id="tfOptions" style="display: none;">
                         <div class="alert alert-info mb-3">
-                            <i class="bi bi-info-circle"></i> <strong>Σωστό/Λάθος:</strong> Ο εθελοντής θα επιλέξει αν η πρόταση είναι σωστή ή λανθασμένη.
+                            <i class="bi bi-info-circle"></i> <strong>Σωστό/Λάθος:</strong> Το μέλος θα επιλέξει αν η πρόταση είναι σωστή ή λανθασμένη.
                         </div>
                         <div class="mb-3">
                             <label class="form-label">Σωστή Απάντηση *</label>

@@ -11,7 +11,7 @@ redirect('dashboard.php');
 
 requirePermission('certificates_manage');
 
-$pageTitle = 'Πιστοποιητικά Εθελοντών';
+$pageTitle = 'Πιστοποιητικά Μελών';
 
 // ─── Filters ───────────────────────────────────────────────────────────────────
 $filterStatus = get('status', '');
@@ -41,7 +41,7 @@ if (get('export') === 'csv') {
     header('Content-Disposition: attachment; filename="certificates_' . date('Y-m-d') . '.csv"');
     $out = fopen('php://output', 'w');
     fprintf($out, chr(0xEF) . chr(0xBB) . chr(0xBF)); // BOM for UTF-8
-    fputcsv($out, ['Εθελοντής', 'Email', 'Τύπος', 'Ημ. Έκδοσης', 'Ημ. Λήξης', 'Φορέας', 'Αρ. Πιστοποιητικού', 'Κατάσταση']);
+    fputcsv($out, ['Μέλος', 'Email', 'Τύπος', 'Ημ. Έκδοσης', 'Ημ. Λήξης', 'Φορέας', 'Αρ. Πιστοποιητικού', 'Κατάσταση']);
     foreach ($csvRows as $row) {
         fputcsv($out, [
             $row['member_name'], $row['email'], $row['certificate_type'],
@@ -154,7 +154,7 @@ include __DIR__ . '/includes/header.php';
 <!-- Page Header -->
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h1 class="h3 mb-1"><i class="bi bi-award me-2"></i>Πιστοποιητικά Εθελοντών</h1>
+        <h1 class="h3 mb-1"><i class="bi bi-award me-2"></i>Πιστοποιητικά Μελών</h1>
         <p class="text-muted mb-0">Επισκόπηση & παρακολούθηση πιστοποιητικών</p>
     </div>
     <div class="d-flex gap-2">
@@ -243,14 +243,14 @@ include __DIR__ . '/includes/header.php';
     </div>
 <?php elseif (empty($missingData)): ?>
     <div class="alert alert-success">
-        <i class="bi bi-check-circle me-1"></i>Όλοι οι ενεργοί εθελοντές έχουν τα υποχρεωτικά πιστοποιητικά!
+        <i class="bi bi-check-circle me-1"></i>Όλα τα ενεργά μέλη έχουν τα υποχρεωτικά πιστοποιητικά!
     </div>
 <?php else: ?>
     <!-- Search -->
     <form method="get" class="mb-3">
         <input type="hidden" name="tab" value="missing">
         <div class="input-group" style="max-width: 400px;">
-            <input type="text" name="q" class="form-control" placeholder="Αναζήτηση εθελοντή..." value="<?= h($filterSearch) ?>">
+            <input type="text" name="q" class="form-control" placeholder="Αναζήτηση μέλους..." value="<?= h($filterSearch) ?>">
             <button class="btn btn-outline-secondary"><i class="bi bi-search"></i></button>
         </div>
     </form>
@@ -266,7 +266,7 @@ include __DIR__ . '/includes/header.php';
             <table class="table table-sm table-hover align-middle mb-0">
                 <thead class="table-light">
                     <tr>
-                        <th>Εθελοντής</th>
+                        <th>Μέλος</th>
                         <th>Email</th>
                         <th class="text-end pe-3">Ενέργεια</th>
                     </tr>
@@ -322,7 +322,7 @@ include __DIR__ . '/includes/header.php';
             </div>
             <div class="col-md-4">
                 <label class="form-label small">Αναζήτηση</label>
-                <input type="text" name="q" class="form-control form-control-sm" placeholder="Εθελοντής, email ή τύπος..."
+                <input type="text" name="q" class="form-control form-control-sm" placeholder="Μέλος, email ή τύπος..."
                        value="<?= h($filterSearch) ?>">
             </div>
             <div class="col-md-2">
@@ -338,7 +338,7 @@ include __DIR__ . '/includes/header.php';
         <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
                 <tr>
-                    <th>Εθελοντής</th>
+                    <th>Μέλος</th>
                     <th>Τύπος</th>
                     <th>Ημ. Έκδοσης</th>
                     <th>Ημ. Λήξης</th>
@@ -389,7 +389,7 @@ include __DIR__ . '/includes/header.php';
                                 $gcDate = date('Ymd', strtotime($cert['expiry_date']));
                                 $gcDateEnd = date('Ymd', strtotime($cert['expiry_date'] . ' +1 day'));
                                 $gcTitle = urlencode('Λήξη Πιστοποιητικού: ' . $cert['type_name'] . ' – ' . $cert['member_name']);
-                                $gcDetails = urlencode('Εθελοντής: ' . $cert['member_name'] . '\nΤύπος Πιστοποιητικού: ' . $cert['type_name']);
+                                $gcDetails = urlencode('Μέλος: ' . $cert['member_name'] . '\nΤύπος Πιστοποιητικού: ' . $cert['type_name']);
                                 $gcUrl = "https://calendar.google.com/calendar/render?action=TEMPLATE&text={$gcTitle}&dates={$gcDate}/{$gcDateEnd}&details={$gcDetails}";
                             ?>
                             <a href="<?= $gcUrl ?>" target="_blank" class="btn btn-sm btn-outline-success" title="Προσθήκη στο Google Calendar">

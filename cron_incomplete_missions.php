@@ -55,7 +55,7 @@ foreach ($incompleteShifts as $shift) {
          WHERE title = ? 
          AND message LIKE ?
          AND created_at > DATE_SUB(NOW(), INTERVAL 24 HOUR)",
-        ['Αποστολή Χρειάζεται Εθελοντές', '%' . $shift['mission_title'] . '%']
+        ['Αποστολή Χρειάζεται Μέλη', '%' . $shift['mission_title'] . '%']
     );
     
     if ($alreadySent > 0) {
@@ -88,8 +88,8 @@ foreach ($incompleteShifts as $shift) {
         // In-app notification
         sendNotification(
             $user['id'], 
-            'Αποστολή Χρειάζεται Εθελοντές', 
-            "Η αποστολή '{$shift['mission_title']}' χρειάζεται {$shift['available_spots']} ακόμα εθελοντές! Ημερομηνία: " . formatDate($shift['start_time'])
+            'Αποστολή Χρειάζεται Μέλη', 
+            "Η αποστολή '{$shift['mission_title']}' χρειάζεται {$shift['available_spots']} ακόμα μέλη! Ημερομηνία: " . formatDate($shift['start_time'])
         );
     }
 }

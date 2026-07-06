@@ -56,7 +56,7 @@ if (!isAdmin()) {
     $params[] = getCurrentUser()['id'];
 }
 
-// Τ.Ε.Π.: κρύψε βάρδιες Τ.Ε.Π. από απλούς εθελοντές
+// Τ.Ε.Π.: κρύψε βάρδιες Τ.Ε.Π. από απλούς μέλη
 if (!canSeeTep()) {
     $where[] = '(m.mission_type_id != ? OR m.responsible_user_id = ?)';
     $params[] = getTepMissionTypeId();
@@ -157,7 +157,7 @@ include __DIR__ . '/includes/header.php';
                     <th>Βάρδια</th>
                     <th>Αποστολή</th>
                     <th>Χρόνος</th>
-                    <th>Εθελοντές</th>
+                    <th>Μέλη</th>
                     <th>Κατάσταση</th>
                     <th></th>
                 </tr>
@@ -275,7 +275,7 @@ include __DIR__ . '/includes/header.php';
                     </div>
                     
                     <div class="mobile-card-row">
-                        <div class="mobile-card-label">Εθελοντές</div>
+                        <div class="mobile-card-label">Μέλη</div>
                         <span class="badge bg-success"><?= $shift['approved_count'] ?>/<?= $shift['max_members'] ?></span>
                         <?php if ($shift['pending_count'] > 0): ?>
                             <span class="badge bg-warning ms-1"><?= $shift['pending_count'] ?> εκκρεμεί</span>

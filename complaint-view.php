@@ -1,7 +1,7 @@
 <?php
 /**
  * VolunteerOps - Complaint View
- * Προβολή παραπόνου (εθελοντής & admin)
+ * Προβολή παραπόνου (μέλος & admin)
  */
 
 require_once __DIR__ . '/bootstrap.php';

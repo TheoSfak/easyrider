@@ -81,11 +81,11 @@ include __DIR__ . '/includes/header.php';
     </div>
     <div class="card-body">
         <p class="mb-2">
-            Αυτό το εργαλείο ελέγχει <strong>όλο το ιστορικό βαρδιών και πόντων</strong> κάθε εθελοντή
+            Αυτό το εργαλείο ελέγχει <strong>όλο το ιστορικό βαρδιών και πόντων</strong> κάθε μέλους
             και αποδίδει τα badges που έχει ήδη κερδίσει αλλά δεν καταγράφτηκαν.
         </p>
         <p class="mb-3">
-            Τα νέα badges θα εμφανιστούν ως <strong>αδιάβαστα (notified=0)</strong>, οπότε ο κάθε εθελοντής
+            Τα νέα badges θα εμφανιστούν ως <strong>αδιάβαστα (notified=0)</strong>, οπότε το κάθε μέλος
             θα δει το popup με confetti την επόμενη φορά που θα συνδεθεί.
         </p>
 
@@ -94,7 +94,7 @@ include __DIR__ . '/includes/header.php';
                 <div class="card text-center border-0 bg-light">
                     <div class="card-body py-3">
                         <div class="h2 text-primary mb-0"><?= $totalMembers ?></div>
-                        <small class="text-muted">Ενεργοί Εθελοντές</small>
+                        <small class="text-muted">Ενεργά Μέλη</small>
                     </div>
                 </div>
             </div>
@@ -125,7 +125,7 @@ include __DIR__ . '/includes/header.php';
         <form method="post">
             <?= csrfField() ?>
             <button type="submit" class="btn btn-warning btn-lg">
-                <i class="bi bi-play-circle-fill me-2"></i>Εκτέλεση Backfill για <?= $totalMembers ?> εθελοντές
+                <i class="bi bi-play-circle-fill me-2"></i>Εκτέλεση Backfill για <?= $totalMembers ?> μέλη
             </button>
         </form>
     </div>
@@ -136,12 +136,12 @@ include __DIR__ . '/includes/header.php';
 <div class="alert alert-success">
     <i class="bi bi-check-circle-fill me-2"></i>
     Ολοκληρώθηκε! Αποδόθηκαν συνολικά <strong><?= $totalNew ?> badges</strong> σε
-    <strong><?= count(array_filter($results, fn($r) => $r['count'] > 0)) ?></strong> εθελοντές.
+    <strong><?= count(array_filter($results, fn($r) => $r['count'] > 0)) ?></strong> μέλη.
 </div>
 
 <div class="card">
     <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Αποτελέσματα (<?= count($results) ?> εθελοντές)</h5>
+        <h5 class="mb-0">Αποτελέσματα (<?= count($results) ?> μέλη)</h5>
         <div>
             <button class="btn btn-sm btn-outline-secondary" onclick="toggleOnlyNew()">
                 <i class="bi bi-funnel me-1"></i>Μόνο με νέα badges
@@ -153,7 +153,7 @@ include __DIR__ . '/includes/header.php';
             <table class="table table-hover mb-0" id="resultsTable">
                 <thead class="table-light">
                     <tr>
-                        <th>Εθελοντής</th>
+                        <th>Μέλος</th>
                         <th class="text-center">Νέα Badges</th>
                         <th>Badges που αποδόθηκαν</th>
                     </tr>
@@ -199,7 +199,7 @@ include __DIR__ . '/includes/header.php';
         </button>
     </form>
     <a href="members.php" class="btn btn-outline-secondary">
-        <i class="bi bi-people me-1"></i>Λίστα Εθελοντών
+        <i class="bi bi-people me-1"></i>Λίστα Μελών
     </a>
 </div>
 

@@ -29,7 +29,7 @@ try {
 </ul>
 <p>Μπορείτε να δείτε τις λεπτομέρειες της εργασίας συνδεόμενοι στο σύστημα.</p>',
             'available_variables' => 'user_name, task_title, task_description, task_priority, task_deadline, assigned_by',
-            'description' => 'Αποστέλλεται όταν ανατίθεται εργασία σε εθελοντή'
+            'description' => 'Αποστέλλεται όταν ανατίθεται εργασία σε μέλος'
         ],
         [
             'code' => 'task_comment',

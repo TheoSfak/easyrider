@@ -86,11 +86,11 @@ class AppTester {
             ['url' => '/mission-form.php', 'name' => 'New Mission Form', 'expect' => 'Νέα Αποστολή'],
             ['url' => '/mission-view.php?id=11', 'name' => 'Mission View', 'expect' => 'Βάρδιες'],
             ['url' => '/shifts.php', 'name' => 'Shifts List', 'expect' => 'Βάρδιες'],
-            ['url' => '/shift-view.php?id=19', 'name' => 'Shift View', 'expect' => 'Εθελοντές'],
+            ['url' => '/shift-view.php?id=19', 'name' => 'Shift View', 'expect' => 'Μέλη'],
             ['url' => '/shift-form.php?mission_id=11', 'name' => 'New Shift Form', 'expect' => 'Νέα Βάρδια'],
             
             // Member management
-            ['url' => '/members.php', 'name' => 'Members List', 'expect' => 'Εθελοντές'],
+            ['url' => '/members.php', 'name' => 'Members List', 'expect' => 'Μέλη'],
             ['url' => '/member-view.php?id=7', 'name' => 'Member View', 'expect' => 'Μαρία'],
             ['url' => '/member-form.php?id=7', 'name' => 'Member Edit Form', 'expect' => 'Επεξεργασία'],
             

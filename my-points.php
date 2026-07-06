@@ -181,7 +181,7 @@ include __DIR__ . '/includes/header.php';
             <div class="card-body">
                 <ul class="list-unstyled mb-0">
                     <li class="mb-2">
-                        <strong><?= POINTS_PER_HOUR ?> πόντοι</strong> ανά ώρα εθελοντισμού
+                        <strong><?= POINTS_PER_HOUR ?> πόντοι</strong> ανά ώρα συμμετοχής
                     </li>
                     <li class="mb-2">
                         <strong>×<?= WEEKEND_MULTIPLIER ?></strong> για Σαββατοκύριακα

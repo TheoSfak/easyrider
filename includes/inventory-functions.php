@@ -840,7 +840,7 @@ function returnInventoryKit($kitId, $userId, $returnNotes = '') {
                     }
                 } else {
                     $failedCount++;
-                    $messages[] = "{$item['name']}: Χρεωμένο σε άλλον εθελοντή";
+                    $messages[] = "{$item['name']}: Χρεωμένο σε άλλο μέλος";
                 }
             }
         }

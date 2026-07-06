@@ -130,7 +130,7 @@ if (isPost()) {
         $locCount    = (int)dbFetchValue("SELECT COUNT(*) FROM inventory_locations WHERE department_id = ?", [$id]);
 
         if ($volCount > 0 || $itemCount > 0) {
-            setFlash('error', 'Δεν μπορείτε να διαγράψετε παράρτημα με εθελοντές ή υλικά. Μεταφέρετε πρώτα.');
+            setFlash('error', 'Δεν μπορείτε να διαγράψετε παράρτημα με μέλη ή υλικά. Μεταφέρετε πρώτα.');
             redirect('branches.php');
         }
 
@@ -189,7 +189,7 @@ include __DIR__ . '/includes/header.php';
         <h1 class="h3 mb-1">
             <i class="bi bi-geo-alt-fill me-2"></i><?= h($pageTitle) ?>
         </h1>
-        <p class="text-muted mb-0">Τμήματα πόλεων — η κάθε πόλη αντιστοιχεί σε τμήμα εθελοντών <strong>και</strong> αποθήκη υλικών.</p>
+        <p class="text-muted mb-0">Τμήματα πόλεων — η κάθε πόλη αντιστοιχεί σε τμήμα μελών <strong>και</strong> αποθήκη υλικών.</p>
     </div>
 </div>
 
@@ -201,7 +201,7 @@ include __DIR__ . '/includes/header.php';
     <div>
         <strong>Πώς λειτουργεί:</strong> Κάθε παράρτημα αντιστοιχεί ταυτόχρονα σε:
         <ul class="mb-0 mt-1">
-            <li><i class="bi bi-people text-primary me-1"></i><strong>Τμήμα εθελοντών</strong> — επιλέγεται στην <em>Αποθήκη/Πόλη</em> κατά την επεξεργασία εθελοντή</li>
+            <li><i class="bi bi-people text-primary me-1"></i><strong>Τμήμα μελών</strong> — επιλέγεται στην <em>Αποθήκη/Πόλη</em> κατά την επεξεργασία μέλους</li>
             <li><i class="bi bi-box-seam text-success me-1"></i><strong>Αποθήκη υλικών</strong> — επιλέγεται ως αποθήκη στα υλικά αποθέματος</li>
         </ul>
     </div>
@@ -248,7 +248,7 @@ include __DIR__ . '/includes/header.php';
                                 <div class="row g-2 mb-3">
                                     <div class="col-12">
                                         <small class="text-uppercase fw-bold text-muted">
-                                            <i class="bi bi-people me-1"></i>Τμήμα Εθελοντών
+                                            <i class="bi bi-people me-1"></i>Τμήμα Μελών
                                         </small>
                                     </div>
                                     <div class="col-6">
@@ -315,8 +315,8 @@ include __DIR__ . '/includes/header.php';
 
                                 <!-- Action buttons -->
                                 <div class="d-flex gap-2 mt-3 pt-2 border-top">
-                                    <a href="members.php?warehouse=<?= $b['id'] ?>" class="btn btn-sm btn-outline-primary flex-fill" title="Εθελοντές">
-                                        <i class="bi bi-people me-1"></i>Εθελοντές
+                                    <a href="members.php?warehouse=<?= $b['id'] ?>" class="btn btn-sm btn-outline-primary flex-fill" title="Μέλη">
+                                        <i class="bi bi-people me-1"></i>Μέλη
                                     </a>
                                     <a href="inventory.php?dept=<?= $b['id'] ?>" class="btn btn-sm btn-outline-success flex-fill" title="Υλικά">
                                         <i class="bi bi-box-seam me-1"></i>Υλικά
@@ -382,7 +382,7 @@ include __DIR__ . '/includes/header.php';
                 </table>
             </div>
             <div class="card-footer bg-light text-muted small">
-                <i class="bi bi-info-circle me-1"></i>Τα λειτουργικά τμήματα (π.χ. Διασωστών, Υγειονομική) αντιστοιχίζονται στο πεδίο <em>Τμήμα</em> του εθελοντή.
+                <i class="bi bi-info-circle me-1"></i>Τα λειτουργικά τμήματα (π.χ. Διασωστών, Υγειονομική) αντιστοιχίζονται στο πεδίο <em>Τμήμα</em> του μέλους.
                 Τα παραρτήματα αντιστοιχίζονται στο πεδίο <em>Αποθήκη/Πόλη</em>.
                 <a href="departments.php" class="ms-2">Διαχείριση τμημάτων →</a>
             </div>
@@ -412,7 +412,7 @@ include __DIR__ . '/includes/header.php';
                         <input type="text" class="form-control" name="name" required
                                value="<?= h($editItem['name'] ?? '') ?>"
                                placeholder="π.χ. Ηράκλειο">
-                        <small class="text-muted">Αυτό εμφανίζεται ως τμήμα στους εθελοντές και ως αποθήκη στα υλικά</small>
+                        <small class="text-muted">Αυτό εμφανίζεται ως τμήμα στα μέλη και ως αποθήκη στα υλικά</small>
                     </div>
 
                     <div class="mb-3">
@@ -472,7 +472,7 @@ include __DIR__ . '/includes/header.php';
                 <h6 class="card-title"><i class="bi bi-link-45deg me-1"></i>Σχετικές Σελίδες</h6>
                 <div class="list-group list-group-flush">
                     <a href="members.php" class="list-group-item list-group-item-action d-flex align-items-center">
-                        <i class="bi bi-people text-primary me-2"></i>Εθελοντές
+                        <i class="bi bi-people text-primary me-2"></i>Μέλη
                         <small class="text-muted ms-auto">Αντιστοίχιση πόλης</small>
                     </a>
                     <a href="inventory.php" class="list-group-item list-group-item-action d-flex align-items-center">

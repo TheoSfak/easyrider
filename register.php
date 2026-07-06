@@ -111,7 +111,7 @@ $appLogo = getSetting('app_logo', '');
     <div class="register-card">
         <div class="register-header">
             <h2><i class="bi bi-person-plus me-2"></i>Εγγραφή</h2>
-            <p class="mb-0 opacity-75">Γίνετε μέλος της ομάδας εθελοντών</p>
+            <p class="mb-0 opacity-75">Γίνετε μέλος της ομάδας μελών</p>
         </div>
         <div class="register-body">
             <?php if (!empty($errors)): ?>

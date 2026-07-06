@@ -399,7 +399,7 @@ include __DIR__ . '/includes/header.php';
         <!-- Assigned Members Card -->
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-light">
-                <h6 class="mb-0"><i class="bi bi-people me-2"></i>Ανατεθειμένοι Εθελοντές</h6>
+                <h6 class="mb-0"><i class="bi bi-people me-2"></i>Ανατεθειμένα Μέλη</h6>
             </div>
             <div class="card-body">
                 <?php if (empty($assignedUsers)): ?>

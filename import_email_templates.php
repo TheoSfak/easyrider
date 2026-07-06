@@ -34,7 +34,7 @@ try {
     </div>
     <div style="padding: 30px; background: #fff;">
         <h2>Καλώς ήρθατε, {{user_name}}!</h2>
-        <p>Ευχαριστούμε για την εγγραφή σας στην πλατφόρμα εθελοντισμού.</p>
+        <p>Ευχαριστούμε για την εγγραφή σας στην πλατφόρμα της λέσχης.</p>
         <p>Μπορείτε τώρα να:</p>
         <ul>
             <li>Δείτε τις διαθέσιμες αποστολές</li>
@@ -46,7 +46,7 @@ try {
         </p>
     </div>
     <div style="padding: 15px; background: #f8f9fa; text-align: center; font-size: 12px; color: #666;">
-        {{app_name}} - Σύστημα Διαχείρισης Εθελοντών
+        {{app_name}} - Σύστημα Διαχείρισης Μελών
     </div>
 </div>',
             'description' => 'Αποστέλλεται σε νέους χρήστες μετά την εγγραφή',
@@ -71,7 +71,7 @@ try {
         </p>
     </div>
 </div>',
-            'description' => 'Αποστέλλεται όταν εγκρίνεται η συμμετοχή εθελοντή σε βάρδια',
+            'description' => 'Αποστέλλεται όταν εγκρίνεται η συμμετοχή μέλους σε βάρδια',
             'available_variables' => '{{app_name}}, {{user_name}}, {{mission_title}}, {{shift_date}}, {{shift_time}}, {{location}}'
         ],
         [
@@ -93,7 +93,7 @@ try {
         </p>
     </div>
 </div>',
-            'description' => 'Αποστέλλεται όταν απορρίπτεται η συμμετοχή εθελοντή',
+            'description' => 'Αποστέλλεται όταν απορρίπτεται η συμμετοχή μέλους',
             'available_variables' => '{{app_name}}, {{user_name}}, {{mission_title}}, {{shift_date}}, {{rejection_reason}}, {{missions_url}}'
         ],
         [
@@ -136,7 +136,7 @@ try {
         </p>
     </div>
 </div>',
-            'description' => 'Αποστέλλεται σε εθελοντές όταν δημοσιεύεται νέα αποστολή',
+            'description' => 'Αποστέλλεται σε μέλη όταν δημοσιεύεται νέα αποστολή',
             'available_variables' => '{{app_name}}, {{mission_title}}, {{mission_description}}, {{location}}, {{start_date}}, {{end_date}}, {{mission_url}}'
         ],
         [
@@ -157,7 +157,7 @@ try {
         </p>
     </div>
 </div>',
-            'description' => 'Αποστέλλεται σε εθελοντές όταν ακυρώνεται αποστολή',
+            'description' => 'Αποστέλλεται σε μέλη όταν ακυρώνεται αποστολή',
             'available_variables' => '{{app_name}}, {{user_name}}, {{mission_title}}, {{cancellation_reason}}, {{missions_url}}'
         ],
         [
@@ -177,7 +177,7 @@ try {
         </p>
     </div>
 </div>',
-            'description' => 'Αποστέλλεται σε εθελοντές όταν ακυρώνεται βάρδια',
+            'description' => 'Αποστέλλεται σε μέλη όταν ακυρώνεται βάρδια',
             'available_variables' => '{{app_name}}, {{user_name}}, {{mission_title}}, {{shift_date}}, {{shift_time}}, {{cancellation_reason}}, {{missions_url}}'
         ],
         [
@@ -203,7 +203,7 @@ try {
         </p>
     </div>
 </div>',
-            'description' => 'Αποστέλλεται όταν ο εθελοντής κερδίζει πόντους',
+            'description' => 'Αποστέλλεται όταν το μέλος κερδίζει πόντους',
             'available_variables' => '{{app_name}}, {{user_name}}, {{points}}, {{mission_title}}, {{shift_date}}, {{total_points}}, {{leaderboard_url}}'
         ],
         [
@@ -339,12 +339,12 @@ try {
     $notifications = [
         ['code' => 'welcome', 'name' => 'Καλωσόρισμα', 'description' => 'Μετά την εγγραφή νέου χρήστη', 'enabled' => 1],
         ['code' => 'new_mission', 'name' => 'Νέα Αποστολή', 'description' => 'Όταν δημοσιεύεται νέα αποστολή', 'enabled' => 1],
-        ['code' => 'participation_approved', 'name' => 'Έγκριση Συμμετοχής', 'description' => 'Όταν εγκρίνεται η συμμετοχή εθελοντή σε βάρδια', 'enabled' => 1],
-        ['code' => 'participation_rejected', 'name' => 'Απόρριψη Συμμετοχής', 'description' => 'Όταν απορρίπτεται η συμμετοχή εθελοντή', 'enabled' => 1],
+        ['code' => 'participation_approved', 'name' => 'Έγκριση Συμμετοχής', 'description' => 'Όταν εγκρίνεται η συμμετοχή μέλους σε βάρδια', 'enabled' => 1],
+        ['code' => 'participation_rejected', 'name' => 'Απόρριψη Συμμετοχής', 'description' => 'Όταν απορρίπτεται η συμμετοχή μέλους', 'enabled' => 1],
         ['code' => 'shift_reminder', 'name' => 'Υπενθύμιση Βάρδιας', 'description' => 'Μία μέρα πριν τη βάρδια', 'enabled' => 1],
         ['code' => 'mission_canceled', 'name' => 'Ακύρωση Αποστολής', 'description' => 'Όταν ακυρώνεται αποστολή', 'enabled' => 1],
         ['code' => 'shift_canceled', 'name' => 'Ακύρωση Βάρδιας', 'description' => 'Όταν ακυρώνεται βάρδια', 'enabled' => 1],
-        ['code' => 'points_earned', 'name' => 'Κέρδος Πόντων', 'description' => 'Όταν ο εθελοντής κερδίζει πόντους', 'enabled' => 0],
+        ['code' => 'points_earned', 'name' => 'Κέρδος Πόντων', 'description' => 'Όταν το μέλος κερδίζει πόντους', 'enabled' => 0],
         ['code' => 'task_assigned', 'name' => 'Ανάθεση Εργασίας', 'description' => 'Όταν ανατίθεται εργασία σε χρήστη', 'enabled' => 1],
         ['code' => 'task_comment', 'name' => 'Σχόλιο σε Εργασία', 'description' => 'Όταν προστίθεται σχόλιο σε εργασία', 'enabled' => 1],
         ['code' => 'task_status_changed', 'name' => 'Αλλαγή Κατάστασης Εργασίας', 'description' => 'Όταν αλλάζει η κατάσταση εργασίας', 'enabled' => 1],

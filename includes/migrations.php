@@ -345,7 +345,7 @@ function runSchemaMigrations(): void {
                     $bodyHtml .= '</p>';
                     $bodyHtml .= '</div>';
                     $bodyHtml .= '<div style="padding: 15px; background: #f8f9fa; text-align: center; font-size: 12px; color: #666;">';
-                    $bodyHtml .= '{{app_name}} - Σύστημα Διαχείρισης Εθελοντών';
+                    $bodyHtml .= '{{app_name}} - Σύστημα Διαχείρισης Μελών';
                     $bodyHtml .= '</div>';
                     $bodyHtml .= '</div>';
 
@@ -357,7 +357,7 @@ function runSchemaMigrations(): void {
                             'Προσθήκη από Διαχειριστή',
                             'Ο διαχειριστής σας τοποθέτησε απευθείας σε βάρδια',
                             $bodyHtml,
-                            'Αποστέλλεται στον εθελοντή όταν ο διαχειριστής τον προσθέτει απευθείας σε βάρδια',
+                            'Αποστέλλεται στο μέλος όταν ο διαχειριστής το προσθέτει απευθείας σε βάρδια',
                             '{{app_name}}, {{user_name}}, {{mission_title}}, {{shift_date}}, {{shift_time}}, {{location}}, {{admin_notes}}, {{login_url}}',
                         ]
                     );
@@ -392,7 +392,7 @@ function runSchemaMigrations(): void {
                             'Κέρδος Πόντων',
                             'Κερδίσατε {{points}} πόντους!',
                             $bodyHtml2,
-                            'Αποστέλλεται όταν ο εθελοντής κερδίζει πόντους',
+                            'Αποστέλλεται όταν το μέλος κερδίζει πόντους',
                             '{{app_name}}, {{user_name}}, {{points}}, {{mission_title}}, {{shift_date}}, {{total_points}}',
                         ]
                     );
@@ -408,7 +408,7 @@ function runSchemaMigrations(): void {
                         [
                             'admin_added_member',
                             'Προσθήκη από Διαχειριστή',
-                            'Όταν ο διαχειριστής προσθέτει εθελοντή απευθείας σε βάρδια',
+                            'Όταν ο διαχειριστής προσθέτει μέλος απευθείας σε βάρδια',
                             $tmplId,
                         ]
                     );
@@ -424,7 +424,7 @@ function runSchemaMigrations(): void {
                         [
                             'points_earned',
                             'Κέρδος Πόντων',
-                            'Όταν ο εθελοντής κερδίζει πόντους',
+                            'Όταν το μέλος κερδίζει πόντους',
                             $tmplId2,
                         ]
                     );
@@ -460,7 +460,7 @@ function runSchemaMigrations(): void {
 
                 $ftr = function () : string {
                     return '<div style="text-align:center;padding:18px 0 0;color:#9ca3af;font-size:12px;line-height:1.9;">'
-                         . '<p style="margin:0;"><strong style="color:#6b7280;">{{app_name}}</strong> &bull; Σύστημα Διαχείρισης Εθελοντών</p>'
+                         . '<p style="margin:0;"><strong style="color:#6b7280;">{{app_name}}</strong> &bull; Σύστημα Διαχείρισης Μελών</p>'
                          . '<p style="margin:0;">Αυτό το μήνυμα στάλθηκε αυτόματα από το σύστημα.</p>'
                          . '</div>';
                 };
@@ -492,7 +492,7 @@ function runSchemaMigrations(): void {
 
                 // ── WELCOME ──────────────────────────────────────────────────────────────
                 $inner = $greet()
-                    . $p('Ευχαριστούμε που εγγραφήκατε στην πλατφόρμα εθελοντισμού <strong>{{app_name}}</strong>. Είστε πλέον μέλος της ομάδας μας!')
+                    . $p('Ευχαριστούμε που εγγραφήκατε στην πλατφόρμα της λέσχης <strong>{{app_name}}</strong>. Είστε πλέον μέλος της ομάδας μας!')
                     . '<div style="background:#eff6ff;border-left:4px solid #2563eb;padding:14px 20px;border-radius:0 8px 8px 0;margin:20px 0;">'
                     . '<p style="color:#1e40af;font-weight:700;font-size:14px;margin:0 0 8px;">Τι μπορείτε να κάνετε:</p>'
                     . '<div style="font-size:14px;color:#374151;line-height:1.9;">'
@@ -651,7 +651,7 @@ function runSchemaMigrations(): void {
 
                 $ftr = function () : string {
                     return '<div style="text-align:center;padding:18px 0 0;color:#9ca3af;font-size:12px;line-height:1.9;">'
-                         . '<p style="margin:0;"><strong style="color:#6b7280;">{{app_name}}</strong> &bull; Σύστημα Διαχείρισης Εθελοντών</p>'
+                         . '<p style="margin:0;"><strong style="color:#6b7280;">{{app_name}}</strong> &bull; Σύστημα Διαχείρισης Μελών</p>'
                          . '<p style="margin:0;">Αυτό το μήνυμα στάλθηκε αυτόματα από το σύστημα.</p>'
                          . '</div>';
                 };
@@ -683,7 +683,7 @@ function runSchemaMigrations(): void {
 
                 // ── WELCOME ──────────────────────────────────────────────────────────────
                 $inner = $greet()
-                    . $p('Ευχαριστούμε που εγγραφήκατε στην πλατφόρμα εθελοντισμού <strong>{{app_name}}</strong>. Είστε πλέον μέλος της ομάδας μας!')
+                    . $p('Ευχαριστούμε που εγγραφήκατε στην πλατφόρμα της λέσχης <strong>{{app_name}}</strong>. Είστε πλέον μέλος της ομάδας μας!')
                     . '<div style="background:#eff6ff;border-left:4px solid #2563eb;padding:14px 20px;border-radius:0 8px 8px 0;margin:20px 0;">'
                     . '<p style="color:#1e40af;font-weight:700;font-size:14px;margin:0 0 8px;">Τι μπορείτε να κάνετε:</p>'
                     . '<div style="font-size:14px;color:#374151;line-height:1.9;">'
@@ -832,7 +832,7 @@ function runSchemaMigrations(): void {
                 };
                 $ftr = function () : string {
                     return '<div style="text-align:center;padding:18px 0 0;color:#9ca3af;font-size:12px;line-height:1.9;">'
-                         . '<p style="margin:0;"><strong style="color:#6b7280;">{{app_name}}</strong> &bull; Σύστημα Διαχείρισης Εθελοντών</p>'
+                         . '<p style="margin:0;"><strong style="color:#6b7280;">{{app_name}}</strong> &bull; Σύστημα Διαχείρισης Μελών</p>'
                          . '<p style="margin:0;">Αυτό το μήνυμα στάλθηκε αυτόματα από το σύστημα.</p>'
                          . '</div>';
                 };
@@ -1058,7 +1058,7 @@ function runSchemaMigrations(): void {
             'up' => function () {
                 $exists = dbFetchOne("SELECT id FROM email_templates WHERE code = 'mission_reminder'");
                 if (!$exists) {
-                    $bodyHtml = '<div style="background:#eef2f7;padding:28px 0 40px;font-family:Helvetica Neue,Arial,sans-serif;"><div style="max-width:600px;margin:0 auto;"><div style="background:#fd7e14;padding:30px 40px 26px;border-radius:12px 12px 0 0;text-align:center;">{{logo_html}}<p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">{{app_name}}</p><div style="font-size:36px;line-height:1;margin:0 0 8px;">&#128226;</div><h1 style="color:#fff;margin:0;font-size:23px;font-weight:700;line-height:1.3;">Υπενθύμιση Αποστολής</h1></div><div style="background:#fff;padding:36px 40px 40px;border-radius:0 0 12px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.07);"><h2 style="color:#1f2937;font-size:18px;font-weight:700;margin:0 0 14px;">Γεια σας {{user_name}},</h2><p style="color:#4b5563;line-height:1.65;font-size:15px;margin:0 0 14px;">Η παρακάτω αποστολή είναι ακόμα <strong>ανοιχτή</strong> και αναζητά εθελοντές:</p><div style="background:#f9fafb;border-left:4px solid #fd7e14;padding:2px 20px;border-radius:0 8px 8px 0;margin:20px 0;"><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Αποστολή:</span><span style="color:#111827;font-weight:600;">{{mission_title}}</span></div><div style="padding:7px 0;font-size:14px;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Περιγραφή:</span><span style="color:#111827;font-weight:600;">{{mission_description}}</span></div></div><p style="color:#4b5563;line-height:1.65;font-size:15px;margin:0 0 14px;">Μη χάσετε την ευκαιρία να συμμετέχετε και να κάνετε τη διαφορά!</p><div style="text-align:center;margin:28px 0 4px;"><a href="{{mission_url}}" style="background:#fd7e14;color:#ffffff;text-decoration:none;padding:13px 38px;border-radius:8px;font-size:15px;font-weight:700;display:inline-block;letter-spacing:0.3px;">Δείτε την Αποστολή</a></div></div><div style="text-align:center;padding:18px 0 0;color:#9ca3af;font-size:12px;line-height:1.9;"><p style="margin:0;"><strong style="color:#6b7280;">{{app_name}}</strong> &bull; Σύστημα Διαχείρισης Εθελοντών</p><p style="margin:0;">Αυτό το μήνυμα στάλθηκε αυτόματα από το σύστημα.</p></div></div></div>';
+                    $bodyHtml = '<div style="background:#eef2f7;padding:28px 0 40px;font-family:Helvetica Neue,Arial,sans-serif;"><div style="max-width:600px;margin:0 auto;"><div style="background:#fd7e14;padding:30px 40px 26px;border-radius:12px 12px 0 0;text-align:center;">{{logo_html}}<p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">{{app_name}}</p><div style="font-size:36px;line-height:1;margin:0 0 8px;">&#128226;</div><h1 style="color:#fff;margin:0;font-size:23px;font-weight:700;line-height:1.3;">Υπενθύμιση Αποστολής</h1></div><div style="background:#fff;padding:36px 40px 40px;border-radius:0 0 12px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.07);"><h2 style="color:#1f2937;font-size:18px;font-weight:700;margin:0 0 14px;">Γεια σας {{user_name}},</h2><p style="color:#4b5563;line-height:1.65;font-size:15px;margin:0 0 14px;">Η παρακάτω αποστολή είναι ακόμα <strong>ανοιχτή</strong> και αναζητά μέλη:</p><div style="background:#f9fafb;border-left:4px solid #fd7e14;padding:2px 20px;border-radius:0 8px 8px 0;margin:20px 0;"><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Αποστολή:</span><span style="color:#111827;font-weight:600;">{{mission_title}}</span></div><div style="padding:7px 0;font-size:14px;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Περιγραφή:</span><span style="color:#111827;font-weight:600;">{{mission_description}}</span></div></div><p style="color:#4b5563;line-height:1.65;font-size:15px;margin:0 0 14px;">Μη χάσετε την ευκαιρία να συμμετέχετε και να κάνετε τη διαφορά!</p><div style="text-align:center;margin:28px 0 4px;"><a href="{{mission_url}}" style="background:#fd7e14;color:#ffffff;text-decoration:none;padding:13px 38px;border-radius:8px;font-size:15px;font-weight:700;display:inline-block;letter-spacing:0.3px;">Δείτε την Αποστολή</a></div></div><div style="text-align:center;padding:18px 0 0;color:#9ca3af;font-size:12px;line-height:1.9;"><p style="margin:0;"><strong style="color:#6b7280;">{{app_name}}</strong> &bull; Σύστημα Διαχείρισης Μελών</p><p style="margin:0;">Αυτό το μήνυμα στάλθηκε αυτόματα από το σύστημα.</p></div></div></div>';
                     dbInsert(
                         "INSERT INTO email_templates (code, name, subject, body_html, description, available_variables) 
                          VALUES ('mission_reminder', 'Υπενθύμιση Αποστολής', 'Υπενθύμιση Αποστολής: {{mission_title}}', ?, 'Όταν στέλνεται υπενθύμιση για ανοιχτή αποστολή', '{{app_name}}, {{user_name}}, {{mission_title}}, {{mission_description}}, {{mission_url}}')",
@@ -1188,7 +1188,7 @@ function runSchemaMigrations(): void {
                     dbInsert(
                         "INSERT INTO notification_settings (code, name, description, email_enabled, email_template_id)
                          VALUES ('certificate_expiry_reminder', 'Υπενθύμιση Λήξης Πιστοποιητικού',
-                                 'Όταν πλησιάζει η λήξη ενός πιστοποιητικού του εθελοντή', 1,
+                                 'Όταν πλησιάζει η λήξη ενός πιστοποιητικού του μέλους', 1,
                                  (SELECT id FROM email_templates WHERE code = 'certificate_expiry_reminder'))"
                     );
                 }
@@ -1386,8 +1386,8 @@ function runSchemaMigrations(): void {
                     ['missions_10',   '10 Αποστολές',          'Ολοκλήρωσε 10 αποστολές',                      'missions',  '🌟', 0,    10 ],
                     ['missions_25',   '25 Αποστολές',          'Ολοκλήρωσε 25 αποστολές',                      'missions',  '💫', 0,    25 ],
                     ['missions_50',   '50 Αποστολές',          'Ολοκλήρωσε 50 αποστολές',                      'missions',  '🏆', 0,    50 ],
-                    ['hours_500',     '500 Ώρες',              'Συμπλήρωσε 500 ώρες εθελοντισμού',             'hours',     '⚡', 0,    500],
-                    ['hours_1000',    '1000 Ώρες',             'Συμπλήρωσε 1000 ώρες εθελοντισμού',            'hours',     '💎', 0,    1000],
+                    ['hours_500',     '500 Ώρες',              'Συμπλήρωσε 500 ώρες συμμετοχής',             'hours',     '⚡', 0,    500],
+                    ['hours_1000',    '1000 Ώρες',             'Συμπλήρωσε 1000 ώρες συμμετοχής',            'hours',     '💎', 0,    1000],
                     ['points_2000',   '2000 Πόντοι',           'Συγκέντρωσε 2000 πόντους',                     'points',    '🎖️', 2000, 0  ],
                     ['points_5000',   '5000 Πόντοι',           'Συγκέντρωσε 5000 πόντους',                     'points',    '👑', 5000, 0  ],
                     ['early_bird',    'Πτηνό της Αυγής',       'Ολοκλήρωσε 5 βάρδιες πριν τις 8:00',          'special',   '🌅', 0,    5  ],
@@ -1789,7 +1789,7 @@ function runSchemaMigrations(): void {
                 // ── Missing email templates (task-related + mission_needs_members) ──
                 // Helper: wrap content in styled email layout
                 $wrap30 = function($headerBg, $icon, $title, $body) {
-                    return '<div style="background:#eef2f7;padding:28px 0 40px;font-family:Helvetica Neue,Arial,sans-serif;"><div style="max-width:600px;margin:0 auto;"><div style="background:'.$headerBg.';padding:30px 40px 26px;border-radius:12px 12px 0 0;text-align:center;">{{logo_html}}<p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">{{app_name}}</p><div style="font-size:36px;line-height:1;margin:0 0 8px;">'.$icon.'</div><h1 style="color:#fff;margin:0;font-size:23px;font-weight:700;line-height:1.3;">'.$title.'</h1></div><div style="background:#fff;padding:36px 40px 40px;border-radius:0 0 12px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.07);">'.$body.'</div><div style="text-align:center;padding:18px 0 0;color:#9ca3af;font-size:12px;line-height:1.9;"><p style="margin:0;"><strong style="color:#6b7280;">{{app_name}}</strong> &bull; Σύστημα Διαχείρισης Εθελοντών</p><p style="margin:0;">Αυτό το μήνυμα στάλθηκε αυτόματα από το σύστημα.</p></div></div></div>';
+                    return '<div style="background:#eef2f7;padding:28px 0 40px;font-family:Helvetica Neue,Arial,sans-serif;"><div style="max-width:600px;margin:0 auto;"><div style="background:'.$headerBg.';padding:30px 40px 26px;border-radius:12px 12px 0 0;text-align:center;">{{logo_html}}<p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">{{app_name}}</p><div style="font-size:36px;line-height:1;margin:0 0 8px;">'.$icon.'</div><h1 style="color:#fff;margin:0;font-size:23px;font-weight:700;line-height:1.3;">'.$title.'</h1></div><div style="background:#fff;padding:36px 40px 40px;border-radius:0 0 12px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.07);">'.$body.'</div><div style="text-align:center;padding:18px 0 0;color:#9ca3af;font-size:12px;line-height:1.9;"><p style="margin:0;"><strong style="color:#6b7280;">{{app_name}}</strong> &bull; Σύστημα Διαχείρισης Μελών</p><p style="margin:0;">Αυτό το μήνυμα στάλθηκε αυτόματα από το σύστημα.</p></div></div></div>';
                 };
                 $info30 = function($borderColor, $rows) {
                     $html = '<div style="background:#f9fafb;border-left:4px solid '.$borderColor.';padding:2px 20px;border-radius:0 8px 8px 0;margin:20px 0;">';
@@ -1829,10 +1829,10 @@ function runSchemaMigrations(): void {
                      $wrap30('#22c55e', '&#9989;', 'Ολοκλήρωση Υποεργασίας',
                         $greet30.$p30('Ο/Η <strong>{{completed_by}}</strong> ολοκλήρωσε μια υποεργασία στην εργασία "<strong>{{task_title}}</strong>".').$info30('#22c55e', [['Υποεργασία','{{subtask_title}}'],['Εργασία','{{task_title}}']]).$alert30('#f0fdf4','#bbf7d0','#166534','✅ Η υποεργασία έχει σημανθεί ως ολοκληρωμένη.').$p30('Συνδεθείτε στο σύστημα για να δείτε την πρόοδο της εργασίας.').$btn30('#22c55e','Δείτε την Εργασία')),
                      'Αποστέλλεται όταν ολοκληρώνεται υποεργασία', 'user_name, task_title, subtask_title, completed_by'],
-                    ['mission_needs_members', 'Αποστολή Χρειάζεται Εθελοντές', 'Η αποστολή {{mission_title}} χρειάζεται εθελοντές!',
-                     $wrap30('#dc2626', '&#128680;', 'Χρειάζονται Εθελοντές!',
-                        $greet30.$p30('Η αποστολή "<strong>{{mission_title}}</strong>" χρειάζεται <strong>επειγόντως</strong> περισσότερους εθελοντές!').$info30('#dc2626', [['Αποστολή','{{mission_title}}'],['Ημερομηνία','{{mission_date}}'],['Θέσεις Ανοιχτές','{{available_spots}}'],['Συνολικές Θέσεις','{{total_spots}}']]).$alert30('#fef2f2','#fecaca','#dc2626','🚨 Η βοήθειά σας χρειάζεται! Κάθε εθελοντής κάνει τη διαφορά.').$p30('Αν ενδιαφέρεστε να συμμετέχετε, παρακαλούμε συνδεθείτε στο σύστημα και κάντε αίτηση συμμετοχής.').$btn30('#dc2626','Δηλώστε Συμμετοχή')),
-                     'Αποστέλλεται για αποστολές χωρίς αρκετούς εθελοντές', '{{app_name}}, {{user_name}}, {{mission_title}}, {{mission_description}}, {{mission_url}}'],
+                    ['mission_needs_members', 'Αποστολή Χρειάζεται Μέλη', 'Η αποστολή {{mission_title}} χρειάζεται μέλη!',
+                     $wrap30('#dc2626', '&#128680;', 'Χρειάζονται Μέλη!',
+                        $greet30.$p30('Η αποστολή "<strong>{{mission_title}}</strong>" χρειάζεται <strong>επειγόντως</strong> περισσότερους μέλη!').$info30('#dc2626', [['Αποστολή','{{mission_title}}'],['Ημερομηνία','{{mission_date}}'],['Θέσεις Ανοιχτές','{{available_spots}}'],['Συνολικές Θέσεις','{{total_spots}}']]).$alert30('#fef2f2','#fecaca','#dc2626','🚨 Η βοήθειά σας χρειάζεται! Κάθε μέλος κάνει τη διαφορά.').$p30('Αν ενδιαφέρεστε να συμμετέχετε, παρακαλούμε συνδεθείτε στο σύστημα και κάντε αίτηση συμμετοχής.').$btn30('#dc2626','Δηλώστε Συμμετοχή')),
+                     'Αποστέλλεται για αποστολές χωρίς αρκετούς μέλη', '{{app_name}}, {{user_name}}, {{mission_title}}, {{mission_description}}, {{mission_url}}'],
                     ['shelf_expiry_reminder', 'Υπενθύμιση Λήξης Ραφιών Αποθήκης', 'Υπενθύμιση: Είδη Αποθήκης Λήγουν ή Έχουν Λήξει',
                      $wrap30('#d97706', '&#128230;', 'Υπενθύμιση Λήξης Ραφιών Αποθήκης',
                         $greet30.$p30('Υπάρχουν είδη αποθήκης που πλησιάζουν ή έχουν ξεπεράσει την ημερομηνία λήξης τους.').$info30('#d97706', [['Ληγμένα Είδη','{{expired_count}}'],['Κοντά σε Λήξη (εντός {{threshold_days}} ημερών)','{{expiring_count}}']]).'<div style="background:#f9fafb;border-radius:8px;padding:16px 20px;margin:20px 0;"><p style="color:#6b7280;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;">Λεπτομέρειες:</p><pre style="background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:12px 16px;font-size:13px;color:#374151;margin:0;white-space:pre-wrap;word-break:break-word;">{{details}}</pre></div>'.$p30('Συνδεθείτε στο σύστημα για να ελέγξετε τα είδη.').$btn30('#d97706','Διαχείριση Αποθήκης')),
@@ -1850,12 +1850,12 @@ function runSchemaMigrations(): void {
 
                 // ── Missing notification_settings entries ──
                 $notifCodes = [
-                    ['task_assigned', 'Ανάθεση Εργασίας', 'Όταν ανατίθεται εργασία σε εθελοντή', 1],
+                    ['task_assigned', 'Ανάθεση Εργασίας', 'Όταν ανατίθεται εργασία σε μέλος', 1],
                     ['task_comment', 'Σχόλιο σε Εργασία', 'Όταν προστίθεται σχόλιο σε εργασία', 1],
                     ['task_deadline_reminder', 'Υπενθύμιση Προθεσμίας', 'Όταν πλησιάζει η προθεσμία εργασίας', 1],
                     ['task_status_changed', 'Αλλαγή Κατάστασης Εργασίας', 'Όταν αλλάζει η κατάσταση εργασίας', 1],
                     ['task_subtask_completed', 'Ολοκλήρωση Υποεργασίας', 'Όταν ολοκληρώνεται υποεργασία', 1],
-                    ['mission_needs_members', 'Αποστολή Χρειάζεται Εθελοντές', 'Όταν αποστολή πλησιάζει χωρίς αρκετούς εθελοντές', 1],
+                    ['mission_needs_members', 'Αποστολή Χρειάζεται Μέλη', 'Όταν αποστολή πλησιάζει χωρίς αρκετούς μέλη', 1],
                     ['shelf_expiry_reminder', 'Ειδοποίηση Λήξης Υλικών Ραφιού', 'Όταν υπάρχουν ληγμένα ή υπό λήξη υλικά ραφιού', 1],
                 ];
                 foreach ($notifCodes as $n) {
@@ -1989,7 +1989,7 @@ function runSchemaMigrations(): void {
                 // Insert email templates for citizen cert expiry
                 // Helper: wrap content in styled email layout
                 $wrap = function($headerBg, $icon, $title, $body) {
-                    return '<div style="background:#eef2f7;padding:28px 0 40px;font-family:Helvetica Neue,Arial,sans-serif;"><div style="max-width:600px;margin:0 auto;"><div style="background:'.$headerBg.';padding:30px 40px 26px;border-radius:12px 12px 0 0;text-align:center;">{{logo_html}}<p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">{{app_name}}</p><div style="font-size:36px;line-height:1;margin:0 0 8px;">'.$icon.'</div><h1 style="color:#fff;margin:0;font-size:23px;font-weight:700;line-height:1.3;">'.$title.'</h1></div><div style="background:#fff;padding:36px 40px 40px;border-radius:0 0 12px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.07);">'.$body.'</div><div style="text-align:center;padding:18px 0 0;color:#9ca3af;font-size:12px;line-height:1.9;"><p style="margin:0;"><strong style="color:#6b7280;">{{app_name}}</strong> &bull; Σύστημα Διαχείρισης Εθελοντών</p><p style="margin:0;">Αυτό το μήνυμα στάλθηκε αυτόματα από το σύστημα.</p></div></div></div>';
+                    return '<div style="background:#eef2f7;padding:28px 0 40px;font-family:Helvetica Neue,Arial,sans-serif;"><div style="max-width:600px;margin:0 auto;"><div style="background:'.$headerBg.';padding:30px 40px 26px;border-radius:12px 12px 0 0;text-align:center;">{{logo_html}}<p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">{{app_name}}</p><div style="font-size:36px;line-height:1;margin:0 0 8px;">'.$icon.'</div><h1 style="color:#fff;margin:0;font-size:23px;font-weight:700;line-height:1.3;">'.$title.'</h1></div><div style="background:#fff;padding:36px 40px 40px;border-radius:0 0 12px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.07);">'.$body.'</div><div style="text-align:center;padding:18px 0 0;color:#9ca3af;font-size:12px;line-height:1.9;"><p style="margin:0;"><strong style="color:#6b7280;">{{app_name}}</strong> &bull; Σύστημα Διαχείρισης Μελών</p><p style="margin:0;">Αυτό το μήνυμα στάλθηκε αυτόματα από το σύστημα.</p></div></div></div>';
                 };
                 $certBlock = function($borderColor) {
                     return '<div style="background:#f9fafb;border-left:4px solid '.$borderColor.';padding:2px 20px;border-radius:0 8px 8px 0;margin:20px 0;"><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Πιστοποιητικό:</span><span style="color:#111827;font-weight:600;">{{certificate_type}}</span></div><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Ημ. Λήξης:</span><span style="color:#111827;font-weight:600;">{{expiry_date}}</span></div><div style="padding:7px 0;font-size:14px;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Υπόλοιπες Ημέρες:</span><span style="color:#111827;font-weight:600;">{{days_remaining}} ημέρες</span></div></div>';
@@ -2088,7 +2088,7 @@ function runSchemaMigrations(): void {
             'up' => function () {
                 // Helper functions for styled email layout
                 $wrap = function($headerBg, $icon, $title, $body) {
-                    return '<div style="background:#eef2f7;padding:28px 0 40px;font-family:Helvetica Neue,Arial,sans-serif;"><div style="max-width:600px;margin:0 auto;"><div style="background:'.$headerBg.';padding:30px 40px 26px;border-radius:12px 12px 0 0;text-align:center;">{{logo_html}}<p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">{{app_name}}</p><div style="font-size:36px;line-height:1;margin:0 0 8px;">'.$icon.'</div><h1 style="color:#fff;margin:0;font-size:23px;font-weight:700;line-height:1.3;">'.$title.'</h1></div><div style="background:#fff;padding:36px 40px 40px;border-radius:0 0 12px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.07);">'.$body.'</div><div style="text-align:center;padding:18px 0 0;color:#9ca3af;font-size:12px;line-height:1.9;"><p style="margin:0;"><strong style="color:#6b7280;">{{app_name}}</strong> &bull; Σύστημα Διαχείρισης Εθελοντών</p><p style="margin:0;">Αυτό το μήνυμα στάλθηκε αυτόματα από το σύστημα.</p></div></div></div>';
+                    return '<div style="background:#eef2f7;padding:28px 0 40px;font-family:Helvetica Neue,Arial,sans-serif;"><div style="max-width:600px;margin:0 auto;"><div style="background:'.$headerBg.';padding:30px 40px 26px;border-radius:12px 12px 0 0;text-align:center;">{{logo_html}}<p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">{{app_name}}</p><div style="font-size:36px;line-height:1;margin:0 0 8px;">'.$icon.'</div><h1 style="color:#fff;margin:0;font-size:23px;font-weight:700;line-height:1.3;">'.$title.'</h1></div><div style="background:#fff;padding:36px 40px 40px;border-radius:0 0 12px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.07);">'.$body.'</div><div style="text-align:center;padding:18px 0 0;color:#9ca3af;font-size:12px;line-height:1.9;"><p style="margin:0;"><strong style="color:#6b7280;">{{app_name}}</strong> &bull; Σύστημα Διαχείρισης Μελών</p><p style="margin:0;">Αυτό το μήνυμα στάλθηκε αυτόματα από το σύστημα.</p></div></div></div>';
                 };
                 $info = function($borderColor, $rows) {
                     $html = '<div style="background:#f9fafb;border-left:4px solid '.$borderColor.';padding:2px 20px;border-radius:0 8px 8px 0;margin:20px 0;">';
@@ -2123,11 +2123,11 @@ function runSchemaMigrations(): void {
                     'task_subtask_completed' => $wrap('#22c55e', '&#9989;', 'Ολοκλήρωση Υποεργασίας',
                         $greet.$p('Ο/Η <strong>{{completed_by}}</strong> ολοκλήρωσε μια υποεργασία στην εργασία "<strong>{{task_title}}</strong>".').$info('#22c55e', [['Υποεργασία','{{subtask_title}}'],['Εργασία','{{task_title}}']]).$alert('#f0fdf4','#bbf7d0','#166534','✅ Η υποεργασία έχει σημανθεί ως ολοκληρωμένη.').$p('Συνδεθείτε στο σύστημα για να δείτε την πρόοδο της εργασίας.').$btn('#22c55e','Δείτε την Εργασία')),
 
-                    'mission_needs_members' => $wrap('#dc2626', '&#128680;', 'Χρειάζονται Εθελοντές!',
-                        $greet.$p('Η αποστολή "<strong>{{mission_title}}</strong>" χρειάζεται <strong>επειγόντως</strong> περισσότερους εθελοντές!').$info('#dc2626', [['Αποστολή','{{mission_title}}'],['Ημερομηνία','{{mission_date}}'],['Θέσεις Ανοιχτές','{{available_spots}}'],['Συνολικές Θέσεις','{{total_spots}}']]).$alert('#fef2f2','#fecaca','#dc2626','🚨 Η βοήθειά σας χρειάζεται! Κάθε εθελοντής κάνει τη διαφορά.').$p('Αν ενδιαφέρεστε να συμμετέχετε, παρακαλούμε συνδεθείτε στο σύστημα και κάντε αίτηση συμμετοχής.').$btn('#dc2626','Δηλώστε Συμμετοχή')),
+                    'mission_needs_members' => $wrap('#dc2626', '&#128680;', 'Χρειάζονται Μέλη!',
+                        $greet.$p('Η αποστολή "<strong>{{mission_title}}</strong>" χρειάζεται <strong>επειγόντως</strong> περισσότερους μέλη!').$info('#dc2626', [['Αποστολή','{{mission_title}}'],['Ημερομηνία','{{mission_date}}'],['Θέσεις Ανοιχτές','{{available_spots}}'],['Συνολικές Θέσεις','{{total_spots}}']]).$alert('#fef2f2','#fecaca','#dc2626','🚨 Η βοήθειά σας χρειάζεται! Κάθε μέλος κάνει τη διαφορά.').$p('Αν ενδιαφέρεστε να συμμετέχετε, παρακαλούμε συνδεθείτε στο σύστημα και κάντε αίτηση συμμετοχής.').$btn('#dc2626','Δηλώστε Συμμετοχή')),
 
                     'mission_reminder' => $wrap('#fd7e14', '&#128226;', 'Υπενθύμιση Αποστολής',
-                        $greet.$p('Η παρακάτω αποστολή είναι ακόμα <strong>ανοιχτή</strong> και αναζητά εθελοντές:').$info('#fd7e14', [['Αποστολή','{{mission_title}}'],['Περιγραφή','{{mission_description}}']]).$p('Μη χάσετε την ευκαιρία να συμμετέχετε και να κάνετε τη διαφορά!').$btn('#fd7e14','Δείτε την Αποστολή','{{mission_url}}')),
+                        $greet.$p('Η παρακάτω αποστολή είναι ακόμα <strong>ανοιχτή</strong> και αναζητά μέλη:').$info('#fd7e14', [['Αποστολή','{{mission_title}}'],['Περιγραφή','{{mission_description}}']]).$p('Μη χάσετε την ευκαιρία να συμμετέχετε και να κάνετε τη διαφορά!').$btn('#fd7e14','Δείτε την Αποστολή','{{mission_url}}')),
 
                     'shelf_expiry_reminder' => $wrap('#d97706', '&#128230;', 'Υπενθύμιση Λήξης Ραφιών Αποθήκης',
                         $greet.$p('Υπάρχουν είδη αποθήκης που πλησιάζουν ή έχουν ξεπεράσει την ημερομηνία λήξης τους.').$info('#d97706', [['Ληγμένα Είδη','{{expired_count}}'],['Κοντά σε Λήξη (εντός {{threshold_days}} ημερών)','{{expiring_count}}']]).'<div style="background:#f9fafb;border-radius:8px;padding:16px 20px;margin:20px 0;"><p style="color:#6b7280;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin:0 0 8px;">Λεπτομέρειες:</p><pre style="background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:12px 16px;font-size:13px;color:#374151;margin:0;white-space:pre-wrap;word-break:break-word;">{{details}}</pre></div>'.$p('Συνδεθείτε στο σύστημα για να ελέγξετε τα είδη.').$btn('#d97706','Διαχείριση Αποθήκης')),
@@ -2153,7 +2153,7 @@ function runSchemaMigrations(): void {
             'description' => 'Re-apply all email template styling (retry via PHP parameterized queries)',
             'up' => function () {
                 $wrap = function($headerBg, $icon, $title, $body) {
-                    return '<div style="background:#eef2f7;padding:28px 0 40px;font-family:Helvetica Neue,Arial,sans-serif;"><div style="max-width:600px;margin:0 auto;"><div style="background:'.$headerBg.';padding:30px 40px 26px;border-radius:12px 12px 0 0;text-align:center;">{{logo_html}}<p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">{{app_name}}</p><div style="font-size:36px;line-height:1;margin:0 0 8px;">'.$icon.'</div><h1 style="color:#fff;margin:0;font-size:23px;font-weight:700;line-height:1.3;">'.$title.'</h1></div><div style="background:#fff;padding:36px 40px 40px;border-radius:0 0 12px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.07);">'.$body.'</div><div style="text-align:center;padding:18px 0 0;color:#9ca3af;font-size:12px;line-height:1.9;"><p style="margin:0;"><strong style="color:#6b7280;">{{app_name}}</strong> &bull; Σύστημα Διαχείρισης Εθελοντών</p><p style="margin:0;">Αυτό το μήνυμα στάλθηκε αυτόματα από το σύστημα.</p></div></div></div>';
+                    return '<div style="background:#eef2f7;padding:28px 0 40px;font-family:Helvetica Neue,Arial,sans-serif;"><div style="max-width:600px;margin:0 auto;"><div style="background:'.$headerBg.';padding:30px 40px 26px;border-radius:12px 12px 0 0;text-align:center;">{{logo_html}}<p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">{{app_name}}</p><div style="font-size:36px;line-height:1;margin:0 0 8px;">'.$icon.'</div><h1 style="color:#fff;margin:0;font-size:23px;font-weight:700;line-height:1.3;">'.$title.'</h1></div><div style="background:#fff;padding:36px 40px 40px;border-radius:0 0 12px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.07);">'.$body.'</div><div style="text-align:center;padding:18px 0 0;color:#9ca3af;font-size:12px;line-height:1.9;"><p style="margin:0;"><strong style="color:#6b7280;">{{app_name}}</strong> &bull; Σύστημα Διαχείρισης Μελών</p><p style="margin:0;">Αυτό το μήνυμα στάλθηκε αυτόματα από το σύστημα.</p></div></div></div>';
                 };
                 $info = function($borderColor, $rows) {
                     $html = '<div style="background:#f9fafb;border-left:4px solid '.$borderColor.';padding:2px 20px;border-radius:0 8px 8px 0;margin:20px 0;">';
@@ -2198,13 +2198,13 @@ function runSchemaMigrations(): void {
                         $wrap('#22c55e', '&#9989;', 'Ολοκλήρωση Υποεργασίας',
                             $greet.$p('Ο/Η <strong>{{completed_by}}</strong> ολοκλήρωσε μια υποεργασία στην εργασία "<strong>{{task_title}}</strong>".').$info('#22c55e', [['Υποεργασία','{{subtask_title}}'],['Εργασία','{{task_title}}']]).$alert('#f0fdf4','#bbf7d0','#166534','✅ Η υποεργασία έχει σημανθεί ως ολοκληρωμένη.').$p('Συνδεθείτε στο σύστημα για να δείτε την πρόοδο της εργασίας.').$btn('#22c55e','Δείτε την Εργασία'))],
 
-                    'mission_needs_members' => ['Αποστολή Χρειάζεται Εθελοντές', 'Επείγον: Χρειάζονται Εθελοντές - {{mission_title}}',
-                        $wrap('#dc2626', '&#128680;', 'Χρειάζονται Εθελοντές!',
-                            $greet.$p('Η αποστολή "<strong>{{mission_title}}</strong>" χρειάζεται <strong>επειγόντως</strong> περισσότερους εθελοντές!').$info('#dc2626', [['Αποστολή','{{mission_title}}'],['Ημερομηνία','{{mission_date}}'],['Θέσεις Ανοιχτές','{{available_spots}}'],['Συνολικές Θέσεις','{{total_spots}}']]).$alert('#fef2f2','#fecaca','#dc2626','🚨 Η βοήθειά σας χρειάζεται! Κάθε εθελοντής κάνει τη διαφορά.').$p('Αν ενδιαφέρεστε να συμμετέχετε, παρακαλούμε συνδεθείτε στο σύστημα και κάντε αίτηση συμμετοχής.').$btn('#dc2626','Δηλώστε Συμμετοχή'))],
+                    'mission_needs_members' => ['Αποστολή Χρειάζεται Μέλη', 'Επείγον: Χρειάζονται Μέλη - {{mission_title}}',
+                        $wrap('#dc2626', '&#128680;', 'Χρειάζονται Μέλη!',
+                            $greet.$p('Η αποστολή "<strong>{{mission_title}}</strong>" χρειάζεται <strong>επειγόντως</strong> περισσότερους μέλη!').$info('#dc2626', [['Αποστολή','{{mission_title}}'],['Ημερομηνία','{{mission_date}}'],['Θέσεις Ανοιχτές','{{available_spots}}'],['Συνολικές Θέσεις','{{total_spots}}']]).$alert('#fef2f2','#fecaca','#dc2626','🚨 Η βοήθειά σας χρειάζεται! Κάθε μέλος κάνει τη διαφορά.').$p('Αν ενδιαφέρεστε να συμμετέχετε, παρακαλούμε συνδεθείτε στο σύστημα και κάντε αίτηση συμμετοχής.').$btn('#dc2626','Δηλώστε Συμμετοχή'))],
 
                     'mission_reminder' => ['Υπενθύμιση Αποστολής', 'Υπενθύμιση Αποστολής: {{mission_title}}',
                         $wrap('#fd7e14', '&#128226;', 'Υπενθύμιση Αποστολής',
-                            $greet.$p('Η παρακάτω αποστολή είναι ακόμα <strong>ανοιχτή</strong> και αναζητά εθελοντές:').$info('#fd7e14', [['Αποστολή','{{mission_title}}'],['Περιγραφή','{{mission_description}}']]).$p('Μη χάσετε την ευκαιρία να συμμετέχετε και να κάνετε τη διαφορά!').$btn('#fd7e14','Δείτε την Αποστολή','{{mission_url}}'))],
+                            $greet.$p('Η παρακάτω αποστολή είναι ακόμα <strong>ανοιχτή</strong> και αναζητά μέλη:').$info('#fd7e14', [['Αποστολή','{{mission_title}}'],['Περιγραφή','{{mission_description}}']]).$p('Μη χάσετε την ευκαιρία να συμμετέχετε και να κάνετε τη διαφορά!').$btn('#fd7e14','Δείτε την Αποστολή','{{mission_url}}'))],
 
                     'shelf_expiry_reminder' => ['Υπενθύμιση Λήξης Ραφιών Αποθήκης', 'Υπενθύμιση: Είδη Αποθήκης Λήγουν ή Έχουν Λήξει',
                         $wrap('#d97706', '&#128230;', 'Υπενθύμιση Λήξης Ραφιών Αποθήκης',
@@ -2437,20 +2437,20 @@ function runSchemaMigrations(): void {
 
                 // ── 2. Email templates (safe: ON DUPLICATE KEY touches nothing) ────
                 $tplHtml = [
-                    'complaint_submitted' => '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;"><div style="background:#dc2626;color:white;padding:20px;text-align:center;"><h1>&#9888; Νέο Παράπονο Εθελοντή</h1></div><div style="padding:30px;background:#fff;"><h2>Γεια σας {{admin_name}},</h2><p>Ο/Η εθελοντής <strong>{{member_name}}</strong> υπέβαλε νέο παράπονο.</p><ul><li><strong>Θέμα:</strong> {{complaint_subject}}</li><li><strong>Κατηγορία:</strong> {{complaint_category}}</li><li><strong>Προτεραιότητα:</strong> {{complaint_priority}}</li><li><strong>Αποστολή:</strong> {{mission_title}}</li></ul><p>{{complaint_body}}</p><p style="text-align:center;"><a href="{{complaint_url}}" style="background:#dc2626;color:white;padding:12px 28px;text-decoration:none;border-radius:5px;">Δείτε το Παράπονο</a></p></div><div style="padding:12px;background:#f8f9fa;text-align:center;font-size:12px;color:#666;">{{app_name}}</div></div>',
+                    'complaint_submitted' => '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;"><div style="background:#dc2626;color:white;padding:20px;text-align:center;"><h1>&#9888; Νέο Παράπονο Μέλους</h1></div><div style="padding:30px;background:#fff;"><h2>Γεια σας {{admin_name}},</h2><p>Ο/Η μέλος <strong>{{member_name}}</strong> υπέβαλε νέο παράπονο.</p><ul><li><strong>Θέμα:</strong> {{complaint_subject}}</li><li><strong>Κατηγορία:</strong> {{complaint_category}}</li><li><strong>Προτεραιότητα:</strong> {{complaint_priority}}</li><li><strong>Αποστολή:</strong> {{mission_title}}</li></ul><p>{{complaint_body}}</p><p style="text-align:center;"><a href="{{complaint_url}}" style="background:#dc2626;color:white;padding:12px 28px;text-decoration:none;border-radius:5px;">Δείτε το Παράπονο</a></p></div><div style="padding:12px;background:#f8f9fa;text-align:center;font-size:12px;color:#666;">{{app_name}}</div></div>',
                     'complaint_response'  => '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;"><div style="background:#16a34a;color:white;padding:20px;text-align:center;"><h1>&#128172; Απάντηση στο Παράπονό σας</h1></div><div style="padding:30px;background:#fff;"><h2>Γεια σας {{user_name}},</h2><p>Λάβαμε το παράπονό σας και σας αποστέλλουμε την απάντησή μας.</p><ul><li><strong>Θέμα:</strong> {{complaint_subject}}</li><li><strong>Νέα Κατάσταση:</strong> {{complaint_status}}</li><li><strong>Απάντηση από:</strong> {{responder_name}}</li></ul><blockquote style="background:#f0fdf4;border-left:4px solid #16a34a;padding:12px 16px;">{{admin_response}}</blockquote><p style="text-align:center;"><a href="{{complaint_url}}" style="background:#16a34a;color:white;padding:12px 28px;text-decoration:none;border-radius:5px;">Δείτε το Παράπονο</a></p></div><div style="padding:12px;background:#f8f9fa;text-align:center;font-size:12px;color:#666;">{{app_name}}</div></div>',
                 ];
                 $tplMeta = [
                     'complaint_submitted' => [
                         'name'    => 'Νέο Παράπονο (Admin)',
-                        'subject' => 'Νέο παράπονο εθελοντή - {{complaint_subject}}',
-                        'desc'    => 'Αποστέλλεται στους διαχειριστές όταν υποβάλλεται νέο παράπονο εθελοντή',
+                        'subject' => 'Νέο παράπονο μέλους - {{complaint_subject}}',
+                        'desc'    => 'Αποστέλλεται στους διαχειριστές όταν υποβάλλεται νέο παράπονο μέλους',
                         'vars'    => '{{app_name}}, {{admin_name}}, {{member_name}}, {{complaint_subject}}, {{complaint_category}}, {{complaint_priority}}, {{complaint_body}}, {{mission_title}}, {{complaint_url}}',
                     ],
                     'complaint_response'  => [
                         'name'    => 'Απάντηση Παραπόνου',
                         'subject' => 'Απάντηση στο παράπονό σας: {{complaint_subject}}',
-                        'desc'    => 'Αποστέλλεται στον εθελοντή όταν ο διαχειριστής απαντήσει στο παράπονό του',
+                        'desc'    => 'Αποστέλλεται στο μέλος όταν ο διαχειριστής απαντήσει στο παράπονό του',
                         'vars'    => '{{app_name}}, {{user_name}}, {{complaint_subject}}, {{complaint_status}}, {{responder_name}}, {{admin_response}}, {{complaint_url}}',
                     ],
                 ];
@@ -2521,7 +2521,7 @@ function runSchemaMigrations(): void {
                     'shift_swap_requested' => [
                         'name'    => 'Αίτημα Αντικατάστασης Βάρδιας',
                         'subject' => 'Αίτημα αντικατάστασης για αποστολή {{mission_title}}',
-                        'desc'    => 'Αποστέλλεται στον εθελοντή που ζητήθηκε να καλύψει τη βάρδια',
+                        'desc'    => 'Αποστέλλεται στο μέλος που ζητήθηκε να καλύψει τη βάρδια',
                         'vars'    => '{{user_name}}, {{requester_name}}, {{mission_title}}, {{shift_date}}, {{shift_time}}, {{message}}',
                         'html'    => '<div style="font-family:Arial,sans-serif"><div style="background:#8e44ad;color:#fff;padding:16px 20px"><h2 style="margin:0">&#128257; Αίτημα Αντικατάστασης</h2></div><div style="padding:20px"><p>Γεια, <strong>{{user_name}}</strong>!</p><p>Ο/Η <strong>{{requester_name}}</strong> σας ζητά να τον/την αντικαταστήσετε στη βάρδια:</p><ul><li><strong>Αποστολή:</strong> {{mission_title}}</li><li><strong>Ημ/νία:</strong> {{shift_date}}</li><li><strong>Ώρα:</strong> {{shift_time}}</li></ul><p>Συνδεθείτε για να αποδεχτείτε ή να αρνηθείτε το αίτημα.</p></div></div>',
                     ],
@@ -2535,7 +2535,7 @@ function runSchemaMigrations(): void {
                     'shift_swap_approved' => [
                         'name'    => 'Έγκριση Αντικατάστασης Βάρδιας',
                         'subject' => 'Η αντικατάσταση για {{mission_title}} εγκρίθηκε',
-                        'desc'    => 'Αποστέλλεται και στους δύο εθελοντές όταν ο διαχειριστής εγκρίνει',
+                        'desc'    => 'Αποστέλλεται και στους δύο μέλη όταν ο διαχειριστής εγκρίνει',
                         'vars'    => '{{user_name}}, {{replacement_name}}, {{mission_title}}, {{shift_date}}, {{shift_time}}',
                         'html'    => '<div style="font-family:Arial,sans-serif"><div style="background:#2980b9;color:#fff;padding:16px 20px"><h2 style="margin:0">&#9989; Αντικατάσταση Εγκρίθηκε</h2></div><div style="padding:20px"><p>Γεια, <strong>{{user_name}}</strong>!</p><p>Η αντικατάσταση για τη βάρδια εγκρίθηκε από τον διαχειριστή:</p><ul><li><strong>Αποστολή:</strong> {{mission_title}}</li><li><strong>Ημ/νία:</strong> {{shift_date}}</li><li><strong>Ώρα:</strong> {{shift_time}}</li></ul></div></div>',
                     ],
@@ -2583,7 +2583,7 @@ function runSchemaMigrations(): void {
                     'shift_swap_requested' => [
                         'name'    => 'Αίτημα Αντικατάστασης Βάρδιας',
                         'subject' => 'Αίτημα αντικατάστασης για αποστολή {{mission_title}}',
-                        'desc'    => 'Αποστέλλεται στον εθελοντή που ζητήθηκε να καλύψει τη βάρδια',
+                        'desc'    => 'Αποστέλλεται στο μέλος που ζητήθηκε να καλύψει τη βάρδια',
                         'vars'    => '{{user_name}}, {{requester_name}}, {{mission_title}}, {{shift_date}}, {{shift_time}}, {{message}}',
                         'html'    => '<div style="background:#eef2f7;padding:28px 0 40px;font-family:Helvetica Neue,Arial,sans-serif;"><div style="max-width:600px;margin:0 auto;"><div style="background:#8e44ad;padding:30px 40px 26px;border-radius:12px 12px 0 0;text-align:center;">{{logo_html}}<p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">{{app_name}}</p><div style="font-size:36px;line-height:1;margin:0 0 8px;">&#128257;</div><h1 style="color:#fff;margin:0;font-size:23px;font-weight:700;line-height:1.3;">Αίτημα Αντικατάστασης Βάρδιας</h1></div><div style="background:#fff;padding:36px 40px 40px;border-radius:0 0 12px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.07);"><h2 style="color:#1f2937;font-size:18px;font-weight:700;margin:0 0 14px;">Γεια σας {{user_name}},</h2><p style="color:#4b5563;line-height:1.65;font-size:15px;margin:0 0 14px;">Ο/Η <strong>{{requester_name}}</strong> σας ζητά να τον/την αντικαταστήσετε στην παρακάτω βάρδια. Συνδεθείτε για να αποδεχτείτε ή να αρνηθείτε το αίτημα.</p><div style="background:#f9fafb;border-left:4px solid #8e44ad;padding:2px 20px;border-radius:0 8px 8px 0;margin:20px 0;"><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Αποστολή:</span><span style="color:#111827;font-weight:600;">{{mission_title}}</span></div><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Ημερομηνία:</span><span style="color:#111827;font-weight:600;">{{shift_date}}</span></div><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Ώρα:</span><span style="color:#111827;font-weight:600;">{{shift_time}}</span></div><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Μήνυμα:</span><span style="color:#111827;font-weight:600;">{{message}}</span></div></div></div></div></div>',
                     ],
@@ -2597,7 +2597,7 @@ function runSchemaMigrations(): void {
                     'shift_swap_approved' => [
                         'name'    => 'Έγκριση Αντικατάστασης Βάρδιας',
                         'subject' => 'Η αντικατάσταση για {{mission_title}} εγκρίθηκε',
-                        'desc'    => 'Αποστέλλεται και στους δύο εθελοντές όταν ο διαχειριστής εγκρίνει',
+                        'desc'    => 'Αποστέλλεται και στους δύο μέλη όταν ο διαχειριστής εγκρίνει',
                         'vars'    => '{{user_name}}, {{replacement_name}}, {{mission_title}}, {{shift_date}}, {{shift_time}}',
                         'html'    => '<div style="background:#eef2f7;padding:28px 0 40px;font-family:Helvetica Neue,Arial,sans-serif;"><div style="max-width:600px;margin:0 auto;"><div style="background:#2563eb;padding:30px 40px 26px;border-radius:12px 12px 0 0;text-align:center;">{{logo_html}}<p style="color:rgba(255,255,255,0.7);font-size:11px;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">{{app_name}}</p><div style="font-size:36px;line-height:1;margin:0 0 8px;">&#9989;</div><h1 style="color:#fff;margin:0;font-size:23px;font-weight:700;line-height:1.3;">Αντικατάσταση Βάρδιας Εγκρίθηκε</h1></div><div style="background:#fff;padding:36px 40px 40px;border-radius:0 0 12px 12px;box-shadow:0 4px 20px rgba(0,0,0,0.07);"><h2 style="color:#1f2937;font-size:18px;font-weight:700;margin:0 0 14px;">Γεια σας {{user_name}},</h2><p style="color:#4b5563;line-height:1.65;font-size:15px;margin:0 0 14px;">Η αντικατάσταση στη βάρδια έχει εγκριθεί από τον διαχειριστή. Παρακαλούμε ελέγξτε τις ενημερωμένες βάρδιες σας.</p><div style="background:#f9fafb;border-left:4px solid #2563eb;padding:2px 20px;border-radius:0 8px 8px 0;margin:20px 0;"><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Αποστολή:</span><span style="color:#111827;font-weight:600;">{{mission_title}}</span></div><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Ημερομηνία:</span><span style="color:#111827;font-weight:600;">{{shift_date}}</span></div><div style="padding:7px 0;font-size:14px;border-bottom:1px solid #f3f4f6;"><span style="color:#9ca3af;display:inline-block;min-width:140px;">Ώρα:</span><span style="color:#111827;font-weight:600;">{{shift_time}}</span></div></div><p style="color:#6b7280;font-size:13px;line-height:1.6;margin:24px 0 0;">Αν έχετε απορίες, επικοινωνήστε με τον διαχειριστή σας.</p></div></div></div>',
                     ],
@@ -3082,7 +3082,7 @@ body { margin:0; padding:0; background:#f4f6f9; font-family: "Segoe UI", -apple-
                             'linear-gradient(90deg, #27ae60, #2ecc71, #27ae60)',
                             '#ffffff',
                             '#1a472a',
-                            'Εθελοντικές Δράσεις',
+                            'Δράσεις Λέσχης',
                             '#27ae60'
                         ),
                     ],
@@ -3268,7 +3268,7 @@ body{margin:0;padding:0;background:#f5f5f5;font-family:"Segoe UI",Roboto,Arial,s
     </td>
     <td style="background:#34495e;padding:28px 32px;vertical-align:middle;">
       <h1 style="margin:0;font-size:22px;font-weight:700;color:#ffffff;">{from_name}</h1>
-      <p style="margin:6px 0 0;font-size:12px;color:#bdc3c7;text-transform:uppercase;letter-spacing:1.5px;">Εθελοντική Ομάδα</p>
+      <p style="margin:6px 0 0;font-size:12px;color:#bdc3c7;text-transform:uppercase;letter-spacing:1.5px;">Λέσχη</p>
     </td>
   </tr>
   <!-- Accent line -->
@@ -3377,7 +3377,7 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                         'name' => 'Μηνιαία Ενημέρωση',
                         'description' => 'Μηνιαία ανασκόπηση δραστηριοτήτων και νέων',
                         'body' => '<h2 style="color:#2c3e50;">📋 Μηνιαία Ενημέρωση</h2>
-<p>Αγαπητοί εθελοντές,</p>
+<p>Αγαπητοί μέλη,</p>
 <p>Ακολουθεί η μηνιαία ανασκόπηση των δραστηριοτήτων μας:</p>
 
 <h3 style="color:#3498db;">🎯 Αποστολές του μήνα</h3>
@@ -3386,8 +3386,8 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
 <li>[Περιγραφή αποστολής 2]</li>
 </ul>
 
-<h3 style="color:#27ae60;">🏆 Κορυφαίοι Εθελοντές</h3>
-<p>[Αναφέρετε τους εθελοντές με τους περισσότερους πόντους]</p>
+<h3 style="color:#27ae60;">🏆 Κορυφαία Μέλη</h3>
+<p>[Αναφέρετε τα μέλη με τους περισσότερους πόντους]</p>
 
 <h3 style="color:#e67e22;">📅 Προσεχείς Δραστηριότητες</h3>
 <p>[Προσθέστε τις επερχόμενες αποστολές και εκδηλώσεις]</p>
@@ -3400,13 +3400,13 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                         'description' => 'Πρόσκληση συμμετοχής σε νέα αποστολή',
                         'body' => '<h2 style="color:#e74c3c;">🚨 Νέα Αποστολή - Χρειαζόμαστε τη βοήθειά σας!</h2>
 <p>Αγαπητέ/ή {name},</p>
-<p>Σας ενημερώνουμε για μια <strong>νέα αποστολή</strong> που χρειάζεται εθελοντές:</p>
+<p>Σας ενημερώνουμε για μια <strong>νέα αποστολή</strong> που χρειάζεται μέλη:</p>
 
 <table style="width:100%;border-collapse:collapse;margin:16px 0;">
 <tr style="background:#f8f9fa;"><td style="padding:10px;border:1px solid #dee2e6;font-weight:bold;">📍 Τοποθεσία</td><td style="padding:10px;border:1px solid #dee2e6;">[Τοποθεσία]</td></tr>
 <tr><td style="padding:10px;border:1px solid #dee2e6;font-weight:bold;">📅 Ημερομηνία</td><td style="padding:10px;border:1px solid #dee2e6;">[Ημερομηνία]</td></tr>
 <tr style="background:#f8f9fa;"><td style="padding:10px;border:1px solid #dee2e6;font-weight:bold;">⏰ Ώρες</td><td style="padding:10px;border:1px solid #dee2e6;">[Ώρες]</td></tr>
-<tr><td style="padding:10px;border:1px solid #dee2e6;font-weight:bold;">👥 Εθελοντές που χρειάζονται</td><td style="padding:10px;border:1px solid #dee2e6;">[Αριθμός]</td></tr>
+<tr><td style="padding:10px;border:1px solid #dee2e6;font-weight:bold;">👥 Μέλη που χρειάζονται</td><td style="padding:10px;border:1px solid #dee2e6;">[Αριθμός]</td></tr>
 </table>
 
 <p><strong>Δηλώστε συμμετοχή</strong> μέσω της πλατφόρμας VolunteerOps το συντομότερο δυνατό!</p>
@@ -3415,9 +3415,9 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                     ],
                     [
                         'name' => 'Γενική Ανακοίνωση',
-                        'description' => 'Γενικού σκοπού ανακοίνωση προς εθελοντές',
+                        'description' => 'Γενικού σκοπού ανακοίνωση προς μέλη',
                         'body' => '<h2 style="color:#2c3e50;">📢 Ανακοίνωση</h2>
-<p>Αγαπητοί εθελοντές,</p>
+<p>Αγαπητοί μέλη,</p>
 
 <p>[Γράψτε εδώ το κύριο μήνυμα της ανακοίνωσης]</p>
 
@@ -3432,10 +3432,10 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                     ],
                     [
                         'name' => 'Καλωσόρισμα Νέων Μελών',
-                        'description' => 'Μήνυμα καλωσορίσματος για νέους εθελοντές',
+                        'description' => 'Μήνυμα καλωσορίσματος για νέους μέλη',
                         'body' => '<h2 style="color:#27ae60;">🎉 Καλώς ήρθατε στην ομάδα μας!</h2>
 <p>Αγαπητέ/ή {name},</p>
-<p>Σας καλωσορίζουμε στην εθελοντική μας ομάδα! Είμαστε χαρούμενοι που είστε μαζί μας.</p>
+<p>Σας καλωσορίζουμε στη λέσχη μας! Είμαστε χαρούμενοι που είστε μαζί μας.</p>
 
 <h3 style="color:#3498db;">🚀 Πρώτα βήματα</h3>
 <ol>
@@ -4310,11 +4310,11 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
 
                 $templateReplacements = [
                     'VolunteerOps' => 'EasyRide',
-                    'Σύστημα Διαχείρισης Εθελοντών' => 'Λέσχη Μοτοσικλετιστών',
+                    'Σύστημα Διαχείρισης Μελών' => 'Λέσχη Μοτοσικλετιστών',
                     'Εθελοντικές Δράσεις' => 'Δράσεις Λέσχης',
                     'Αγαπητοί εθελοντές' => 'Αγαπητά μέλη',
-                    'Αγαπητοί Εθελοντές' => 'Αγαπητά Μέλη',
-                    'Κορυφαίοι Εθελοντές' => 'Ενεργά Μέλη',
+                    'Αγαπητοί Μέλη' => 'Αγαπητά Μέλη',
+                    'Κορυφαίοι Μέλη' => 'Ενεργά Μέλη',
                     'νέους εθελοντές' => 'νέα μέλη',
                     'νέοι εθελοντές' => 'νέα μέλη',
                     'νέος εθελοντής' => 'νέο μέλος',
@@ -4323,7 +4323,7 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                     'εθελοντική ομάδα' => 'λέσχη',
                     'εθελοντική' => 'της λέσχης',
                     'Εθελοντής' => 'Μέλος',
-                    'Εθελοντές' => 'Μέλη',
+                    'Μέλη' => 'Μέλη',
                     'εθελοντής' => 'μέλος',
                     'εθελοντές' => 'μέλη',
                     'εθελοντή' => 'μέλους',

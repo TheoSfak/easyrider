@@ -1,6 +1,6 @@
 <?php
-require_once __DIR__ . '/../bootstrap.php';
-require_once __DIR__ . '/../includes/import-functions.php';
+require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/includes/import-functions.php';
 requireRole([ROLE_SYSTEM_ADMIN]);
 
 $pageTitle = 'Εισαγωγή Μελών από CSV';
@@ -56,7 +56,7 @@ if ($step == '3' && isPost()) {
     redirect('import-members.php?step=4');
 }
 
-include __DIR__ . '/../includes/header.php';
+include __DIR__ . '/includes/header.php';
 ?>
 
 <div class="container-fluid py-4">
@@ -96,7 +96,7 @@ include __DIR__ . '/../includes/header.php';
                             <strong>Ρόλος:</strong> MEMBER / SHIFT_LEADER / DEPARTMENT_ADMIN / SYSTEM_ADMIN<br>
                             <strong>Boolean πεδία:</strong> Ναι = 1, Όχι = 0
                             <br class="mt-1">
-                            <a href="templates/members_template.csv" class="alert-link">
+                            <a href="exports/templates/members_template.csv" class="alert-link">
                                 <i class="bi bi-download"></i> Κατέβασμα Υποδείγματος
                             </a>
                         </div>
@@ -276,4 +276,4 @@ include __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+<?php include __DIR__ . '/includes/footer.php'; ?>

@@ -170,7 +170,7 @@ include __DIR__ . '/includes/header.php';
                 <thead class="table-light">
                     <tr>
                         <th>#</th>
-                        <th>Εθελοντής</th>
+                        <th>Μέλος</th>
                         <th>Θέμα</th>
                         <th>Κατηγορία</th>
                         <th>Προτεραιότητα</th>

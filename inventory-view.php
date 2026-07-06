@@ -233,7 +233,7 @@ include __DIR__ . '/includes/header.php';
             <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-4">
-                        <strong class="text-muted d-block mb-1">Εθελοντής</strong>
+                        <strong class="text-muted d-block mb-1">Μέλος</strong>
                         <?= h($activeBooking['member_name']) ?>
                         <?php if ($activeBooking['user_phone']): ?>
                             <br><small><i class="bi bi-telephone"></i> <?= h($activeBooking['user_phone']) ?></small>
@@ -299,7 +299,7 @@ include __DIR__ . '/includes/header.php';
                         <table class="table table-sm table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Εθελοντής</th>
+                                    <th>Μέλος</th>
                                     <th>Ημ/νία</th>
                                     <th>Τοποθεσία</th>
                                     <th>Κατάσταση</th>

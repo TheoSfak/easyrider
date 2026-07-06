@@ -72,7 +72,7 @@ if (isPost()) {
         } else {
             $certCount = dbFetchValue("SELECT COUNT(*) FROM member_certificates WHERE certificate_type_id = ?", [$id]);
             if ($certCount > 0) {
-                setFlash('error', 'Δεν μπορείτε να διαγράψετε αυτόν τον τύπο γιατί υπάρχουν <strong>' . $certCount . '</strong> πιστοποιητικά εθελοντών που τον χρησιμοποιούν. Απενεργοποιήστε τον αντί αυτού.');
+                setFlash('error', 'Δεν μπορείτε να διαγράψετε αυτόν τον τύπο γιατί υπάρχουν <strong>' . $certCount . '</strong> πιστοποιητικά μελών που τον χρησιμοποιούν. Απενεργοποιήστε τον αντί αυτού.');
             } else {
                 dbExecute("DELETE FROM certificate_types WHERE id = ?", [$id]);
                 logAudit('delete_certificate_type', 'certificate_types', $id);
@@ -100,7 +100,7 @@ include __DIR__ . '/includes/header.php';
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h1 class="h3 mb-1"><i class="bi bi-award me-2"></i>Τύποι Πιστοποιητικών</h1>
-        <p class="text-muted mb-0">Διαχείριση τύπων πιστοποιητικών εθελοντών</p>
+        <p class="text-muted mb-0">Διαχείριση τύπων πιστοποιητικών μελών</p>
     </div>
     <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createModal">
         <i class="bi bi-plus-circle me-1"></i>Νέος Τύπος
@@ -233,7 +233,7 @@ include __DIR__ . '/includes/header.php';
                         <label class="form-check-label" for="createRequired">
                             Υποχρεωτικό πιστοποιητικό
                         </label>
-                        <div class="form-text">Θα εμφανίζεται ως «ελλείπον» σε εθελοντές που δεν το έχουν.</div>
+                        <div class="form-text">Θα εμφανίζεται ως «ελλείπον» σε μέλη που δεν το έχουν.</div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -310,11 +310,11 @@ include __DIR__ . '/includes/header.php';
                     <?php if ($t['cert_count'] > 0): ?>
                     <div class="alert alert-warning">
                         <i class="bi bi-exclamation-triangle me-1"></i>
-                        Υπάρχουν <strong><?= $t['cert_count'] ?> πιστοποιητικά</strong> εθελοντών με αυτόν τον τύπο.
+                        Υπάρχουν <strong><?= $t['cert_count'] ?> πιστοποιητικά</strong> μελών με αυτόν τον τύπο.
                         Η διαγραφή δεν θα επιτραπεί. Μπορείτε να τον απενεργοποιήσετε.
                     </div>
                     <?php else: ?>
-                    <p class="text-muted">Δεν υπάρχουν πιστοποιητικά εθελοντών με αυτόν τον τύπο.</p>
+                    <p class="text-muted">Δεν υπάρχουν πιστοποιητικά μελών με αυτόν τον τύπο.</p>
                     <?php endif; ?>
                 </div>
                 <div class="modal-footer">
