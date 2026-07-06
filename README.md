@@ -4,14 +4,14 @@
 
 The app is built as a plain PHP project without a framework, so it can run on common shared hosting, XAMPP, or a standard Apache/PHP/MySQL production server.
 
-**Version:** 3.81.8  
+**Version:** 3.82.0  
 **Author:** Theodore Sfakianakis  
 **Repository:** https://github.com/TheoSfak/easyrider
 
 ![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?logo=php&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?logo=mysql&logoColor=white)
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white)
-![Version](https://img.shields.io/badge/version-3.81.8-blue)
+![Version](https://img.shields.io/badge/version-3.82.0-blue)
 
 ---
 
@@ -299,6 +299,11 @@ php /path/to/easyride/cron_daily.php
 ---
 
 ## Current Release Highlights
+
+### v3.82.0
+
+- Renamed "volunteer"/"Εθελοντής" to "member"/"Μέλος" throughout the entire application: database tables/columns/indexes, file names and URLs (old URLs 301-redirect automatically), every PHP identifier and query, and all Greek/English UI text — including careful Greek grammatical gender agreement (εθελοντής is masculine, μέλος is neuter). The app's internal access-guard constant and the literal database role/type values are intentionally left unchanged since they're invisible to users.
+- Replaced the legacy uniform-size fields (pants/shirt/blouse/fleece) and the ΕΠΙΔΡΑΣΙΣ/ΓΓΠΠ registry-number fields on the member form/profile/CSV import-export with a single optional "Αρ. Μητρώου Λέσχης" (Club Registry Number) field.
 
 ### v3.81.8
 
