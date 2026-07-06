@@ -4,14 +4,14 @@
 
 The app is built as a plain PHP project without a framework, so it can run on common shared hosting, XAMPP, or a standard Apache/PHP/MySQL production server.
 
-**Version:** 3.81.7  
+**Version:** 3.81.8  
 **Author:** Theodore Sfakianakis  
 **Repository:** https://github.com/TheoSfak/easyrider
 
 ![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?logo=php&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?logo=mysql&logoColor=white)
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white)
-![Version](https://img.shields.io/badge/version-3.81.7-blue)
+![Version](https://img.shields.io/badge/version-3.81.8-blue)
 
 ---
 
@@ -299,6 +299,10 @@ php /path/to/easyride/cron_daily.php
 ---
 
 ## Current Release Highlights
+
+### v3.81.8
+
+- Fix: the "Κλείσιμο Διαδρομής" (Close Ride) modal and the volunteer documents modal could grow taller than the viewport with no way to scroll to their footer buttons — the modal body now gets a proper internal scrollbar so the close/submit button is always reachable.
 
 ### v3.81.7
 
