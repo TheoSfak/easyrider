@@ -2383,9 +2383,10 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 <?php endif; ?>
 
-<?php if ((!empty($mission['latitude']) && !empty($mission['longitude'])) || !empty($routePoints)): ?>
+<?php if ((!$isMultiDayMission && ((!empty($mission['latitude']) && !empty($mission['longitude'])) || !empty($routePoints))) || $isMultiDayMission): ?>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<?php if (!$isMultiDayMission): ?>
 <script src="<?= rtrim(BASE_URL, '/') ?>/assets/js/ride-replay.js?v=<?= APP_VERSION ?>"></script>
 <script>
 (function () {
@@ -2448,5 +2449,157 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() { map.invalidateSize(); }, 150);
 })();
 </script>
+<?php endif; ?>
+
+<?php if ($isMultiDayMission): ?>
+<script>
+(function () {
+    var days = <?= json_encode(array_map(function ($day) {
+        return [
+            'day_number' => (int)$day['day_number'],
+            'date_label' => $day['date_label'],
+            'overnight_notes' => (string)($day['overnight_notes'] ?? ''),
+            'directions_url' => (string)($day['directions_url'] ?? ''),
+            'points' => $day['route_points_decoded'],
+            'geometry' => $day['geometry'],
+            'metrics' => [
+                'distance_label' => (string)($day['metrics']['distance_label'] ?? ''),
+                'moving_label' => (string)($day['metrics']['moving_label'] ?? ''),
+                'stop_label' => (string)($day['metrics']['stop_label'] ?? ''),
+                'total_label' => (string)($day['metrics']['total_label'] ?? ''),
+                'provider' => (string)($day['metrics']['provider'] ?? 'estimate'),
+            ],
+        ];
+    }, $missionDays), JSON_UNESCAPED_UNICODE) ?>;
+    var fallbackLat = <?= !empty($mission['latitude']) ? (float)$mission['latitude'] : 'null' ?>;
+    var fallbackLng = <?= !empty($mission['longitude']) ? (float)$mission['longitude'] : 'null' ?>;
+
+    var map = null;
+    var markers = [];
+    var polyline = null;
+
+    function esc(value) {
+        return String(value || '').replace(/[&<>"']/g, function(ch) {
+            return {'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;'}[ch];
+        });
+    }
+
+    function findDay(dayNumber) {
+        for (var i = 0; i < days.length; i++) {
+            if (days[i].day_number === dayNumber) return days[i];
+        }
+        return null;
+    }
+
+    function formatMetricsHtml(day) {
+        if (!day.points.length) {
+            return '<span class="text-muted small">Δεν έχουν οριστεί σημεία διαδρομής για αυτή τη μέρα.</span>';
+        }
+        var html = '<span class="badge bg-light text-dark border"><i class="bi bi-signpost-2 me-1"></i>' + esc(day.metrics.distance_label) + '</span>';
+        html += '<span class="badge bg-light text-dark border"><i class="bi bi-stopwatch me-1"></i>Οδήγηση ' + esc(day.metrics.moving_label) + '</span>';
+        html += '<span class="badge bg-warning text-dark"><i class="bi bi-cup-hot me-1"></i>Στάσεις ' + esc(day.metrics.stop_label) + '</span>';
+        html += '<span class="badge bg-primary"><i class="bi bi-clock-history me-1"></i>Σύνολο ' + esc(day.metrics.total_label) + '</span>';
+        html += day.metrics.provider === 'google'
+            ? '<span class="text-success align-self-center"><i class="bi bi-google me-1"></i>Διαδρομή μέσω Google.</span>'
+            : '<span class="text-muted align-self-center">Εκτίμηση σε ευθεία γραμμή.</span>';
+        return html;
+    }
+
+    function formatTimelineHtml(day) {
+        if (!day.points.length) {
+            return '<div class="list-group-item text-muted small">Δεν έχουν οριστεί σημεία διαδρομής.</div>';
+        }
+        return day.points.map(function(point, idx) {
+            var extras = '';
+            if (point.scheduled_time) extras += '<span class="badge bg-light text-dark border"><i class="bi bi-clock me-1"></i>' + esc(point.scheduled_time) + '</span>';
+            if (point.stop_minutes > 0) extras += '<span class="badge bg-warning text-dark"><i class="bi bi-cup-hot me-1"></i>Στάση ' + parseInt(point.stop_minutes, 10) + '\'</span>';
+            var notes = point.notes ? '<div class="text-muted small mt-1">' + esc(point.notes).replace(/\n/g, '<br>') + '</div>' : '';
+            return '<div class="list-group-item"><div class="d-flex gap-2">' +
+                '<span class="badge bg-primary rounded-circle d-inline-flex align-items-center justify-content-center flex-shrink-0" style="width:28px;height:28px;">' + (idx + 1) + '</span>' +
+                '<div class="flex-grow-1"><div class="d-flex flex-wrap align-items-center gap-2"><strong>' + esc(point.title || ('Σημείο ' + (idx + 1))) + '</strong>' + extras + '</div>' + notes + '</div>' +
+                '</div></div>';
+        }).join('');
+    }
+
+    function renderDay(dayNumber) {
+        var day = findDay(dayNumber);
+        if (!day) return;
+
+        document.querySelectorAll('#missionDayViewTabs .nav-link').forEach(function(tab) {
+            tab.classList.toggle('active', parseInt(tab.dataset.dayNumber, 10) === dayNumber);
+        });
+
+        document.getElementById('dayViewDate').textContent = day.date_label;
+
+        var overnightWrap = document.getElementById('dayViewOvernight');
+        if (day.overnight_notes) {
+            overnightWrap.style.display = '';
+            document.getElementById('dayViewOvernightText').textContent = day.overnight_notes;
+        } else {
+            overnightWrap.style.display = 'none';
+        }
+
+        var navBtn = document.getElementById('dayViewNavBtn');
+        if (day.directions_url) {
+            navBtn.href = day.directions_url;
+            navBtn.style.display = '';
+        } else {
+            navBtn.style.display = 'none';
+        }
+
+        document.getElementById('dayViewMetrics').innerHTML = formatMetricsHtml(day);
+        document.getElementById('dayViewTimeline').innerHTML = formatTimelineHtml(day);
+
+        markers.forEach(function(m) { m.remove(); });
+        markers = [];
+        if (polyline) { polyline.remove(); polyline = null; }
+
+        var latLngs = day.points.map(function(p) { return [p.lat, p.lng]; });
+        latLngs.forEach(function(latLng, index) {
+            var point = day.points[index];
+            var popup = '<strong>' + esc(point.title || ('Σημείο ' + (index + 1))) + '</strong>';
+            if (point.notes) popup += '<br><small>' + esc(point.notes) + '</small>';
+            var marker = L.circleMarker(latLng, {
+                radius: 5, color: '#0d6efd', fillColor: '#0d6efd', fillOpacity: 0.9, weight: 2
+            }).addTo(map).bindTooltip(String(index + 1), { permanent: true, direction: 'center', className: 'route-point-label' }).bindPopup(popup);
+            markers.push(marker);
+        });
+
+        if (latLngs.length >= 2) {
+            polyline = L.polyline(day.geometry.length >= 2 ? day.geometry : latLngs, { color: '#0d6efd', weight: 5, opacity: 0.85 }).addTo(map);
+        }
+
+        if (latLngs.length) {
+            map.fitBounds(L.latLngBounds(day.geometry.length >= 2 ? day.geometry.concat(latLngs) : latLngs), { padding: [25, 25] });
+        } else if (fallbackLat !== null) {
+            map.setView([fallbackLat, fallbackLng], 13);
+        } else {
+            map.setView([35.3387, 25.1442], 9);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        map = L.map('dayViewMap', { zoomControl: true, scrollWheelZoom: false }).setView([35.3387, 25.1442], 9);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom: 19
+        }).addTo(map);
+
+        document.querySelectorAll('#missionDayViewTabs .nav-link').forEach(function(tab) {
+            tab.addEventListener('click', function(e) {
+                e.preventDefault();
+                renderDay(parseInt(tab.dataset.dayNumber, 10));
+            });
+        });
+
+        if (days.length) {
+            renderDay(days[0].day_number);
+        }
+        setTimeout(function() { map.invalidateSize(); }, 150);
+    });
+})();
+</script>
+<?php endif; ?>
+
 <?php endif; ?>
 <?php include __DIR__ . '/includes/footer.php'; ?>
