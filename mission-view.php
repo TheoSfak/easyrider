@@ -32,6 +32,16 @@ $routePoints = normalizeRideRoutePoints($mission['route_points'] ?? '[]');
 $routeMetrics = rideMissionRouteMetrics($mission, $routePoints);
 $routeGeometry = rideRouteGeometry($mission);
 
+$missionDays = dbFetchAll("SELECT * FROM mission_days WHERE mission_id = ? ORDER BY day_number", [$id]);
+$isMultiDayMission = !empty($missionDays);
+foreach ($missionDays as &$day) {
+    $day['route_points_decoded'] = normalizeRideRoutePoints($day['route_points'] ?? '[]');
+    $day['metrics'] = rideMissionRouteMetrics($day, $day['route_points_decoded']);
+    $day['geometry'] = rideRouteGeometry($day);
+    $day['date_label'] = formatDateGreek($day['day_date']);
+}
+unset($day);
+
 function buildGoogleMapsDirectionsUrl(array $routePoints, array $mission): string {
     if (count($routePoints) >= 2) {
         $origin = $routePoints[0]['lat'] . ',' . $routePoints[0]['lng'];
@@ -69,6 +79,11 @@ function buildGoogleMapsDirectionsUrl(array $routePoints, array $mission): strin
 }
 
 $googleDirectionsUrl = buildGoogleMapsDirectionsUrl($routePoints, $mission);
+
+foreach ($missionDays as &$day) {
+    $day['directions_url'] = buildGoogleMapsDirectionsUrl($day['route_points_decoded'], $mission);
+}
+unset($day);
 
 $pageTitle = $mission['title'];
 $user = getCurrentUser();
@@ -1069,7 +1084,7 @@ include __DIR__ . '/includes/header.php';
             </div>
         </div>
 
-        <?php if ((!empty($mission['latitude']) && !empty($mission['longitude'])) || !empty($routePoints)): ?>
+        <?php if (!$isMultiDayMission && ((!empty($mission['latitude']) && !empty($mission['longitude'])) || !empty($routePoints))): ?>
         <!-- Mission Location Map -->
         <div class="card mb-4">
             <div class="card-header py-2 bg-light d-flex justify-content-between align-items-center">
@@ -1104,7 +1119,7 @@ include __DIR__ . '/includes/header.php';
         </div>
         <?php endif; ?>
 
-        <?php if (!empty($routePoints)): ?>
+        <?php if (!$isMultiDayMission && !empty($routePoints)): ?>
         <div class="card mb-4">
             <div class="card-header py-2 bg-light d-flex justify-content-between align-items-center">
                 <h6 class="mb-0"><i class="bi bi-clock-history me-1 text-primary"></i>Χρονοδιάγραμμα Διαδρομής</h6>
