@@ -1168,6 +1168,35 @@ include __DIR__ . '/includes/header.php';
         </div>
         <?php endif; ?>
 
+        <?php if ($isMultiDayMission): ?>
+        <div class="card mb-4">
+            <div class="card-header py-2 bg-light">
+                <h6 class="mb-0"><i class="bi bi-calendar-range me-1 text-primary"></i>Ημερήσιο Πρόγραμμα</h6>
+            </div>
+            <ul class="nav nav-pills p-2 border-bottom" id="missionDayViewTabs">
+                <?php foreach ($missionDays as $i => $day): ?>
+                <li class="nav-item">
+                    <a href="#" class="nav-link py-1 px-2<?= $i === 0 ? ' active' : '' ?>" data-day-number="<?= (int)$day['day_number'] ?>">
+                        <?= h($day['title'] ?: 'Μέρα ' . (int)$day['day_number']) ?> · <?= h(date('d/m', strtotime($day['day_date']))) ?>
+                    </a>
+                </li>
+                <?php endforeach; ?>
+            </ul>
+            <div class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center small">
+                <span id="dayViewDate" class="text-muted"></span>
+                <a href="#" id="dayViewNavBtn" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:.75rem;display:none;">
+                    <i class="bi bi-sign-turn-right me-1"></i>Πλοήγηση
+                </a>
+            </div>
+            <div id="dayViewOvernight" class="px-3 py-2 border-bottom small bg-light" style="display:none;">
+                <i class="bi bi-moon-stars me-1"></i><span id="dayViewOvernightText"></span>
+            </div>
+            <div id="dayViewMap" style="height:320px;"></div>
+            <div class="p-2 border-bottom d-flex flex-wrap gap-2 small" id="dayViewMetrics"></div>
+            <div class="list-group list-group-flush" id="dayViewTimeline"></div>
+        </div>
+        <?php endif; ?>
+
         <?php if ($canViewRideEvents): ?>
         <div class="card mb-4" id="ride-events-panel">
             <div class="card-header py-2 bg-light d-flex justify-content-between align-items-center">
