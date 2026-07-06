@@ -1317,7 +1317,7 @@ include __DIR__ . '/includes/header.php';
                         <input type="hidden" name="brand_id" value="<?= $pb['id'] ?>">
                         <button type="submit" class="btn btn-sm btn-success">Έγκριση</button>
                     </form>
-                    <form method="post" class="d-inline" onsubmit="return confirm('<?= $pb['usage_count'] > 0 ? 'Χρησιμοποιείται από ' . $pb['usage_count'] . ' μέλος/μέλη — θα αδειάσει το πεδίο τους. ' : '' ?>Απόρριψη της μάρκας <?= h($pb['name']) ?>;');">
+                    <form method="post" class="d-inline js-confirm-submit" data-confirm-message="<?= h(($pb['usage_count'] > 0 ? 'Χρησιμοποιείται από ' . $pb['usage_count'] . ' μέλος/μέλη — θα αδειάσει το πεδίο τους. ' : '') . 'Απόρριψη της μάρκας ' . $pb['name'] . ';') ?>">
                         <?= csrfField() ?>
                         <input type="hidden" name="action" value="reject_moto_brand">
                         <input type="hidden" name="brand_id" value="<?= $pb['id'] ?>">
@@ -1340,7 +1340,7 @@ include __DIR__ . '/includes/header.php';
                         <input type="hidden" name="model_id" value="<?= $pm['id'] ?>">
                         <button type="submit" class="btn btn-sm btn-success">Έγκριση</button>
                     </form>
-                    <form method="post" class="d-inline" onsubmit="return confirm('<?= $pm['usage_count'] > 0 ? 'Χρησιμοποιείται από ' . $pm['usage_count'] . ' μέλος/μέλη — θα αδειάσει το πεδίο τους. ' : '' ?>Απόρριψη του μοντέλου <?= h($pm['name']) ?>;');">
+                    <form method="post" class="d-inline js-confirm-submit" data-confirm-message="<?= h(($pm['usage_count'] > 0 ? 'Χρησιμοποιείται από ' . $pm['usage_count'] . ' μέλος/μέλη — θα αδειάσει το πεδίο τους. ' : '') . 'Απόρριψη του μοντέλου ' . $pm['name'] . ';') ?>">
                         <?= csrfField() ?>
                         <input type="hidden" name="action" value="reject_moto_model">
                         <input type="hidden" name="model_id" value="<?= $pm['id'] ?>">
@@ -1351,6 +1351,13 @@ include __DIR__ . '/includes/header.php';
         <?php endforeach; ?>
     </div>
 </div>
+<script>
+document.querySelectorAll('form.js-confirm-submit').forEach(function (f) {
+    f.addEventListener('submit', function (e) {
+        if (!confirm(f.dataset.confirmMessage)) e.preventDefault();
+    });
+});
+</script>
 <?php endif; ?>
 
 <?php endif; ?>
