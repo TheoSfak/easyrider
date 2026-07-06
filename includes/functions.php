@@ -619,3 +619,54 @@ function canSeeTep(?int $responsibleUserId = null): bool {
     if ($responsibleUserId && $responsibleUserId === getCurrentUserId()) return true;
     return false;
 }
+
+/**
+ * Resolve a motorcycle brand name to its id, reusing any existing row
+ * (approved or pending) by case-insensitive match. Creates a new pending
+ * (is_approved = 0) row if no match exists. Returns null for empty input.
+ */
+function resolveMotorcycleBrandId(?string $brandName, int $createdBy): ?int {
+    $brandName = trim((string) $brandName);
+    if ($brandName === '') {
+        return null;
+    }
+
+    $existingId = dbFetchValue(
+        "SELECT id FROM motorcycle_brands WHERE LOWER(name) = LOWER(?)",
+        [$brandName]
+    );
+    if ($existingId) {
+        return (int) $existingId;
+    }
+
+    return (int) dbInsert(
+        "INSERT INTO motorcycle_brands (name, is_approved, created_by, created_at) VALUES (?, 0, ?, NOW())",
+        [$brandName, $createdBy]
+    );
+}
+
+/**
+ * Resolve a motorcycle model name (scoped to a brand id) to its id, reusing
+ * any existing row (approved or pending) by case-insensitive match within
+ * that brand. Creates a new pending (is_approved = 0) row if no match
+ * exists. Returns null if the model name or brand id is missing.
+ */
+function resolveMotorcycleModelId(?string $modelName, ?int $brandId, int $createdBy): ?int {
+    $modelName = trim((string) $modelName);
+    if ($modelName === '' || !$brandId) {
+        return null;
+    }
+
+    $existingId = dbFetchValue(
+        "SELECT id FROM motorcycle_models WHERE brand_id = ? AND LOWER(name) = LOWER(?)",
+        [$brandId, $modelName]
+    );
+    if ($existingId) {
+        return (int) $existingId;
+    }
+
+    return (int) dbInsert(
+        "INSERT INTO motorcycle_models (brand_id, name, is_approved, created_by, created_at) VALUES (?, ?, 0, ?, NOW())",
+        [$brandId, $modelName, $createdBy]
+    );
+}
