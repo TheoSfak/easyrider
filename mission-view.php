@@ -31,6 +31,7 @@ if (!$mission) {
 $routePoints = normalizeRideRoutePoints($mission['route_points'] ?? '[]');
 $routeMetrics = rideMissionRouteMetrics($mission, $routePoints);
 $routeGeometry = rideRouteGeometry($mission);
+$replayPoints = rideReplayPoints($routeGeometry, $routePoints);
 
 $missionDays = dbFetchAll("SELECT * FROM mission_days WHERE mission_id = ? ORDER BY day_number", [$id]);
 $isMultiDayMission = !empty($missionDays);
@@ -123,14 +124,14 @@ $canResolveRideEvents = isRideController($mission, $user);
 $canViewRideEvents = $canManageMissions || $isResponsible || $canResolveRideEvents;
 $rideEvents = $canViewRideEvents ? getRideEvents($id, 40, false) : [];
 
-$rideReplayEvents = [];
-if ($mission['status'] === STATUS_COMPLETED && count($routeGeometry) >= 2) {
-    $eventsWithFractions = rideEventRoutePositions($routeGeometry, $rideEvents ?? []);
+function buildReplayEvents(array $routePoints, array $events): array {
+    $replayEvents = [];
+    $eventsWithFractions = rideEventRoutePositions($routePoints, $events);
     foreach ($eventsWithFractions as $event) {
         if ($event['route_fraction'] === null) {
             continue;
         }
-        $rideReplayEvents[] = [
+        $replayEvents[] = [
             'lat' => (float)$event['lat'],
             'lng' => (float)$event['lng'],
             'title' => (string)$event['title'],
@@ -138,6 +139,12 @@ if ($mission['status'] === STATUS_COMPLETED && count($routeGeometry) >= 2) {
             'routeFraction' => (float)$event['route_fraction'],
         ];
     }
+    return $replayEvents;
+}
+
+$rideReplayEvents = [];
+if ($mission['status'] === STATUS_COMPLETED && count($replayPoints) >= 2) {
+    $rideReplayEvents = buildReplayEvents($replayPoints, $rideEvents ?? []);
 }
 
 $rideReadiness = $canViewRideEvents ? getRideReadinessSummary($id) : null;
@@ -1105,7 +1112,7 @@ include __DIR__ . '/includes/header.php';
                     <i class="bi bi-box-arrow-up-right me-1"></i>Google Maps
                 </a>
                 <?php endif; ?>
-                <?php if ($mission['status'] === STATUS_COMPLETED && count($routeGeometry) >= 2): ?>
+                <?php if ($mission['status'] === STATUS_COMPLETED && count($replayPoints) >= 2): ?>
                 <button type="button" class="btn btn-outline-primary btn-sm py-0 px-2" style="font-size:.75rem"
                         data-bs-toggle="modal" data-bs-target="#rideReplayModal">
                     <i class="bi bi-film me-1"></i>Ride Replay
@@ -2395,8 +2402,9 @@ document.addEventListener('DOMContentLoaded', function() {
     var label = <?= json_encode($mission['location']) ?>;
     var routePoints = <?= json_encode($routePoints, JSON_UNESCAPED_UNICODE) ?>;
     var routeGeometry = <?= json_encode($routeGeometry) ?>;
+    var replayPoints = <?= json_encode($replayPoints) ?>;
     window.easyRideReplayData = {
-        points: routeGeometry,
+        points: replayPoints,
         distanceMeters: <?= json_encode((float)($routeMetrics['distance_meters'] ?? 0)) ?>,
         distanceLabel: <?= json_encode((string)($routeMetrics['distance_label'] ?? '')) ?>,
         totalMinutes: <?= json_encode((int)($routeMetrics['total_minutes'] ?? 0)) ?>,
