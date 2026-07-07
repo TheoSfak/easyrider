@@ -273,7 +273,7 @@ include __DIR__ . '/includes/header.php';
         <div class="list-group-item">
             <div class="row align-items-center">
                 <div class="col">
-                    <strong><?= h($sr['requester_name']) ?></strong> δεν μπορεί να παραστεί στο σκέλος:
+                    <strong><?= h($sr['requester_name']) ?></strong> δεν μπορεί να παραστεί στον Κύκλο Εγγραφών:
                     <div class="mt-1">
                         <i class="bi bi-flag-fill text-primary me-1"></i><?= h($sr['mission_title']) ?> &nbsp;
                         <i class="bi bi-calendar3 me-1 text-muted"></i><?= formatDateTime($sr['start_time'], 'd/m/Y') ?> &nbsp;
@@ -362,7 +362,7 @@ include __DIR__ . '/includes/header.php';
                 <thead>
                     <tr>
                         <th>Δράση</th>
-                        <th>Σκέλος</th>
+                        <th>Κύκλος Εγγραφών</th>
                         <th>Τοποθεσία</th>
                         <th>Ημ/νία Αίτησης</th>
                         <th>Ενέργειες</th>
@@ -413,7 +413,7 @@ include __DIR__ . '/includes/header.php';
                             </div>
                         <?php endif; ?>
                         <div class="mobile-card-row">
-                            <div class="mobile-card-label">Σκέλος</div>
+                            <div class="mobile-card-label">Κύκλος Εγγραφών</div>
                             <small><i class="bi bi-calendar me-1"></i><?= formatDateTime($p['start_time'], 'd/m/Y') ?> &nbsp;<?= formatDateTime($p['start_time'], 'H:i') ?> - <?= formatDateTime($p['end_time'], 'H:i') ?></small>
                         </div>
                         <div class="mobile-card-row">
@@ -455,7 +455,7 @@ include __DIR__ . '/includes/header.php';
                 <thead>
                     <tr>
                         <th>Δράση</th>
-                        <th>Σκέλος</th>
+                        <th>Κύκλος Εγγραφών</th>
                         <th>Τοποθεσία</th>
                         <th>Κατάσταση</th>
                         <th>Εγκρίθηκε</th>
@@ -550,7 +550,7 @@ include __DIR__ . '/includes/header.php';
                             </div>
                         <?php endif; ?>
                         <div class="mobile-card-row">
-                            <div class="mobile-card-label">Σκέλος</div>
+                            <div class="mobile-card-label">Κύκλος Εγγραφών</div>
                             <small><i class="bi bi-calendar me-1"></i><?= formatDateTime($p['start_time'], 'd/m/Y') ?> &nbsp;<?= formatDateTime($p['start_time'], 'H:i') ?> - <?= formatDateTime($p['end_time'], 'H:i') ?></small>
                         </div>
                         <div class="mobile-card-row">
@@ -611,7 +611,7 @@ include __DIR__ . '/includes/header.php';
                 <thead>
                     <tr>
                         <th>Δράση</th>
-                        <th>Σκέλος</th>
+                        <th>Κύκλος Εγγραφών</th>
                         <th>Λόγος Απόρριψης</th>
                         <th>Ημ/νία Απόρριψης</th>
                     </tr>
@@ -664,7 +664,7 @@ include __DIR__ . '/includes/header.php';
                             </div>
                         <?php endif; ?>
                         <div class="mobile-card-row">
-                            <div class="mobile-card-label">Σκέλος</div>
+                            <div class="mobile-card-label">Κύκλος Εγγραφών</div>
                             <small><i class="bi bi-calendar me-1"></i><?= formatDateTime($p['start_time'], 'd/m/Y') ?> &nbsp;<?= formatDateTime($p['start_time'], 'H:i') ?> - <?= formatDateTime($p['end_time'], 'H:i') ?></small>
                         </div>
                         <div class="mobile-card-row">
@@ -703,7 +703,7 @@ include __DIR__ . '/includes/header.php';
                 <thead>
                     <tr>
                         <th>Δράση</th>
-                        <th>Σκέλος</th>
+                        <th>Κύκλος Εγγραφών</th>
                         <th>Κατάσταση</th>
                         <th>Ημ/νία</th>
                     </tr>
@@ -745,7 +745,7 @@ include __DIR__ . '/includes/header.php';
                             </div>
                         </div>
                         <div class="mobile-card-row">
-                            <div class="mobile-card-label">Σκέλος</div>
+                            <div class="mobile-card-label">Κύκλος Εγγραφών</div>
                             <small><i class="bi bi-calendar me-1"></i><?= formatDateTime($p['start_time'], 'd/m/Y') ?> &nbsp;<?= formatDateTime($p['start_time'], 'H:i') ?> - <?= formatDateTime($p['end_time'], 'H:i') ?></small>
                         </div>
                         <div class="mobile-card-row">

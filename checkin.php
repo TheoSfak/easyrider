@@ -62,7 +62,7 @@ if (!$shift) {
                 <div class="card-body py-5">
                     <i class="bi bi-exclamation-triangle text-danger" style="font-size:3rem;"></i>
                     <h4 class="mt-3">Μη έγκυρος QR κωδικός</h4>
-                    <p class="text-muted">Αυτός ο σύνδεσμος δεν αντιστοιχεί σε ενεργή βάρδια.</p>
+                    <p class="text-muted">Αυτός ο σύνδεσμος δεν αντιστοιχεί σε ενεργό Κύκλο Εγγραφών.</p>
                     <a href="dashboard.php" class="btn btn-outline-secondary mt-2">
                         <i class="bi bi-house me-1"></i>Αρχική
                     </a>
@@ -114,7 +114,7 @@ if (isPost()) {
     verifyCsrf();
 
     if (!$pr) {
-        setFlash('error', 'Δεν βρέθηκε εγκεκριμένη συμμετοχή για αυτή τη βάρδια.');
+        setFlash('error', 'Δεν βρέθηκε εγκεκριμένη συμμετοχή για αυτόν τον Κύκλο Εγγραφών.');
         redirect('checkin.php?token=' . urlencode($token));
     }
 
@@ -172,7 +172,7 @@ include __DIR__ . '/includes/header.php';
                     <div class="alert alert-warning mb-0">
                         <i class="bi bi-exclamation-triangle me-2"></i>
                         <strong>Δεν βρέθηκε εγκεκριμένη συμμετοχή</strong>
-                        <p class="mb-0 mt-1 small">Δεν έχετε εγκεκριμένη αίτηση για αυτή τη βάρδια. Επικοινωνήστε με τον υπεύθυνο βάρδιας.</p>
+                        <p class="mb-0 mt-1 small">Δεν έχετε εγκεκριμένη αίτηση για αυτόν τον Κύκλο Εγγραφών. Επικοινωνήστε με τον υπεύθυνο Κύκλου Εγγραφών.</p>
                     </div>
 
                 <?php elseif (!empty($pr['attendance_confirmed_at']) && !empty($pr['attended'])): ?>
@@ -190,7 +190,7 @@ include __DIR__ . '/includes/header.php';
                         <i class="bi bi-person-exclamation me-2"></i>
                         <strong>Απαιτείται παρέμβαση διαχειριστή</strong>
                         <p class="mb-0 mt-1 small">
-                            Η παρουσία σας έχει ήδη σημειωθεί ως απουσία. Επικοινωνήστε με τον υπεύθυνο βάρδιας ή διαχειριστή για έλεγχο.
+                            Η παρουσία σας έχει ήδη σημειωθεί ως απουσία. Επικοινωνήστε με τον υπεύθυνο Κύκλου Εγγραφών ή διαχειριστή για έλεγχο.
                         </p>
                     </div>
 

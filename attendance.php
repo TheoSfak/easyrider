@@ -251,9 +251,9 @@ if (isPost()) {
             
             // Award points
             dbInsert(
-                "INSERT INTO member_points (user_id, points, reason, description, pointable_type, pointable_id, created_at) 
+                "INSERT INTO member_points (user_id, points, reason, description, pointable_type, pointable_id, created_at)
                  VALUES (?, ?, ?, ?, ?, ?, NOW())",
-                [$pr['member_id'], $points, 'SHIFT_COMPLETED', 'Βάρδια: ' . $mission['title'], 'App\\Models\\Shift', $shiftId]
+                [$pr['member_id'], $points, 'SHIFT_COMPLETED', 'Κύκλος Εγγραφών: ' . $mission['title'], 'App\\Models\\Shift', $shiftId]
             );
             
             // Update user total points
@@ -330,7 +330,7 @@ include __DIR__ . '/includes/header.php';
 <!-- Shifts Accordion -->
 <?php if (empty($shifts)): ?>
     <div class="alert alert-info">
-        <i class="bi bi-info-circle me-2"></i>Δεν υπάρχουν βάρδιες σε αυτή την αποστολή.
+        <i class="bi bi-info-circle me-2"></i>Δεν υπάρχουν κύκλοι εγγραφών σε αυτή την αποστολή.
     </div>
 <?php else: ?>
     <div class="accordion" id="shiftsAccordion">

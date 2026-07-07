@@ -278,7 +278,7 @@ include __DIR__ . '/includes/header.php';
                         <th>Μέλος</th>
                     <?php endif; ?>
                     <th>Αποστολή</th>
-                    <th>Βάρδια</th>
+                    <th>Κύκλος Εγγραφών</th>
                     <th>Κατάσταση</th>
                     <th>Ημ/νία Αίτησης</th>
                     <th>Απόφαση</th>
