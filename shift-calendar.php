@@ -1,13 +1,13 @@
 <?php
 /**
- * VolunteerOps - Ημερολόγιο Βάρδιων
+ * VolunteerOps - Ημερολόγιο Κύκλων Εγγραφών
  * Interactive FullCalendar view of all shifts with colour-coded fill rates.
  */
 
 require_once __DIR__ . '/bootstrap.php';
 requireLogin();
 
-$pageTitle = 'Ημερολόγιο Βάρδιων';
+$pageTitle = 'Ημερολόγιο Κύκλων Εγγραφών';
 
 // Data for filter dropdowns
 $missionTypes = dbFetchAll("SELECT id, name FROM mission_types ORDER BY name");
@@ -289,8 +289,8 @@ include __DIR__ . '/includes/header.php';
 <div class="cal-hero d-flex justify-content-between align-items-center">
     <div style="position:relative;z-index:1;">
         <p class="cal-hero-sub mb-1"><i class="bi bi-calendar3 me-1"></i>Ημερολόγιο</p>
-        <h1 class="cal-hero-title">Βάρδιες Αποστολών</h1>
-        <p class="cal-hero-sub">Εποπτεία και διαχείριση βαρδιών μελών</p>
+        <h1 class="cal-hero-title">Κύκλοι Εγγραφών Αποστολών</h1>
+        <p class="cal-hero-sub">Εποπτεία και διαχείριση Κύκλων Εγγραφών μελών</p>
     </div>
     <div class="d-none d-md-flex align-items-center gap-2" style="position:relative;z-index:1;">
         <a href="shifts.php" class="btn btn-sm btn-light fw-semibold">
@@ -480,13 +480,13 @@ document.addEventListener('DOMContentLoaded', function () {
             const gs = info.event.start ? info.event.start.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'') : '';
             const ge = info.event.end   ? info.event.end.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'') : gs;
             const gcalUrl = 'https://calendar.google.com/calendar/render?action=TEMPLATE'
-                + '&text='     + encodeURIComponent(ep.mission_title + ' — Βάρδια #' + ep.shift_id)
+                + '&text='     + encodeURIComponent(ep.mission_title + ' — Κύκλος Εγγραφών #' + ep.shift_id)
                 + '&dates='    + gs + '/' + ge
-                + '&details='  + encodeURIComponent('Βάρδια Λέσχης - ' + ep.mission_title)
+                + '&details='  + encodeURIComponent('Κύκλος Εγγραφών Λέσχης - ' + ep.mission_title)
                 + '&location=' + encodeURIComponent(ep.location || '');
 
             const viewLink = info.event.url
-                ? '<a href="' + info.event.url + '" class="btn btn-sm btn-outline-primary w-100 mt-2" style="font-size:0.78rem;"><i class="bi bi-eye me-1"></i>Προβολή Βάρδιας</a>'
+                ? '<a href="' + info.event.url + '" class="btn btn-sm btn-outline-primary w-100 mt-2" style="font-size:0.78rem;"><i class="bi bi-eye me-1"></i>Προβολή Κύκλου Εγγραφών</a>'
                 : '';
 
             const body =

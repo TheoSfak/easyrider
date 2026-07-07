@@ -260,7 +260,7 @@ if (isPost()) {
                             "INSERT INTO member_points 
                              (user_id, points, reason, description, pointable_type, pointable_id, created_at)
                              VALUES (?, ?, ?, ?, 'App\\\\Models\\\\Shift', ?, NOW())",
-                            [$pr['member_id'], $points, 'shift_attendance', "Βάρδια: " . $shift['mission_title'], $id]
+                            [$pr['member_id'], $points, 'shift_attendance', "Κύκλος Εγγραφών: " . $shift['mission_title'], $id]
                         );
 
                         dbExecute(
@@ -331,7 +331,7 @@ if (isPost()) {
                         $userIds = array_column($affectedParticipants, 'member_id');
                         sendBulkNotifications(
                             $userIds,
-                            'Ακύρωση Βάρδιας',
+                            'Ακύρωση Κύκλου Εγγραφών',
                             'Η βάρδια στην αποστολή "' . $shift['mission_title'] . '" (' . formatDateTime($shift['start_time']) . ') διαγράφηκε. Η αίτησή σας ακυρώθηκε αυτόματα.'
                         );
                     }
@@ -761,7 +761,7 @@ include __DIR__ . '/includes/header.php';
         <!-- Shift Details -->
         <div class="card mb-4">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-clock me-1"></i>Στοιχεία Βάρδιας</h5>
+                <h5 class="mb-0"><i class="bi bi-clock me-1"></i>Στοιχεία Κύκλου Εγγραφών</h5>
                 <?php if ($isActive): ?>
                     <span class="badge bg-success fs-6"><i class="bi bi-play-fill me-1"></i>Σε εξέλιξη</span>
                 <?php elseif ($isPast): ?>
@@ -1182,7 +1182,7 @@ include __DIR__ . '/includes/header.php';
                 </div>
                 <div class="card-body">
                     <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#deleteShiftModal">
-                        <i class="bi bi-trash me-1"></i>Διαγραφή Βάρδιας
+                        <i class="bi bi-trash me-1"></i>Διαγραφή Κύκλου Εγγραφών
                     </button>
                 </div>
             </div>
@@ -1419,7 +1419,7 @@ $activeParticipants = array_filter($participants, function($p) {
                 <?= csrfField() ?>
                 <input type="hidden" name="action" value="delete">
                 <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-1"></i>Διαγραφή Βάρδιας</h5>
+                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle me-1"></i>Διαγραφή Κύκλου Εγγραφών</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -1476,7 +1476,7 @@ $activeParticipants = array_filter($participants, function($p) {
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
-                <h5 class="modal-title" id="qrModalLabel"><i class="bi bi-qr-code me-2"></i>QR Check-in Βάρδιας</h5>
+                <h5 class="modal-title" id="qrModalLabel"><i class="bi bi-qr-code me-2"></i>QR Check-in Κύκλου Εγγραφών</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body text-center py-4">

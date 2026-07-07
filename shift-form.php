@@ -9,7 +9,7 @@ requirePermission('shifts_manage');
 $id = (int) get('id');
 $missionId = get('mission_id');
 $shift = null;
-$pageTitle = 'Νέα Βάρδια';
+$pageTitle = 'Νέος Κύκλος Εγγραφών';
 
 if ($id) {
     $shift = dbFetchOne("SELECT * FROM shifts WHERE id = ?", [$id]);
@@ -18,7 +18,7 @@ if ($id) {
         redirect('shifts.php');
     }
     $missionId = $shift['mission_id'];
-    $pageTitle = 'Επεξεργασία Βάρδιας';
+    $pageTitle = 'Επεξεργασία Κύκλου Εγγραφών';
 }
 
 // Get mission

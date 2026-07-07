@@ -6,7 +6,7 @@
 require_once __DIR__ . '/bootstrap.php';
 requireLogin();
 
-$pageTitle = 'Βάρδιες';
+$pageTitle = 'Κύκλοι Εγγραφών';
 
 // Filters
 $missionId = get('mission_id', '');
@@ -98,11 +98,11 @@ include __DIR__ . '/includes/header.php';
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">
-        <i class="bi bi-clock me-2"></i>Βάρδιες
+        <i class="bi bi-clock me-2"></i>Κύκλοι Εγγραφών
     </h1>
     <?php if (isAdmin()): ?>
     <a href="shift-form.php" class="btn btn-primary">
-        <i class="bi bi-plus-lg me-1"></i>Νέα Βάρδια
+        <i class="bi bi-plus-lg me-1"></i>Νέος Κύκλος Εγγραφών
     </a>
     <?php endif; ?>
 </div>
@@ -154,7 +154,7 @@ include __DIR__ . '/includes/header.php';
         <table class="table table-hover align-middle">
             <thead>
                 <tr>
-                    <th>Βάρδια</th>
+                    <th>Κύκλος Εγγραφών</th>
                     <th>Αποστολή</th>
                     <th>Χρόνος</th>
                     <th>Μέλη</th>
@@ -174,7 +174,7 @@ include __DIR__ . '/includes/header.php';
                     ?>
                     <tr class="<?= $isPast ? 'table-secondary' : '' ?>">
                         <td>
-                            <strong><?= h(($shift['title'] ?? '') ?: 'Βάρδια #' . $shift['id']) ?></strong>
+                            <strong><?= h(($shift['title'] ?? '') ?: 'Κύκλος Εγγραφών #' . $shift['id']) ?></strong>
                             <?php if (!empty($shift['description'])): ?>
                                 <br><small class="text-muted"><?= h(mb_substr($shift['description'], 0, 50)) ?>...</small>
                             <?php endif; ?>
@@ -238,7 +238,7 @@ include __DIR__ . '/includes/header.php';
                 <div class="card-body <?= $isPast ? 'text-muted' : '' ?>">
                     <div class="mobile-card-header">
                         <div class="card-title">
-                            <strong><?= h(($shift['title'] ?? '') ?: 'Βάρδια #' . $shift['id']) ?></strong>
+                            <strong><?= h(($shift['title'] ?? '') ?: 'Κύκλος Εγγραφών #' . $shift['id']) ?></strong>
                         </div>
                         <div>
                             <?php if ($isActive): ?>
