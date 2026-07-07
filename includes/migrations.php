@@ -4680,6 +4680,19 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                 }
             },
         ],
+        [
+            'version'     => 80,
+            'description' => 'Add missions.replay_share_token for public no-login Ride Replay sharing',
+            'up' => function () {
+                $colExists = dbFetchValue(
+                    "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+                     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'missions' AND COLUMN_NAME = 'replay_share_token'"
+                );
+                if (!$colExists) {
+                    dbExecute("ALTER TABLE missions ADD COLUMN replay_share_token VARCHAR(64) NULL UNIQUE AFTER route_provider");
+                }
+            },
+        ],
 
     ];
     // ────────────────────────────────────────────────────────────────────────
