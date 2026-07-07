@@ -276,6 +276,14 @@ function rideRouteGeometry(array $mission): array {
     return count($points) >= 2 ? $points : [];
 }
 
+function rideReplayPoints(array $geometry, array $points): array {
+    if (count($geometry) >= 2) {
+        return $geometry;
+    }
+    $pairs = array_map(fn($p) => [(float)$p['lat'], (float)$p['lng']], $points);
+    return count($pairs) >= 2 ? $pairs : [];
+}
+
 function rideEventRoutePositions(array $routeGeometry, array $events): array {
     $vertexCount = count($routeGeometry);
 
