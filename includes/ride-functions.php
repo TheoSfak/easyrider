@@ -337,6 +337,24 @@ function rideEventRoutePositions(array $routeGeometry, array $events): array {
     return $events;
 }
 
+function buildReplayEvents(array $routePoints, array $events): array {
+    $replayEvents = [];
+    $eventsWithFractions = rideEventRoutePositions($routePoints, $events);
+    foreach ($eventsWithFractions as $event) {
+        if ($event['route_fraction'] === null) {
+            continue;
+        }
+        $replayEvents[] = [
+            'lat' => (float)$event['lat'],
+            'lng' => (float)$event['lng'],
+            'title' => (string)$event['title'],
+            'severity' => (string)($event['severity'] ?? 'info'),
+            'routeFraction' => (float)$event['route_fraction'],
+        ];
+    }
+    return $replayEvents;
+}
+
 function rideMissionRouteMetrics(array $mission, ?array $routePoints = null): array {
     if ($routePoints === null) {
         $routePoints = normalizeRideRoutePoints($mission['route_points'] ?? '[]');
