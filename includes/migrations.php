@@ -4638,6 +4638,20 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                 dbExecute("UPDATE email_templates SET name = ? WHERE code = ?", ['Αίτημα Αντικατάστασης Κύκλου Εγγραφών', 'shift_swap_requested']);
                 dbExecute("UPDATE email_templates SET name = ? WHERE code = ?", ['Έγκριση Αντικατάστασης Κύκλου Εγγραφών', 'shift_swap_approved']);
 
+                dbExecute(
+                    "UPDATE email_templates SET body_html = REPLACE(body_html, ?, ?) WHERE code = 'welcome'",
+                    ['Δηλώσετε συμμετοχή σε βάρδιες', 'Δηλώσετε συμμετοχή σε κύκλους εγγραφών']
+                );
+                dbExecute(
+                    "UPDATE email_templates SET body_html = REPLACE(REPLACE(body_html, ?, ?), ?, ?) WHERE code = 'participation_rejected'",
+                    ['>Βάρδια:<', '>Κύκλος Εγγραφών:<', 'Δείτε Άλλες Βάρδιες', 'Δείτε Άλλους Κύκλους Εγγραφών']
+                );
+                dbExecute(
+                    "UPDATE email_templates SET body_html = REPLACE(REPLACE(body_html, ?, ?), ?, ?) WHERE code = 'points_earned'",
+                    ['Ολοκληρώσατε μια βάρδια και κερδίσατε πόντους!', 'Ολοκληρώσατε έναν Κύκλο Εγγραφών και κερδίσατε πόντους!',
+                     '>Βάρδια:<', '>Κύκλος Εγγραφών:<']
+                );
+
                 $notificationUpdates = [
                     ['participation_approved', null, 'Όταν εγκρίνεται η αίτηση συμμετοχής σε Κύκλο Εγγραφών'],
                     ['shift_reminder', 'Υπενθύμιση Κύκλου Εγγραφών', 'Μία μέρα πριν τον Κύκλο Εγγραφών'],
