@@ -18,6 +18,7 @@ $rows = dbFetchAll("SELECT setting_key, setting_value FROM settings");
 foreach ($rows as $row) {
     $settings[$row['setting_key']] = $row['setting_value'];
 }
+$inventoryEnabled = ($settings['inventory_nav_enabled'] ?? '0') === '1';
 
 // Defaults
 $defaults = [
@@ -932,11 +933,13 @@ include __DIR__ . '/includes/header.php';
             <i class="bi bi-bell me-1"></i>Ειδοποιήσεις
         </a>
     </li>
+    <?php if ($inventoryEnabled): ?>
     <li class="nav-item">
         <a class="nav-link <?= $activeTab === 'inventory' ? 'active' : '' ?>" href="settings.php?tab=inventory">
             <i class="bi bi-box-seam me-1"></i>Απόθεμα
         </a>
     </li>
+    <?php endif; ?>
     <li class="nav-item">
         <a class="nav-link <?= $activeTab === 'citizens' ? 'active' : '' ?>" href="settings.php?tab=citizens">
             <i class="bi bi-person-vcard me-1"></i>Συνδρομές
@@ -1642,7 +1645,7 @@ function previewTemplate(id) {
 <?php endif; ?>
 
 <!-- Inventory Settings Tab -->
-<?php if ($activeTab === 'inventory'): ?>
+<?php if ($activeTab === 'inventory' && $inventoryEnabled): ?>
 <?php
 $warehouses = dbFetchAll("SELECT id, name FROM departments WHERE has_inventory = 1 AND is_active = 1 ORDER BY name");
 $invLocations = dbFetchAll("SELECT l.*, d.name AS warehouse_name FROM inventory_locations l LEFT JOIN departments d ON l.department_id = d.id WHERE l.is_active = 1 ORDER BY l.name");
