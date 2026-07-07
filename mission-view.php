@@ -39,6 +39,7 @@ foreach ($missionDays as &$day) {
     $day['route_points_decoded'] = normalizeRideRoutePoints($day['route_points'] ?? '[]');
     $day['metrics'] = rideMissionRouteMetrics($day, $day['route_points_decoded']);
     $day['geometry'] = rideRouteGeometry($day);
+    $day['replay_points'] = rideReplayPoints($day['geometry'], $day['route_points_decoded']);
     $day['date_label'] = formatDateGreek($day['day_date']);
 }
 unset($day);
@@ -146,6 +147,17 @@ $rideReplayEvents = [];
 if ($mission['status'] === STATUS_COMPLETED && count($replayPoints) >= 2) {
     $rideReplayEvents = buildReplayEvents($replayPoints, $rideEvents ?? []);
 }
+
+foreach ($missionDays as &$day) {
+    $day['replay_events'] = [];
+    if ($mission['status'] === STATUS_COMPLETED && count($day['replay_points']) >= 2) {
+        $dayEvents = array_values(array_filter($rideEvents ?? [], function ($event) use ($day) {
+            return substr((string)$event['created_at'], 0, 10) === $day['day_date'];
+        }));
+        $day['replay_events'] = buildReplayEvents($day['replay_points'], $dayEvents);
+    }
+}
+unset($day);
 
 $rideReadiness = $canViewRideEvents ? getRideReadinessSummary($id) : null;
 $activeRideEventCount = 0;
@@ -1191,9 +1203,15 @@ include __DIR__ . '/includes/header.php';
             </ul>
             <div class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center small">
                 <span id="dayViewDate" class="text-muted"></span>
-                <a href="#" id="dayViewNavBtn" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:.75rem;display:none;">
-                    <i class="bi bi-sign-turn-right me-1"></i>Πλοήγηση
-                </a>
+                <div class="d-flex gap-2">
+                    <button type="button" id="dayViewReplayBtn" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:.75rem;display:none;"
+                            data-bs-toggle="modal" data-bs-target="#dayReplayModal">
+                        <i class="bi bi-film me-1"></i>Ride Replay
+                    </button>
+                    <a href="#" id="dayViewNavBtn" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary py-0 px-2" style="font-size:.75rem;display:none;">
+                        <i class="bi bi-sign-turn-right me-1"></i>Πλοήγηση
+                    </a>
+                </div>
             </div>
             <div id="dayViewOvernight" class="px-3 py-2 border-bottom small bg-light" style="display:none;">
                 <i class="bi bi-moon-stars me-1"></i><span id="dayViewOvernightText"></span>
@@ -2156,6 +2174,40 @@ if (!empty($shiftIds)) {
     </div>
 </div>
 
+<?php if ($isMultiDayMission): ?>
+<div class="modal fade" id="dayReplayModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-film me-1"></i>Ride Replay — <span id="dayReplayDayLabel"></span></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body p-0">
+                <div id="dayReplayMap" style="height:360px;"></div>
+                <div class="p-3 border-top">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <span id="dayReplayKm" class="fw-bold">0 m</span>
+                            <span class="text-muted mx-1">&middot;</span>
+                            <span id="dayReplayTime" class="fw-bold">0 λεπτά</span>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" id="dayReplayRestart" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-arrow-counterclockwise"></i>
+                            </button>
+                            <button type="button" id="dayReplayPlayPause" class="btn btn-sm btn-primary">
+                                <i class="bi bi-play-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <input type="range" id="dayReplayScrubber" class="form-range" min="0" max="1" step="0.001" value="0">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <!-- Apply Modal (for members) -->
 <?php if (!$canManageMissions): ?>
 <div class="modal fade" id="applyModal" tabindex="-1" aria-hidden="true">
@@ -2393,8 +2445,8 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php if ((!$isMultiDayMission && ((!empty($mission['latitude']) && !empty($mission['longitude'])) || !empty($routePoints))) || $isMultiDayMission): ?>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<?php if (!$isMultiDayMission): ?>
 <script src="<?= rtrim(BASE_URL, '/') ?>/assets/js/ride-replay.js?v=<?= APP_VERSION ?>"></script>
+<?php if (!$isMultiDayMission): ?>
 <script>
 (function () {
     var lat = <?= !empty($mission['latitude']) ? (float)$mission['latitude'] : 'null' ?>;
@@ -2477,6 +2529,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 'total_label' => (string)($day['metrics']['total_label'] ?? ''),
                 'provider' => (string)($day['metrics']['provider'] ?? 'estimate'),
             ],
+            'replay' => [
+                'points' => $day['replay_points'],
+                'distanceMeters' => (float)($day['metrics']['distance_meters'] ?? 0),
+                'totalMinutes' => (int)($day['metrics']['total_minutes'] ?? 0),
+                'events' => $day['replay_events'],
+            ],
         ];
     }, $missionDays), JSON_UNESCAPED_UNICODE) ?>;
     var fallbackLat = <?= !empty($mission['latitude']) ? (float)$mission['latitude'] : 'null' ?>;
@@ -2555,6 +2613,21 @@ document.addEventListener('DOMContentLoaded', function() {
             navBtn.style.display = 'none';
         }
 
+        var replayBtn = document.getElementById('dayViewReplayBtn');
+        if (day.replay.points.length >= 2) {
+            window.easyDayReplayData = {
+                points: day.replay.points,
+                distanceMeters: day.replay.distanceMeters,
+                totalMinutes: day.replay.totalMinutes,
+                events: day.replay.events
+            };
+            document.getElementById('dayReplayDayLabel').textContent = day.date_label;
+            replayBtn.style.display = '';
+        } else {
+            window.easyDayReplayData = null;
+            replayBtn.style.display = 'none';
+        }
+
         document.getElementById('dayViewMetrics').innerHTML = formatMetricsHtml(day);
         document.getElementById('dayViewTimeline').innerHTML = formatTimelineHtml(day);
 
@@ -2599,6 +2672,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 renderDay(parseInt(tab.dataset.dayNumber, 10));
             });
         });
+
+        var dayReplayModal = document.getElementById('dayReplayModal');
+        if (dayReplayModal && window.initRideReplayController) {
+            window.initRideReplayController({
+                modalEl: dayReplayModal,
+                elIds: {
+                    map: 'dayReplayMap',
+                    km: 'dayReplayKm',
+                    time: 'dayReplayTime',
+                    scrubber: 'dayReplayScrubber',
+                    playPause: 'dayReplayPlayPause',
+                    restart: 'dayReplayRestart'
+                },
+                getData: function () { return window.easyDayReplayData || null; }
+            });
+        }
 
         if (days.length) {
             renderDay(days[0].day_number);
