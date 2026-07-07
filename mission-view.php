@@ -44,6 +44,9 @@ foreach ($missionDays as &$day) {
 }
 unset($day);
 
+$hasReplayData = (!$isMultiDayMission && count($replayPoints) >= 2)
+    || ($isMultiDayMission && count(array_filter($missionDays, fn($d) => count($d['replay_points']) >= 2)) > 0);
+
 function buildGoogleMapsDirectionsUrl(array $routePoints, array $mission): string {
     if (count($routePoints) >= 2) {
         $origin = $routePoints[0]['lat'] . ',' . $routePoints[0]['lng'];
@@ -860,6 +863,25 @@ if (isPost()) {
                 redirect('mission-view.php?id=' . $id);
             }
             break;
+
+        case 'generate_replay_share':
+            if ($canManageMissions && $mission['status'] === STATUS_COMPLETED) {
+                $shareToken = bin2hex(random_bytes(32));
+                dbExecute("UPDATE missions SET replay_share_token = ? WHERE id = ?", [$shareToken, $id]);
+                logAudit('generate_replay_share_link', 'missions', $id);
+                setFlash('success', 'Δημιουργήθηκε δημόσιο link κοινοποίησης.');
+            }
+            redirect('mission-view.php?id=' . $id);
+            break;
+
+        case 'revoke_replay_share':
+            if ($canManageMissions) {
+                dbExecute("UPDATE missions SET replay_share_token = NULL WHERE id = ?", [$id]);
+                logAudit('revoke_replay_share_link', 'missions', $id);
+                setFlash('success', 'Το δημόσιο link ανακλήθηκε.');
+            }
+            redirect('mission-view.php?id=' . $id);
+            break;
     }
 }
 
@@ -904,6 +926,11 @@ include __DIR__ . '/includes/header.php';
             <a href="mission-form.php?id=<?= $mission['id'] ?>" class="btn btn-outline-primary">
                 <i class="bi bi-pencil me-1"></i>Επεξεργασία
             </a>
+        <?php endif; ?>
+        <?php if ($canManageMissions && $hasReplayData): ?>
+            <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#replayShareModal">
+                <i class="bi bi-share me-1"></i>Δημόσιο Link
+            </button>
         <?php endif; ?>
     </div>
 </div>
@@ -2188,6 +2215,63 @@ if (!empty($shiftIds)) {
         </div>
     </div>
 </div>
+<?php endif; ?>
+
+<?php if ($canManageMissions && $hasReplayData): ?>
+<div class="modal fade" id="replayShareModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-share me-1"></i>Δημόσιο Link Ride Replay</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <?php if (empty($mission['replay_share_token'])): ?>
+                    <p class="text-muted small mb-3">Δημιουργήστε έναν δημόσιο σύνδεσμο για να μοιραστείτε το Ride Replay αυτής της δράσης εκτός EasyRide, χωρίς να απαιτείται σύνδεση.</p>
+                    <form method="post">
+                        <?= csrfField() ?>
+                        <input type="hidden" name="action" value="generate_replay_share">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-link-45deg me-1"></i>Δημιουργία Link
+                        </button>
+                    </form>
+                <?php else: ?>
+                    <?php $shareUrl = rtrim(BASE_URL, '/') . '/replay-share.php?token=' . urlencode($mission['replay_share_token']); ?>
+                    <label class="form-label small text-muted">Δημόσιος σύνδεσμος</label>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control" id="replayShareUrl" value="<?= h($shareUrl) ?>" readonly>
+                        <button type="button" class="btn btn-outline-secondary" id="replayShareCopyBtn">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+                    </div>
+                    <p class="text-muted small">Όποιος έχει αυτόν τον σύνδεσμο μπορεί να δει το Ride Replay χωρίς σύνδεση, μέχρι να τον ανακαλέσετε.</p>
+                    <form method="post" onsubmit="return confirm('Ανάκληση του δημόσιου συνδέσμου; Ο υπάρχων σύνδεσμος θα σταματήσει να λειτουργεί.');">
+                        <?= csrfField() ?>
+                        <input type="hidden" name="action" value="revoke_replay_share">
+                        <button type="submit" class="btn btn-outline-danger w-100">
+                            <i class="bi bi-x-circle me-1"></i>Ανάκληση Link
+                        </button>
+                    </form>
+                <?php endif; ?>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var copyBtn = document.getElementById('replayShareCopyBtn');
+    if (copyBtn) {
+        copyBtn.addEventListener('click', function () {
+            var input = document.getElementById('replayShareUrl');
+            navigator.clipboard.writeText(input.value).then(function () {
+                var icon = copyBtn.querySelector('i');
+                icon.className = 'bi bi-check-lg';
+                setTimeout(function () { icon.className = 'bi bi-clipboard'; }, 1500);
+            });
+        });
+    }
+});
+</script>
 <?php endif; ?>
 
 <!-- Apply Modal (for members) -->
