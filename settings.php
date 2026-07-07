@@ -1085,10 +1085,10 @@ include __DIR__ . '/includes/header.php';
                 </div>
                 <div class="card-body">
                     <div class="mb-3">
-                        <label for="shift_reminder_hours" class="form-label">Υπενθύμιση Σκέλους / Διαδρομής (ώρες πριν)</label>
+                        <label for="shift_reminder_hours" class="form-label">Υπενθύμιση Κύκλου Εγγραφών / Διαδρομής (ώρες πριν)</label>
                         <input type="number" class="form-control" id="shift_reminder_hours" name="shift_reminder_hours" 
                                value="<?= h($settings['shift_reminder_hours']) ?>" min="1" max="168" required>
-                        <small class="text-muted">Πόσες ώρες πριν το σκέλος της δράσης να στέλνεται υπενθύμιση (προεπιλογή: 24)</small>
+                        <small class="text-muted">Πόσες ώρες πριν τον Κύκλο Εγγραφών της δράσης να στέλνεται υπενθύμιση (προεπιλογή: 24)</small>
                     </div>
                     
                     <hr>
@@ -1105,7 +1105,7 @@ include __DIR__ . '/includes/header.php';
                         <label for="resend_mission_hours_before" class="form-label">Ξαναστείλε Δράση (ώρες πριν)</label>
                         <input type="number" class="form-control" id="resend_mission_hours_before" name="resend_mission_hours_before" 
                                value="<?= h($settings['resend_mission_hours_before']) ?>" min="1" max="720" required>
-                        <small class="text-muted">Αν ένα σκέλος δεν έχει συμπληρωθεί, στείλε email προς τα μέλη Χ ώρες πριν (προεπιλογή: 48)</small>
+                        <small class="text-muted">Αν ένας κύκλος εγγραφών δεν έχει συμπληρωθεί, στείλε email προς τα μέλη Χ ώρες πριν (προεπιλογή: 48)</small>
                     </div>
                     
                     <hr>
@@ -1281,7 +1281,7 @@ include __DIR__ . '/includes/header.php';
                         </label>
                     </div>
                     <div class="form-text">
-                        Όταν είναι ενεργό, κάθε σκέλος αποκτά μοναδικό QR κωδικό. Ο υπεύθυνος ανοίγει το QR και τα μέλη σκανάρουν για αυτόματο check-in παρουσίας.
+                        Όταν είναι ενεργό, κάθε κύκλος εγγραφών αποκτά μοναδικό QR κωδικό. Ο υπεύθυνος ανοίγει το QR και τα μέλη σκανάρουν για αυτόματο check-in παρουσίας.
                     </div>
                 </div>
             </div>
@@ -1795,7 +1795,7 @@ $invStats = [
 <?php
 $cronJobs = [
     'task_reminders'      => ['label' => 'Υπενθυμίσεις Εργασιών',       'icon' => 'bi-list-task',          'desc' => 'Ειδοποιεί τους υπεύθυνους για εργασίες με προθεσμία εντός 24 ωρών.', 'color' => 'primary'],
-    'shift_reminders'     => ['label' => 'Υπενθυμίσεις Σκελών',         'icon' => 'bi-alarm',              'desc' => 'Ειδοποιεί τα εγκεκριμένα μέλη για σκέλη δράσεων εντός ' . h($settings['shift_reminder_hours'] ?? '24') . ' ωρών.', 'color' => 'info'],
+    'shift_reminders'     => ['label' => 'Υπενθυμίσεις Κύκλων Εγγραφών', 'icon' => 'bi-alarm',              'desc' => 'Ειδοποιεί τα εγκεκριμένα μέλη για κύκλους εγγραφών δράσεων εντός ' . h($settings['shift_reminder_hours'] ?? '24') . ' ωρών.', 'color' => 'info'],
     'incomplete_missions' => ['label' => 'Ελλιπείς Δράσεις',            'icon' => 'bi-people',             'desc' => 'Ειδοποιεί μέλη για δράσεις που χρειάζονται ακόμα συμμετοχές (εντός ' . h($settings['resend_mission_hours_before'] ?? '48') . ' ωρών).', 'color' => 'warning'],
     'citizen_cert_expiry' => ['label' => 'Ειδοποιήσεις Συνδρομών',      'icon' => 'bi-person-vcard',       'desc' => 'Στέλνει ειδοποιήσεις λήξης συνδρομών (3μ, 1μ, 1εβδ, ληγμένες).', 'color' => 'secondary'],
 ];
@@ -1906,7 +1906,7 @@ unset($_SESSION['cron_results'], $_SESSION['cron_elapsed']);
                 <ul class="list-unstyled small">
                     <li class="mb-1">
                         <i class="bi bi-gear me-1"></i>
-                        <strong>Ώρες υπενθύμισης σκέλους:</strong> <?= h($settings['shift_reminder_hours'] ?? '24') ?>h
+                        <strong>Ώρες υπενθύμισης Κύκλου Εγγραφών:</strong> <?= h($settings['shift_reminder_hours'] ?? '24') ?>h
                         <a href="settings.php?tab=general" class="ms-1"><i class="bi bi-pencil-square"></i></a>
                     </li>
                     <li class="mb-1">
@@ -2462,7 +2462,7 @@ unset($_SESSION['health_results'], $_SESSION['health_ran']);
                 <div class="row">
                     <div class="col-md-6">
                         <ul class="list-group list-group-flush mb-3">
-                            <li class="list-group-item py-1"><i class="bi bi-x-circle-fill text-danger me-2"></i>Όλες οι δράσεις &amp; σκέλη</li>
+                            <li class="list-group-item py-1"><i class="bi bi-x-circle-fill text-danger me-2"></i>Όλες οι δράσεις &amp; κύκλοι εγγραφών</li>
                             <li class="list-group-item py-1"><i class="bi bi-x-circle-fill text-danger me-2"></i>Αιτήσεις συμμετοχής &amp; παρουσίες</li>
                             <li class="list-group-item py-1"><i class="bi bi-x-circle-fill text-danger me-2"></i>Συζητήσεις δράσεων &amp; απολογισμοί</li>
                             <li class="list-group-item py-1"><i class="bi bi-x-circle-fill text-danger me-2"></i>Παλιό ιστορικό πόντων, αν υπάρχει</li>

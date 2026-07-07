@@ -68,7 +68,7 @@ function replaceNewsletterTags(string $text, array $user, string $unsubscribeTok
     $roleLabels = [
         ROLE_SYSTEM_ADMIN      => 'Διαχειριστής Συστήματος',
         ROLE_DEPARTMENT_ADMIN  => 'Διαχειριστής Τμήματος',
-        ROLE_SHIFT_LEADER      => 'Αρχηγός Βάρδιας',
+        ROLE_SHIFT_LEADER      => 'Αρχηγός Κύκλου Εγγραφών',
         ROLE_MEMBER         => 'Μέλος',
     ];
 

@@ -146,7 +146,7 @@ include __DIR__ . '/includes/header.php';
                             <label class="form-label fw-semibold">Όνομα Ρόλου <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" name="name"
                                    value="<?= h($form['name']) ?>"
-                                   placeholder="π.χ. Επικεφαλής Βάρδιας" required maxlength="100">
+                                   placeholder="π.χ. Επικεφαλής Κύκλου Εγγραφών" required maxlength="100">
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Περιγραφή</label>
