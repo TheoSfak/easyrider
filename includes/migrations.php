@@ -4652,6 +4652,17 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                      '>Βάρδια:<', '>Κύκλος Εγγραφών:<']
                 );
 
+                $descriptionFixes = [
+                    ['admin_added_volunteer', 'προσθέτει απευθείας σε βάρδια', 'προσθέτει απευθείας σε Κύκλο Εγγραφών'],
+                    ['participation_approved', 'συμμετοχή μέλους σε βάρδια', 'συμμετοχή μέλους σε Κύκλο Εγγραφών'],
+                    ['shift_canceled', 'ακυρώνεται βάρδια', 'ακυρώνεται Κύκλος Εγγραφών'],
+                    ['shift_reminder', 'προηγούμενη μέρα της βάρδιας', 'προηγούμενη μέρα του Κύκλου Εγγραφών'],
+                    ['shift_swap_requested', 'ζητήθηκε να καλύψει τη βάρδια', 'ζητήθηκε να καλύψει τον Κύκλο Εγγραφών'],
+                ];
+                foreach ($descriptionFixes as [$code, $old, $new]) {
+                    dbExecute("UPDATE email_templates SET description = REPLACE(description, ?, ?) WHERE code = ?", [$old, $new, $code]);
+                }
+
                 $notificationUpdates = [
                     ['participation_approved', null, 'Όταν εγκρίνεται η αίτηση συμμετοχής σε Κύκλο Εγγραφών'],
                     ['shift_reminder', 'Υπενθύμιση Κύκλου Εγγραφών', 'Μία μέρα πριν τον Κύκλο Εγγραφών'],
