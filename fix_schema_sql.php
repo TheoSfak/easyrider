@@ -26,7 +26,7 @@ $templates = [
         <p>Μπορείτε τώρα να:</p>
         <ul>
             <li>Δείτε τις διαθέσιμες αποστολές</li>
-            <li>Δηλώσετε συμμετοχή σε βάρδιες</li>
+            <li>Δηλώσετε συμμετοχή σε Κύκλους Εγγραφών</li>
             <li>Κερδίσετε πόντους και επιτεύγματα</li>
         </ul>
         <p style="text-align: center; margin-top: 30px;">
@@ -50,10 +50,10 @@ $templates = [
     </div>
     <div style="padding: 30px; background: #fff;">
         <h2>Γεια σας {{user_name}},</h2>
-        <p>Η συμμετοχή σας στη βάρδια εγκρίθηκε!</p>
+        <p>Η συμμετοχή σας στον Κύκλο Εγγραφών εγκρίθηκε!</p>
         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <p><strong>Αποστολή:</strong> {{mission_title}}</p>
-            <p><strong>Βάρδια:</strong> {{shift_date}} ({{shift_time}})</p>
+            <p><strong>Κύκλος Εγγραφών:</strong> {{shift_date}} ({{shift_time}})</p>
             <p><strong>Τοποθεσία:</strong> {{location}}</p>
         </div>
         <p>Παρακαλούμε να είστε στην τοποθεσία έγκαιρα.</p>
@@ -62,7 +62,7 @@ $templates = [
         {{app_name}}
     </div>
 </div>',
-        'description' => 'Αποστέλλεται όταν εγκρίνεται η συμμετοχή μέλους σε βάρδια',
+        'description' => 'Αποστέλλεται όταν εγκρίνεται η συμμετοχή μέλους σε Κύκλο Εγγραφών',
         'available_variables' => '{{app_name}}, {{user_name}}, {{mission_title}}, {{shift_date}}, {{shift_time}}, {{location}}'
     ],
     [
@@ -75,13 +75,13 @@ $templates = [
     </div>
     <div style="padding: 30px; background: #fff;">
         <h2>Γεια σας {{user_name}},</h2>
-        <p>Λυπούμαστε, αλλά η αίτησή σας για τη βάρδια δεν εγκρίθηκε.</p>
+        <p>Λυπούμαστε, αλλά η αίτησή σας για τον Κύκλο Εγγραφών δεν εγκρίθηκε.</p>
         <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
             <p><strong>Αποστολή:</strong> {{mission_title}}</p>
-            <p><strong>Βάρδια:</strong> {{shift_date}} ({{shift_time}})</p>
+            <p><strong>Κύκλος Εγγραφών:</strong> {{shift_date}} ({{shift_time}})</p>
             <p><strong>Λόγος:</strong> {{rejection_reason}}</p>
         </div>
-        <p>Μπορείτε να δηλώσετε συμμετοχή σε άλλες διαθέσιμες βάρδιες.</p>
+        <p>Μπορείτε να δηλώσετε συμμετοχή σε άλλους διαθέσιμους Κύκλους Εγγραφών.</p>
     </div>
     <div style="padding: 15px; background: #f8f9fa; text-align: center; font-size: 12px; color: #666;">
         {{app_name}}

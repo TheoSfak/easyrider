@@ -72,8 +72,8 @@ foreach ($shifts as $shift) {
         // In-app notification
         sendNotification(
             $user['id'], 
-            'Υπενθύμιση Βάρδιας', 
-            "Σε {$reminderHours} ώρες έχετε βάρδια στην αποστολή '{$shift['mission_title']}' στις " . date('H:i', strtotime($shift['start_time']))
+            'Υπενθύμιση Κύκλου Εγγραφών',
+            "Σε {$reminderHours} ώρες έχετε Κύκλο Εγγραφών στην αποστολή '{$shift['mission_title']}' στις " . date('H:i', strtotime($shift['start_time']))
         );
     }
 }

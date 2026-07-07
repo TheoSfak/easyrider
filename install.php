@@ -393,7 +393,7 @@ function installDemoData(PDO $pdo) {
     $stmt = $pdo->prepare("INSERT INTO users (name, email, phone, password, role, is_active, created_at, updated_at) VALUES (?, ?, ?, ?, 'SHIFT_LEADER', 1, NOW(), NOW()) ON DUPLICATE KEY UPDATE id=LAST_INSERT_ID(id)");
     $stmt->execute(['Πέτρος Αρχηγός', 'leader@example.gr', '6979012345', $hashedPass]);
     $leaderId = $pdo->lastInsertId();
-    logDebug('Υπεύθυνος βάρδιας δημιουργήθηκε', 'success');
+    logDebug('Υπεύθυνος Κύκλου Εγγραφών δημιουργήθηκε', 'success');
     
     // Demo Missions
     logDebug('Δημιουργία demo αποστολών...');
@@ -471,7 +471,7 @@ function installDemoData(PDO $pdo) {
     logDebug(count($missions) . ' αποστολές δημιουργήθηκαν', 'success');
     
     // Demo Shifts
-    logDebug('Δημιουργία demo βαρδιών...');
+    logDebug('Δημιουργία demo Κύκλων Εγγραφών...');
     $shiftCount = 0;
     $shiftIds = [];
     foreach ($missionIds as $idx => $missionId) {
@@ -486,13 +486,13 @@ function installDemoData(PDO $pdo) {
                 date('Y-m-d', strtotime("+$idx days")) . " " . ($startHour + 4) . ":00:00",
                 rand(5, 15),
                 rand(2, 4),
-                $i === 0 ? 'Πρωινή βάρδια' : 'Απογευματινή βάρδια'
+                $i === 0 ? 'Πρωινός Κύκλος Εγγραφών' : 'Απογευματινός Κύκλος Εγγραφών'
             ]);
             $shiftIds[] = $pdo->lastInsertId();
             $shiftCount++;
         }
     }
-    logDebug("{$shiftCount} βάρδιες δημιουργήθηκαν", 'success');
+    logDebug("{$shiftCount} Κύκλοι Εγγραφών δημιουργήθηκαν", 'success');
     
     // Demo Participation Requests
     logDebug('Δημιουργία demo αιτήσεων συμμετοχής...');
@@ -848,7 +848,7 @@ if (!empty($_SESSION['debug_log'])) {
                             <div class="col-4">
                                 <div class="bg-white rounded p-2">
                                     <i class="bi bi-clock text-warning demo-feature-icon"></i>
-                                    <div class="small"><strong>8+</strong> Βάρδιες</div>
+                                    <div class="small"><strong>8+</strong> Κύκλοι Εγγραφών</div>
                                 </div>
                             </div>
                         </div>
@@ -906,7 +906,7 @@ if (!empty($_SESSION['debug_log'])) {
                             <ul class="mb-0 mt-2 small">
                                 <li>8 μέλη (κωδικός: <code>demo123</code>)</li>
                                 <li>6 αποστολές σε διάφορες καταστάσεις</li>
-                                <li>Βάρδιες με αιτήσεις συμμετοχής</li>
+                                <li>Κύκλοι Εγγραφών με αιτήσεις συμμετοχής</li>
                                 <li>5 τμήματα οργάνωσης</li>
                             </ul>
                         </div>

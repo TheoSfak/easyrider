@@ -20,8 +20,8 @@ $templates = [
         'code' => 'participation_approved',
         'name' => 'Έγκριση Συμμετοχής',
         'subject' => 'Η συμμετοχή σας εγκρίθηκε - {{mission_title}}',
-        'body_html' => '<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;"><div style="background: #27ae60; color: white; padding: 20px; text-align: center;"><h1>✓ Εγκρίθηκε!</h1></div><div style="padding: 30px; background: #fff;"><h2>Γεια σας {{user_name}},</h2><p>Η συμμετοχή σας στη βάρδια εγκρίθηκε!</p><p><strong>Αποστολή:</strong> {{mission_title}}</p><p><strong>Βάρδια:</strong> {{shift_date}} ({{shift_time}})</p><p><strong>Τοποθεσία:</strong> {{location}}</p></div></div>',
-        'description' => 'Αποστέλλεται όταν εγκρίνεται η συμμετοχή μέλους σε βάρδια',
+        'body_html' => '<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;"><div style="background: #27ae60; color: white; padding: 20px; text-align: center;"><h1>✓ Εγκρίθηκε!</h1></div><div style="padding: 30px; background: #fff;"><h2>Γεια σας {{user_name}},</h2><p>Η συμμετοχή σας στον Κύκλο Εγγραφών εγκρίθηκε!</p><p><strong>Αποστολή:</strong> {{mission_title}}</p><p><strong>Κύκλος Εγγραφών:</strong> {{shift_date}} ({{shift_time}})</p><p><strong>Τοποθεσία:</strong> {{location}}</p></div></div>',
+        'description' => 'Αποστέλλεται όταν εγκρίνεται η συμμετοχή μέλους σε Κύκλο Εγγραφών',
         'available_variables' => '{{app_name}}, {{user_name}}, {{mission_title}}, {{shift_date}}, {{shift_time}}, {{location}}'
     ],
     [
@@ -34,10 +34,10 @@ $templates = [
     ],
     [
         'code' => 'shift_reminder',
-        'name' => 'Υπενθύμιση Βάρδιας',
-        'subject' => 'Υπενθύμιση: Αύριο έχετε βάρδια - {{mission_title}}',
-        'body_html' => '<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;"><div style="background: #f39c12; color: white; padding: 20px; text-align: center;"><h1>⏰ Υπενθύμιση</h1></div><div style="padding: 30px; background: #fff;"><h2>Γεια σας {{user_name}},</h2><p>Σας υπενθυμίζουμε ότι αύριο έχετε βάρδια.</p><p><strong>Αποστολή:</strong> {{mission_title}}</p><p><strong>Ώρα:</strong> {{shift_time}}</p><p><strong>Τοποθεσία:</strong> {{location}}</p></div></div>',
-        'description' => 'Αποστέλλεται την προηγούμενη μέρα της βάρδιας',
+        'name' => 'Υπενθύμιση Κύκλου Εγγραφών',
+        'subject' => 'Υπενθύμιση: Αύριο έχετε Κύκλο Εγγραφών - {{mission_title}}',
+        'body_html' => '<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;"><div style="background: #f39c12; color: white; padding: 20px; text-align: center;"><h1>⏰ Υπενθύμιση</h1></div><div style="padding: 30px; background: #fff;"><h2>Γεια σας {{user_name}},</h2><p>Σας υπενθυμίζουμε ότι αύριο έχετε Κύκλο Εγγραφών.</p><p><strong>Αποστολή:</strong> {{mission_title}}</p><p><strong>Ώρα:</strong> {{shift_time}}</p><p><strong>Τοποθεσία:</strong> {{location}}</p></div></div>',
+        'description' => 'Αποστέλλεται την προηγούμενη μέρα του Κύκλου Εγγραφών',
         'available_variables' => '{{app_name}}, {{user_name}}, {{mission_title}}, {{shift_date}}, {{shift_time}}, {{location}}'
     ],
     [
@@ -58,10 +58,10 @@ $templates = [
     ],
     [
         'code' => 'shift_canceled',
-        'name' => 'Ακύρωση Βάρδιας',
-        'subject' => 'Ακυρώθηκε η βάρδια: {{shift_date}} - {{mission_title}}',
-        'body_html' => '<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;"><div style="background: #e74c3c; color: white; padding: 20px; text-align: center;"><h1>Ακύρωση Βάρδιας</h1></div><div style="padding: 30px; background: #fff;"><h2>Γεια σας {{user_name}},</h2><p>Η βάρδια στις {{shift_date}} ({{shift_time}}) για την αποστολή {{mission_title}} ακυρώθηκε.</p></div></div>',
-        'description' => 'Αποστέλλεται σε μέλη όταν ακυρώνεται βάρδια',
+        'name' => 'Ακύρωση Κύκλου Εγγραφών',
+        'subject' => 'Ακυρώθηκε ο Κύκλος Εγγραφών: {{shift_date}} - {{mission_title}}',
+        'body_html' => '<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;"><div style="background: #e74c3c; color: white; padding: 20px; text-align: center;"><h1>Ακύρωση Κύκλου Εγγραφών</h1></div><div style="padding: 30px; background: #fff;"><h2>Γεια σας {{user_name}},</h2><p>Ο Κύκλος Εγγραφών στις {{shift_date}} ({{shift_time}}) για την αποστολή {{mission_title}} ακυρώθηκε.</p></div></div>',
+        'description' => 'Αποστέλλεται σε μέλη όταν ακυρώνεται Κύκλος Εγγραφών',
         'available_variables' => '{{app_name}}, {{user_name}}, {{mission_title}}, {{shift_date}}, {{shift_time}}'
     ],
     [
@@ -88,11 +88,11 @@ echo "Email templates inserted!\n";
 $notifications = [
     ['code' => 'welcome', 'name' => 'Καλωσόρισμα', 'description' => 'Μετά την εγγραφή νέου χρήστη', 'enabled' => 1],
     ['code' => 'new_mission', 'name' => 'Νέα Αποστολή', 'description' => 'Όταν δημοσιεύεται νέα αποστολή', 'enabled' => 1],
-    ['code' => 'participation_approved', 'name' => 'Έγκριση Συμμετοχής', 'description' => 'Όταν εγκρίνεται η συμμετοχή μέλους σε βάρδια', 'enabled' => 1],
+    ['code' => 'participation_approved', 'name' => 'Έγκριση Συμμετοχής', 'description' => 'Όταν εγκρίνεται η συμμετοχή μέλους σε Κύκλο Εγγραφών', 'enabled' => 1],
     ['code' => 'participation_rejected', 'name' => 'Απόρριψη Συμμετοχής', 'description' => 'Όταν απορρίπτεται η συμμετοχή μέλους', 'enabled' => 1],
-    ['code' => 'shift_reminder', 'name' => 'Υπενθύμιση Βάρδιας', 'description' => 'Μία μέρα πριν τη βάρδια', 'enabled' => 1],
+    ['code' => 'shift_reminder', 'name' => 'Υπενθύμιση Κύκλου Εγγραφών', 'description' => 'Μία μέρα πριν τον Κύκλο Εγγραφών', 'enabled' => 1],
     ['code' => 'mission_canceled', 'name' => 'Ακύρωση Αποστολής', 'description' => 'Όταν ακυρώνεται αποστολή', 'enabled' => 1],
-    ['code' => 'shift_canceled', 'name' => 'Ακύρωση Βάρδιας', 'description' => 'Όταν ακυρώνεται βάρδια', 'enabled' => 1],
+    ['code' => 'shift_canceled', 'name' => 'Ακύρωση Κύκλου Εγγραφών', 'description' => 'Όταν ακυρώνεται Κύκλος Εγγραφών', 'enabled' => 1],
     ['code' => 'points_earned', 'name' => 'Κέρδος Πόντων', 'description' => 'Όταν το μέλος κερδίζει πόντους', 'enabled' => 0],
 ];
 

@@ -251,7 +251,7 @@ include __DIR__ . '/includes/header.php';
                         Βρέθηκαν <?= count($testMissions) ?> αποστολές με "test", "δοκιμή" ή "demo" στον τίτλο/περιγραφή:
                     </p>
                     
-                    <form method="post" onsubmit="return confirm('ΠΡΟΣΟΧΗ: Θα διαγραφούν ΜΟΝΙΜΑ <?= count($testMissions) ?> αποστολές και ΟΛΑ τα σχετικά δεδομένα (βάρδιες, συμμετοχές, εργασίες). Είστε σίγουροι;');">
+                    <form method="post" onsubmit="return confirm('ΠΡΟΣΟΧΗ: Θα διαγραφούν ΜΟΝΙΜΑ <?= count($testMissions) ?> αποστολές και ΟΛΑ τα σχετικά δεδομένα (κύκλοι εγγραφών, συμμετοχές, εργασίες). Είστε σίγουροι;');">
                         <?= csrfField() ?>
                         <input type="hidden" name="action" value="delete_missions">
                         
@@ -265,7 +265,7 @@ include __DIR__ . '/includes/header.php';
                                         <th>Κατάσταση</th>
                                         <th>Ημερομηνία Έναρξης</th>
                                         <th>Δημιουργήθηκε</th>
-                                        <th>Βάρδιες</th>
+                                        <th>Κύκλοι Εγγραφών</th>
                                         <th>Συμμετέχοντες</th>
                                     </tr>
                                 </thead>

@@ -38,7 +38,7 @@ try {
         <p>Μπορείτε τώρα να:</p>
         <ul>
             <li>Δείτε τις διαθέσιμες αποστολές</li>
-            <li>Δηλώσετε συμμετοχή σε βάρδιες</li>
+            <li>Δηλώσετε συμμετοχή σε Κύκλους Εγγραφών</li>
             <li>Κερδίσετε πόντους και επιτεύγματα</li>
         </ul>
         <p style="text-align: center; margin-top: 30px;">
@@ -62,16 +62,16 @@ try {
     </div>
     <div style="padding: 30px; background: #fff;">
         <h2>Γεια σας {{user_name}},</h2>
-        <p>Η συμμετοχή σας στη βάρδια εγκρίθηκε!</p>
+        <p>Η συμμετοχή σας στον Κύκλο Εγγραφών εγκρίθηκε!</p>
         <p><strong>Αποστολή:</strong> {{mission_title}}</p>
-        <p><strong>Βάρδια:</strong> {{shift_date}} ({{shift_time}})</p>
+        <p><strong>Κύκλος Εγγραφών:</strong> {{shift_date}} ({{shift_time}})</p>
         <p><strong>Τοποθεσία:</strong> {{location}}</p>
         <p style="margin-top: 20px; padding: 15px; background: #d5f4e6; border-left: 4px solid #27ae60;">
             💡 Παρακαλούμε παρουσιαστείτε 10 λεπτά νωρίτερα.
         </p>
     </div>
 </div>',
-            'description' => 'Αποστέλλεται όταν εγκρίνεται η συμμετοχή μέλους σε βάρδια',
+            'description' => 'Αποστέλλεται όταν εγκρίνεται η συμμετοχή μέλους σε Κύκλο Εγγραφών',
             'available_variables' => '{{app_name}}, {{user_name}}, {{mission_title}}, {{shift_date}}, {{shift_time}}, {{location}}'
         ],
         [
@@ -86,10 +86,10 @@ try {
         <h2>Γεια σας {{user_name}},</h2>
         <p>Δυστυχώς η αίτηση συμμετοχής σας δεν μπόρεσε να εγκριθεί.</p>
         <p><strong>Αποστολή:</strong> {{mission_title}}</p>
-        <p><strong>Βάρδια:</strong> {{shift_date}}</p>
+        <p><strong>Κύκλος Εγγραφών:</strong> {{shift_date}}</p>
         <p>{{rejection_reason}}</p>
         <p style="margin-top: 20px;">
-            Μπορείτε να δείτε άλλες διαθέσιμες βάρδιες <a href="{{missions_url}}">εδώ</a>.
+            Μπορείτε να δείτε άλλους διαθέσιμους Κύκλους Εγγραφών <a href="{{missions_url}}">εδώ</a>.
         </p>
     </div>
 </div>',
@@ -98,15 +98,15 @@ try {
         ],
         [
             'code' => 'shift_reminder',
-            'name' => 'Υπενθύμιση Βάρδιας',
-            'subject' => 'Υπενθύμιση: Αύριο έχετε βάρδια - {{mission_title}}',
+            'name' => 'Υπενθύμιση Κύκλου Εγγραφών',
+            'subject' => 'Υπενθύμιση: Αύριο έχετε Κύκλο Εγγραφών - {{mission_title}}',
             'body_html' => '<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
     <div style="background: #f39c12; color: white; padding: 20px; text-align: center;">
         <h1>⏰ Υπενθύμιση</h1>
     </div>
     <div style="padding: 30px; background: #fff;">
         <h2>Γεια σας {{user_name}},</h2>
-        <p>Σας υπενθυμίζουμε ότι αύριο έχετε βάρδια.</p>
+        <p>Σας υπενθυμίζουμε ότι αύριο έχετε Κύκλο Εγγραφών.</p>
         <p><strong>Αποστολή:</strong> {{mission_title}}</p>
         <p><strong>Ώρα:</strong> {{shift_time}}</p>
         <p><strong>Τοποθεσία:</strong> {{location}}</p>
@@ -115,7 +115,7 @@ try {
         </p>
     </div>
 </div>',
-            'description' => 'Αποστέλλεται την προηγούμενη μέρα της βάρδιας',
+            'description' => 'Αποστέλλεται την προηγούμενη μέρα του Κύκλου Εγγραφών',
             'available_variables' => '{{app_name}}, {{user_name}}, {{mission_title}}, {{shift_date}}, {{shift_time}}, {{location}}'
         ],
         [
@@ -162,22 +162,22 @@ try {
         ],
         [
             'code' => 'shift_canceled',
-            'name' => 'Ακύρωση Βάρδιας',
-            'subject' => 'Ακυρώθηκε η βάρδια: {{shift_date}} - {{mission_title}}',
+            'name' => 'Ακύρωση Κύκλου Εγγραφών',
+            'subject' => 'Ακυρώθηκε ο Κύκλος Εγγραφών: {{shift_date}} - {{mission_title}}',
             'body_html' => '<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
     <div style="background: #e74c3c; color: white; padding: 20px; text-align: center;">
-        <h1>❌ Ακύρωση Βάρδιας</h1>
+        <h1>❌ Ακύρωση Κύκλου Εγγραφών</h1>
     </div>
     <div style="padding: 30px; background: #fff;">
         <h2>Γεια σας {{user_name}},</h2>
-        <p>Η βάρδια στις <strong>{{shift_date}}</strong> ({{shift_time}}) για την αποστολή <strong>{{mission_title}}</strong> ακυρώθηκε.</p>
+        <p>Ο Κύκλος Εγγραφών στις <strong>{{shift_date}}</strong> ({{shift_time}}) για την αποστολή <strong>{{mission_title}}</strong> ακυρώθηκε.</p>
         <p>{{cancellation_reason}}</p>
         <p style="margin-top: 20px;">
-            Δείτε άλλες διαθέσιμες βάρδιες <a href="{{missions_url}}">εδώ</a>.
+            Δείτε άλλους διαθέσιμους Κύκλους Εγγραφών <a href="{{missions_url}}">εδώ</a>.
         </p>
     </div>
 </div>',
-            'description' => 'Αποστέλλεται σε μέλη όταν ακυρώνεται βάρδια',
+            'description' => 'Αποστέλλεται σε μέλη όταν ακυρώνεται Κύκλος Εγγραφών',
             'available_variables' => '{{app_name}}, {{user_name}}, {{mission_title}}, {{shift_date}}, {{shift_time}}, {{cancellation_reason}}, {{missions_url}}'
         ],
         [
@@ -190,7 +190,7 @@ try {
     </div>
     <div style="padding: 30px; background: #fff;">
         <h2>Γεια σας {{user_name}},</h2>
-        <p>Ολοκληρώσατε τη βάρδια σας στην αποστολή <strong>{{mission_title}}</strong>!</p>
+        <p>Ολοκληρώσατε τον Κύκλο Εγγραφών σας στην αποστολή <strong>{{mission_title}}</strong>!</p>
         <p style="font-size: 24px; color: #27ae60; text-align: center; margin: 30px 0;">
             <strong>+{{points}} πόντοι</strong>
         </p>
@@ -339,11 +339,11 @@ try {
     $notifications = [
         ['code' => 'welcome', 'name' => 'Καλωσόρισμα', 'description' => 'Μετά την εγγραφή νέου χρήστη', 'enabled' => 1],
         ['code' => 'new_mission', 'name' => 'Νέα Αποστολή', 'description' => 'Όταν δημοσιεύεται νέα αποστολή', 'enabled' => 1],
-        ['code' => 'participation_approved', 'name' => 'Έγκριση Συμμετοχής', 'description' => 'Όταν εγκρίνεται η συμμετοχή μέλους σε βάρδια', 'enabled' => 1],
+        ['code' => 'participation_approved', 'name' => 'Έγκριση Συμμετοχής', 'description' => 'Όταν εγκρίνεται η συμμετοχή μέλους σε Κύκλο Εγγραφών', 'enabled' => 1],
         ['code' => 'participation_rejected', 'name' => 'Απόρριψη Συμμετοχής', 'description' => 'Όταν απορρίπτεται η συμμετοχή μέλους', 'enabled' => 1],
-        ['code' => 'shift_reminder', 'name' => 'Υπενθύμιση Βάρδιας', 'description' => 'Μία μέρα πριν τη βάρδια', 'enabled' => 1],
+        ['code' => 'shift_reminder', 'name' => 'Υπενθύμιση Κύκλου Εγγραφών', 'description' => 'Μία μέρα πριν τον Κύκλο Εγγραφών', 'enabled' => 1],
         ['code' => 'mission_canceled', 'name' => 'Ακύρωση Αποστολής', 'description' => 'Όταν ακυρώνεται αποστολή', 'enabled' => 1],
-        ['code' => 'shift_canceled', 'name' => 'Ακύρωση Βάρδιας', 'description' => 'Όταν ακυρώνεται βάρδια', 'enabled' => 1],
+        ['code' => 'shift_canceled', 'name' => 'Ακύρωση Κύκλου Εγγραφών', 'description' => 'Όταν ακυρώνεται Κύκλος Εγγραφών', 'enabled' => 1],
         ['code' => 'points_earned', 'name' => 'Κέρδος Πόντων', 'description' => 'Όταν το μέλος κερδίζει πόντους', 'enabled' => 0],
         ['code' => 'task_assigned', 'name' => 'Ανάθεση Εργασίας', 'description' => 'Όταν ανατίθεται εργασία σε χρήστη', 'enabled' => 1],
         ['code' => 'task_comment', 'name' => 'Σχόλιο σε Εργασία', 'description' => 'Όταν προστίθεται σχόλιο σε εργασία', 'enabled' => 1],
