@@ -424,7 +424,7 @@ class VolunteerOpsFullTester {
         
         // LIST
         $response = $this->httpGet('/shifts.php');
-        if ($response['success'] && strpos($response['body'], 'Βάρδιες') !== false) {
+        if ($response['success'] && strpos($response['body'], 'Κύκλοι Εγγραφών') !== false) {
             $this->pass('Shifts list loads');
         } else {
             $this->fail('Shifts list loads');
@@ -1230,7 +1230,7 @@ class VolunteerOpsFullTester {
         // Note: Admins are redirected to shifts.php
         if (strpos($response['body'], 'Εκκρεμείς') !== false || 
             strpos($response['body'], 'Εγκεκριμένες') !== false ||
-            strpos($response['body'], 'Βάρδιες') !== false) {  // Redirected to shifts for admin
+            strpos($response['body'], 'Κύκλοι Εγγραφών') !== false) {  // Redirected to shifts for admin
             $this->pass('Stats cards or shifts page present');
         } else {
             $this->fail('Stats cards present');

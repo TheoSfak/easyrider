@@ -84,10 +84,10 @@ class AppTester {
             ['url' => '/dashboard.php', 'name' => 'Dashboard', 'expect' => 'Πίνακας Ελέγχου'],
             ['url' => '/missions.php', 'name' => 'Missions List', 'expect' => 'Αποστολές'],
             ['url' => '/mission-form.php', 'name' => 'New Mission Form', 'expect' => 'Νέα Αποστολή'],
-            ['url' => '/mission-view.php?id=11', 'name' => 'Mission View', 'expect' => 'Βάρδιες'],
-            ['url' => '/shifts.php', 'name' => 'Shifts List', 'expect' => 'Βάρδιες'],
+            ['url' => '/mission-view.php?id=11', 'name' => 'Mission View', 'expect' => 'Κύκλοι Εγγραφών'],
+            ['url' => '/shifts.php', 'name' => 'Shifts List', 'expect' => 'Κύκλοι Εγγραφών'],
             ['url' => '/shift-view.php?id=19', 'name' => 'Shift View', 'expect' => 'Μέλη'],
-            ['url' => '/shift-form.php?mission_id=11', 'name' => 'New Shift Form', 'expect' => 'Νέα Βάρδια'],
+            ['url' => '/shift-form.php?mission_id=11', 'name' => 'New Shift Form', 'expect' => 'Νέος Κύκλος Εγγραφών'],
             
             // Member management
             ['url' => '/members.php', 'name' => 'Members List', 'expect' => 'Μέλη'],
@@ -138,7 +138,7 @@ class AppTester {
         
         // Test 1: View a mission
         $mission = $this->httpGet('/mission-view.php?id=11');
-        if ($mission['success'] && strpos($mission['body'], 'Βάρδιες') !== false) {
+        if ($mission['success'] && strpos($mission['body'], 'Κύκλοι Εγγραφών') !== false) {
             $this->pass('View Mission #11', 'OK');
         } else {
             $this->fail('View Mission #11', 'Failed to load');
