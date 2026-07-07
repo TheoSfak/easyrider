@@ -6,6 +6,10 @@
 
 ## Deployed
 
+### v3.86.0 — Ride Replay Public Share Link
+- Οι υπεύθυνοι δράσεων μπορούν πλέον να δημιουργήσουν έναν δημόσιο σύνδεσμο (χωρίς απαίτηση σύνδεσης) που εμφανίζει το Ride Replay μιας ολοκληρωμένης δράσης — με αυτόματη αναπαραγωγή, και εναλλαγή ημερών για πολυήμερες δράσεις — για κοινοποίηση εκτός EasyRide (social media, WhatsApp). Ο σύνδεσμος παραμένει ενεργός μέχρι να ανακληθεί χειροκίνητα.
+- Spec: [docs/superpowers/specs/2026-07-07-ride-replay-share-link-design.md](docs/superpowers/specs/2026-07-07-ride-replay-share-link-design.md)
+
 ### v3.85.0 — Ride Replay Visibility Fix
 - Το Ride Replay (animated recap διαδρομής για ολοκληρωμένες δράσεις) δεν εμφανιζόταν ποτέ στην πράξη: απαιτούσε αποκλειστικά τη διαδρομή μέσω Google Routes API. Τώρα κάνει fallback στα χειροκίνητα σημεία διαδρομής όταν δεν υπάρχει snapped γεωμετρία, και οι πολυήμερες δράσεις αποκτούν ξεχωριστό κουμπί Ride Replay ανά ημέρα, με τη διαδρομή και τα συμβάντα της συγκεκριμένης ημέρας.
 - Spec: [docs/superpowers/specs/2026-07-07-ride-replay-visibility-fix-design.md](docs/superpowers/specs/2026-07-07-ride-replay-visibility-fix-design.md)
@@ -61,9 +65,6 @@
 ---
 
 ## Μένει να γίνει
-
-### Ride Replay — Δημόσιο link κοινοποίησης (χωρίς προγραμματισμένη ημερομηνία)
-Αναφέρθηκε ως μελλοντική ιδέα κατά τον σχεδιασμό του Ride Replay: δυνατότητα δημιουργίας δημόσιου (χωρίς login) link ώστε να μοιράζεται το replay μιας δράσης εκτός EasyRide (π.χ. social media, WhatsApp). Requires ξεχωριστό σχεδιασμό (tokens, privacy, expiry) — δεν έχει προγραμματιστεί ακόμα.
 
 ### Άλλα ανοιχτά σημεία (μη κρίσιμα, cosmetic)
 - Μικρή ασυνέπεια μορφοποίησης ημερομηνίας ανάμεσα στα day-tabs (`d/m`) και στη μπάρα πληροφοριών (πλήρης ελληνική ημερομηνία) στο ημερήσιο πρόγραμμα — καθαρά αισθητικό.

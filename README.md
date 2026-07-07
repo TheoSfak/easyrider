@@ -4,14 +4,14 @@
 
 The app is built as a plain PHP project without a framework, so it can run on common shared hosting, XAMPP, or a standard Apache/PHP/MySQL production server.
 
-**Version:** 3.85.0  
+**Version:** 3.86.0  
 **Author:** Theodore Sfakianakis  
 **Repository:** https://github.com/TheoSfak/easyrider
 
 ![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?logo=php&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?logo=mysql&logoColor=white)
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white)
-![Version](https://img.shields.io/badge/version-3.85.0-blue)
+![Version](https://img.shields.io/badge/version-3.86.0-blue)
 
 ---
 
@@ -299,6 +299,10 @@ php /path/to/easyride/cron_daily.php
 ---
 
 ## Current Release Highlights
+
+### v3.86.0
+
+- Added a public, no-login share link for Ride Replay: mission managers can generate a URL that renders a completed mission's animated route recap (with autoplay, and a day switcher for multi-day missions) for sharing outside EasyRide, and revoke it later.
 
 ### v3.85.0
 
