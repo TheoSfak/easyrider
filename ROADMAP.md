@@ -6,6 +6,10 @@
 
 ## Deployed
 
+### v3.85.0 — Ride Replay Visibility Fix
+- Το Ride Replay (animated recap διαδρομής για ολοκληρωμένες δράσεις) δεν εμφανιζόταν ποτέ στην πράξη: απαιτούσε αποκλειστικά τη διαδρομή μέσω Google Routes API. Τώρα κάνει fallback στα χειροκίνητα σημεία διαδρομής όταν δεν υπάρχει snapped γεωμετρία, και οι πολυήμερες δράσεις αποκτούν ξεχωριστό κουμπί Ride Replay ανά ημέρα, με τη διαδρομή και τα συμβάντα της συγκεκριμένης ημέρας.
+- Spec: [docs/superpowers/specs/2026-07-07-ride-replay-visibility-fix-design.md](docs/superpowers/specs/2026-07-07-ride-replay-visibility-fix-design.md)
+
 ### v3.84.0 — "Σκέλος"/"Βάρδια" → "Κύκλος Εγγραφών"
 - Ενοποίηση δύο ασυνεπών όρων ("Σκέλος", "Βάρδια") που σήμαιναν το ίδιο πράγμα (χρονικό παράθυρο εγγραφής μελών με όριο συμμετεχόντων) σε έναν: "Κύκλος Εγγραφών". Καθαρά αλλαγή λεκτικού σε όλη την εφαρμογή (σελίδες, emails, ειδοποιήσεις, achievements) — καμία αλλαγή στη λειτουργικότητα, στα ονόματα αρχείων/πινάκων, ή στα URLs.
 - Spec: [docs/superpowers/specs/2026-07-07-shift-to-signup-cycle-rename-design.md](docs/superpowers/specs/2026-07-07-shift-to-signup-cycle-rename-design.md)
