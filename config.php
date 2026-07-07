@@ -12,7 +12,7 @@ if (!defined('VOLUNTEEROPS')) {
 // Application
 define('APP_NAME', 'EasyRide');
 define('APP_VERSION', '3.83.0');
-define('DB_SCHEMA_VERSION', 78);
+define('DB_SCHEMA_VERSION', 79);
 
 // Load local config if exists (created by installer)
 if (file_exists(__DIR__ . '/config.local.php')) {

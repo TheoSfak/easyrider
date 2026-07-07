@@ -4564,6 +4564,94 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                 }
             },
         ],
+        [
+            'version'     => 79,
+            'description' => 'Rename shift wording (Σκέλος/Βάρδια) to Κύκλος Εγγραφών in live-stored achievement/email/notification text',
+            'up' => function () {
+                $achievementUpdates = [
+                    ['first_shift', 'Πρώτος Κύκλος Εγγραφών', 'Ολοκλήρωσε τον πρώτο σου Κύκλο Εγγραφών'],
+                    ['shifts_5', '5 Κύκλοι Εγγραφών', 'Ολοκλήρωσε 5 κύκλους εγγραφών'],
+                    ['shifts_10', '10 Κύκλοι Εγγραφών', 'Ολοκλήρωσε 10 κύκλους εγγραφών'],
+                    ['shifts_25', '25 Κύκλοι Εγγραφών', 'Ολοκλήρωσε 25 κύκλους εγγραφών'],
+                    ['shifts_50', '50 Κύκλοι Εγγραφών', 'Ολοκλήρωσε 50 κύκλους εγγραφών'],
+                    ['shifts_100', '100 Κύκλοι Εγγραφών', 'Ολοκλήρωσε 100 κύκλους εγγραφών'],
+                    ['weekend_warrior', null, 'Ολοκλήρωσε 10 κύκλους εγγραφών Σαββατοκύριακου'],
+                    ['night_owl', null, 'Ολοκλήρωσε 10 νυχτερινούς κύκλους εγγραφών'],
+                    ['early_bird', null, 'Ολοκλήρωσε 5 κύκλους εγγραφών πριν τις 8:00'],
+                ];
+                foreach ($achievementUpdates as [$code, $newName, $newDescription]) {
+                    if ($newName !== null) {
+                        dbExecute("UPDATE achievements SET name = ? WHERE code = ?", [$newName, $code]);
+                    }
+                    dbExecute("UPDATE achievements SET description = ? WHERE code = ?", [$newDescription, $code]);
+                }
+
+                dbExecute(
+                    "UPDATE email_templates SET
+                     name = 'Υπενθύμιση Κύκλου Εγγραφών',
+                     subject = 'Υπενθύμιση: Αύριο έχετε Κύκλο Εγγραφών - {{mission_title}}',
+                     body_html = REPLACE(REPLACE(REPLACE(body_html,
+                        'Υπενθύμιση Αυριανής Βάρδιας', 'Υπενθύμιση Αυριανού Κύκλου Εγγραφών'),
+                        'έχετε μια προγραμματισμένη βάρδια', 'έχετε έναν προγραμματισμένο Κύκλο Εγγραφών'),
+                        'Δείτε τη Βάρδια', 'Δείτε τον Κύκλο Εγγραφών')
+                     WHERE code = 'shift_reminder'"
+                );
+
+                dbExecute(
+                    "UPDATE email_templates SET
+                     name = 'Ακύρωση Κύκλου Εγγραφών',
+                     subject = 'Ακυρώθηκε ο Κύκλος Εγγραφών - {{mission_title}} ({{shift_date}})',
+                     body_html = REPLACE(REPLACE(REPLACE(REPLACE(body_html,
+                        'Ακύρωση Βάρδιας', 'Ακύρωση Κύκλου Εγγραφών'),
+                        'η βάρδια στην οποία είχατε δηλώσει συμμετοχή', 'ο Κύκλος Εγγραφών στον οποίο είχατε δηλώσει συμμετοχή'),
+                        '>Βάρδια:<', '>Κύκλος Εγγραφών:<'),
+                        'Δείτε Άλλες Βάρδιες', 'Δείτε Άλλους Κύκλους Εγγραφών')
+                     WHERE code = 'shift_canceled'"
+                );
+                dbExecute(
+                    "UPDATE email_templates SET body_html = REPLACE(body_html,
+                        'σε άλλες διαθέσιμες βάρδιες', 'σε άλλους διαθέσιμους κύκλους εγγραφών')
+                     WHERE code = 'shift_canceled'"
+                );
+
+                dbExecute(
+                    "UPDATE email_templates SET
+                     subject = 'Τοποθετηθήκατε σε Κύκλο Εγγραφών - {{mission_title}}',
+                     body_html = REPLACE(REPLACE(body_html,
+                        'Τοποθέτηση σε Βάρδια', 'Τοποθέτηση σε Κύκλο Εγγραφών'),
+                        'στην παρακάτω βάρδια:', 'στον παρακάτω Κύκλο Εγγραφών:')
+                     WHERE code = 'admin_added_volunteer'"
+                );
+
+                dbExecute(
+                    "UPDATE email_templates SET body_html = REPLACE(body_html,
+                        'αντικαταστήσετε στη βάρδια:', 'αντικαταστήσετε στον Κύκλο Εγγραφών:')
+                     WHERE code = 'shift_swap_requested'"
+                );
+
+                dbExecute(
+                    "UPDATE email_templates SET body_html = REPLACE(body_html,
+                        'αντικατάσταση για τη βάρδια εγκρίθηκε', 'αντικατάσταση για τον Κύκλο Εγγραφών εγκρίθηκε')
+                     WHERE code = 'shift_swap_approved'"
+                );
+
+                $notificationUpdates = [
+                    ['participation_approved', null, 'Όταν εγκρίνεται η αίτηση συμμετοχής σε Κύκλο Εγγραφών'],
+                    ['shift_reminder', 'Υπενθύμιση Κύκλου Εγγραφών', 'Μία μέρα πριν τον Κύκλο Εγγραφών'],
+                    ['shift_canceled', 'Ακύρωση Κύκλου Εγγραφών', 'Όταν ακυρώνεται Κύκλος Εγγραφών'],
+                    ['admin_added_volunteer', null, 'Όταν ο διαχειριστής προσθέτει μέλους απευθείας σε Κύκλο Εγγραφών'],
+                    ['shift_swap_requested', 'Αίτημα αντικατάστασης Κύκλου Εγγραφών (προς αντικατάστατη)', null],
+                ];
+                foreach ($notificationUpdates as [$code, $newName, $newDescription]) {
+                    if ($newName !== null) {
+                        dbExecute("UPDATE notification_settings SET name = ? WHERE code = ?", [$newName, $code]);
+                    }
+                    if ($newDescription !== null) {
+                        dbExecute("UPDATE notification_settings SET description = ? WHERE code = ?", [$newDescription, $code]);
+                    }
+                }
+            },
+        ],
 
     ];
     // ────────────────────────────────────────────────────────────────────────
