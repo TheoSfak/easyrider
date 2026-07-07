@@ -1,8 +1,10 @@
 function initRideReplayController(options) {
-    var modalEl = options.modalEl;
+    var modalEl = options.modalEl || null;
     var elIds = options.elIds;
     var getData = options.getData;
-    if (!modalEl) return;
+    var standalone = !!options.standalone;
+    var autoplay = !!options.autoplay;
+    if (!standalone && !modalEl) return;
 
     var DURATION_MS = 25000;
     var map = null;
@@ -177,28 +179,42 @@ function initRideReplayController(options) {
         updateFrame(0);
     }
 
-    modalEl.addEventListener('shown.bs.modal', function () {
+    function loadData() {
         data = getData();
         if (!data || !Array.isArray(data.points) || data.points.length < 2) {
-            return;
+            return false;
         }
         computeCumulative();
         eventMarkers = [];
-        if (!map) {
-            initMap();
-        }
-        reset();
-    });
-
-    modalEl.addEventListener('hidden.bs.modal', function () {
-        setPlaying(false);
         if (map) {
             map.remove();
             map = null;
             marker = null;
-            eventMarkers = [];
         }
-    });
+        initMap();
+        reset();
+        return true;
+    }
+
+    if (standalone) {
+        if (loadData() && autoplay) {
+            setPlaying(true);
+        }
+    } else {
+        modalEl.addEventListener('shown.bs.modal', function () {
+            loadData();
+        });
+
+        modalEl.addEventListener('hidden.bs.modal', function () {
+            setPlaying(false);
+            if (map) {
+                map.remove();
+                map = null;
+                marker = null;
+                eventMarkers = [];
+            }
+        });
+    }
 
     document.getElementById(elIds.playPause).addEventListener('click', function () {
         if (!data) return;
@@ -220,6 +236,15 @@ function initRideReplayController(options) {
         elapsedMs = parseFloat(e.target.value) * DURATION_MS;
         updateFrame(parseFloat(e.target.value));
     });
+
+    return {
+        reload: function () {
+            setPlaying(false);
+            if (loadData() && autoplay) {
+                setPlaying(true);
+            }
+        }
+    };
 }
 
 window.initRideReplayController = initRideReplayController;
