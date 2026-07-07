@@ -264,7 +264,7 @@ function runHealthChecks() {
         
         // Orphan shifts
         $orphanShifts = (int) dbFetchValue("SELECT COUNT(*) FROM shifts sh LEFT JOIN missions m ON sh.mission_id = m.id WHERE m.id IS NULL");
-        $integrity[] = ['label' => 'Ορφανές βάρδιες (mission deleted)', 'value' => $orphanShifts,
+        $integrity[] = ['label' => 'Ορφανοί Κύκλοι Εγγραφών (mission deleted)', 'value' => $orphanShifts,
                         'status' => $orphanShifts === 0 ? 'ok' : 'warning', 'detail' => $orphanShifts > 0 ? 'Χρειάζεται καθαρισμός' : ''];
         
         // Orphan member_points
@@ -659,7 +659,7 @@ if (isPost()) {
         
         $cronJobs = [
             'task_reminders'      => ['file' => 'cron_task_reminders.php',      'label' => 'Υπενθυμίσεις Εργασιών'],
-            'shift_reminders'     => ['file' => 'cron_shift_reminders.php',     'label' => 'Υπενθυμίσεις Σκελών'],
+            'shift_reminders'     => ['file' => 'cron_shift_reminders.php',     'label' => 'Υπενθυμίσεις Κύκλων Εγγραφών'],
             'incomplete_missions' => ['file' => 'cron_incomplete_missions.php', 'label' => 'Ελλιπείς Δράσεις'],
             'citizen_cert_expiry' => ['file' => 'cron_citizen_cert_expiry.php', 'label' => 'Ειδοποιήσεις Συνδρομών'],
         ];
@@ -1115,7 +1115,7 @@ include __DIR__ . '/includes/header.php';
 # Καθημερινές εργασίες (08:00)
 0 8 * * * /usr/bin/php /home/USERNAME/public_html/easyride/cron_daily.php
 
-# Υπενθυμίσεις σκελών / διαδρομών (κάθε 6 ώρες)
+# Υπενθυμίσεις Κύκλων Εγγραφών / διαδρομών (κάθε 6 ώρες)
 0 */6 * * * /usr/bin/php /home/USERNAME/public_html/easyride/cron_shift_reminders.php
 
 # Δράσεις χωρίς αρκετά μέλη (09:00)

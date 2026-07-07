@@ -14,7 +14,7 @@ $pageTitle = 'Νέος Κύκλος Εγγραφών';
 if ($id) {
     $shift = dbFetchOne("SELECT * FROM shifts WHERE id = ?", [$id]);
     if (!$shift) {
-        setFlash('error', 'Η βάρδια δεν βρέθηκε.');
+        setFlash('error', 'Ο Κύκλος Εγγραφών δεν βρέθηκε.');
         redirect('shifts.php');
     }
     $missionId = $shift['mission_id'];
@@ -84,7 +84,7 @@ if (isPost()) {
                 ]
             );
             logAudit('update', 'shifts', $id);
-            setFlash('success', 'Η βάρδια ενημερώθηκε.');
+            setFlash('success', 'Ο Κύκλος Εγγραφών ενημερώθηκε.');
         } else {
             // Create
             $id = dbInsert(
@@ -97,7 +97,7 @@ if (isPost()) {
                 ]
             );
             logAudit('create', 'shifts', $id);
-            setFlash('success', 'Η βάρδια δημιουργήθηκε.');
+            setFlash('success', 'Ο Κύκλος Εγγραφών δημιουργήθηκε.');
         }
         redirect('mission-view.php?id=' . $missionId);
     }

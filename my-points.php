@@ -128,7 +128,7 @@ include __DIR__ . '/includes/header.php';
             <div class="card-body">
                 <?php if (empty($pointsHistory)): ?>
                     <p class="text-muted">Δεν έχετε κερδίσει πόντους ακόμα.</p>
-                    <p>Συμμετέχετε σε βάρδιες για να κερδίσετε πόντους!</p>
+                    <p>Συμμετέχετε σε Κύκλους Εγγραφών για να κερδίσετε πόντους!</p>
                     <a href="missions.php" class="btn btn-primary">
                         <i class="bi bi-search me-1"></i>Βρείτε Αποστολές
                     </a>
@@ -187,7 +187,7 @@ include __DIR__ . '/includes/header.php';
                         <strong>×<?= WEEKEND_MULTIPLIER ?></strong> για Σαββατοκύριακα
                     </li>
                     <li class="mb-2">
-                        <strong>×<?= NIGHT_MULTIPLIER ?></strong> για νυχτερινές βάρδιες
+                        <strong>×<?= NIGHT_MULTIPLIER ?></strong> για νυχτερινούς Κύκλους Εγγραφών
                     </li>
                     <li class="mb-2">
                         <strong>×<?= MEDICAL_MULTIPLIER ?></strong> για ιατρικές αποστολές

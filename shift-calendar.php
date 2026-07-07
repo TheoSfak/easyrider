@@ -327,7 +327,7 @@ include __DIR__ . '/includes/header.php';
                 <input class="form-check-input" type="checkbox" id="filterMine"
                        <?= $defaultMine === '1' ? 'checked' : '' ?>>
                 <label class="form-check-label fw-semibold" for="filterMine" style="font-size:0.83rem;">
-                    Μόνο οι βάρδιές μου
+                    Μόνο οι Κύκλοι Εγγραφών μου
                 </label>
             </div>
         </div>

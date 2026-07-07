@@ -1,7 +1,7 @@
 <?php
 /**
  * VolunteerOps - Participations Management
- * Διαχείριση αιτήσεων συμμετοχής σε βάρδιες
+ * Διαχείριση αιτήσεων συμμετοχής σε Κύκλους Εγγραφών
  */
 
 require_once __DIR__ . '/bootstrap.php';

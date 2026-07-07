@@ -29,7 +29,7 @@ function getPermissionMap(): array {
         'Δράσεις' => [
             ['slug' => 'missions_view',      'label' => 'Προβολή Δράσεων (όλες)',               'icon' => 'bi-eye',              'description' => 'Βλέπει πρόχειρες, κλειστές & ολοκληρωμένες'],
             ['slug' => 'missions_manage',    'label' => 'Διαχείριση Δράσεων',                   'icon' => 'bi-flag',             'description' => 'Δημιουργία, επεξεργασία, αλλαγή κατάστασης, διαγραφή δράσεων'],
-            ['slug' => 'shifts_manage',      'label' => 'Διαχείριση Σκελών',                    'icon' => 'bi-clock',            'description' => 'Δημιουργία σκελών, έγκριση/απόρριψη συμμετοχών'],
+            ['slug' => 'shifts_manage',      'label' => 'Διαχείριση Κύκλων Εγγραφών',           'icon' => 'bi-clock',            'description' => 'Δημιουργία Κύκλων Εγγραφών, έγκριση/απόρριψη συμμετοχών'],
             ['slug' => 'tasks_manage',       'label' => 'Διαχείριση Εργασιών',                 'icon' => 'bi-list-task',        'description' => 'Δημιουργία & ανάθεση εργασιών'],
         ],
         'Μέλη' => [

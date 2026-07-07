@@ -366,7 +366,7 @@ if (isPost()) {
                          VALUES (?, ?, ?, 5, 1, NOW(), NOW())",
                         [$id, $mission['start_datetime'], $mission['end_datetime']]
                     );
-                    logAudit('auto_create_shift', 'shifts', $id, 'Αυτόματη δημιουργία βαρδίας κατά τη δημοσίευση');
+                    logAudit('auto_create_shift', 'shifts', $id, 'Αυτόματη δημιουργία Κύκλου Εγγραφών κατά τη δημοσίευση');
                 }
 
                 // Notify members based on targeting selection
@@ -757,7 +757,7 @@ if (isPost()) {
                     logAudit('apply', 'participation_requests', null, null, ['shift_id' => $shiftId]);
                     setFlash('success', 'Η αίτησή σας υποβλήθηκε.');
                 } else {
-                    setFlash('error', 'Έχετε ήδη υποβάλει αίτηση για αυτή τη βάρδια.');
+                    setFlash('error', 'Έχετε ήδη υποβάλει αίτηση για αυτόν τον Κύκλο Εγγραφών.');
                 }
                 redirect('mission-view.php?id=' . $id);
             }
@@ -837,21 +837,21 @@ if (isPost()) {
                             // Send in-app notification
                             sendNotification(
                                 $memberId,
-                                'Τοποθετήθηκατε σε βάρδια',
-                                'Ο διαχειριστής σας τοποθέτησε στη βάρδια: ' . $shift['mission_title'] . ' - ' . formatDateTime($shift['start_time'])
+                                'Τοποθετήθηκατε σε Κύκλο Εγγραφών',
+                                'Ο διαχειριστής σας τοποθέτησε στον Κύκλο Εγγραφών: ' . $shift['mission_title'] . ' - ' . formatDateTime($shift['start_time'])
                             );
-                            
+
                             logAudit('manual_add_member', 'participation_requests', $prId);
                             $addedCount++;
                         }
                     }
-                    
+
                     $message = '';
                     if ($addedCount > 0) {
-                        $message = "Το μέλος προστέθηκε σε {$addedCount} βάρδια/ες.";
+                        $message = "Το μέλος προστέθηκε σε {$addedCount} Κύκλο/ους Εγγραφών.";
                     }
                     if ($skippedCount > 0) {
-                        $message .= " {$skippedCount} βάρδια/ες παραλείφθηκαν (ήδη συμμετέχει).";
+                        $message .= " {$skippedCount} Κύκλος/οι Εγγραφών παραλείφθηκαν (ήδη συμμετέχει).";
                     }
                     
                     setFlash($addedCount > 0 ? 'success' : 'warning', $message);
@@ -1349,7 +1349,7 @@ include __DIR__ . '/includes/header.php';
             </div>
             <div class="card-body p-0">
                 <?php if (empty($shifts)): ?>
-                    <p class="text-muted text-center py-4">Δεν υπάρχουν βάρδιες.</p>
+                    <p class="text-muted text-center py-4">Δεν υπάρχουν Κύκλοι Εγγραφών.</p>
                 <?php else: ?>
                     <!-- Desktop/Tablet table view (hidden on portrait phones) -->
                     <div class="table-responsive d-none d-sm-block">
@@ -1394,7 +1394,7 @@ include __DIR__ . '/includes/header.php';
                                         <td class="text-end">
                                             <?php if (!$canManageMissions): ?>
                                                 <div class="d-flex gap-1 justify-content-end flex-wrap align-items-center">
-                                                    <a href="shift-view.php?id=<?= $shift['id'] ?>" class="btn btn-sm btn-outline-primary" title="Προβολή βάρδιας">
+                                                    <a href="shift-view.php?id=<?= $shift['id'] ?>" class="btn btn-sm btn-outline-primary" title="Προβολή Κύκλου Εγγραφών">
                                                         <i class="bi bi-eye"></i>
                                                     </a>
                                                     <?php if (isset($userParticipations[$shift['id']])): ?>
@@ -1782,7 +1782,7 @@ include __DIR__ . '/includes/header.php';
             </div>
             <div class="card-body">
                 <div class="d-flex justify-content-between mb-2">
-                    <span>Σύνολο Βαρδιών:</span>
+                    <span>Σύνολο Κύκλων Εγγραφών:</span>
                     <strong><?= count($shifts) ?></strong>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
@@ -2163,7 +2163,7 @@ if (!empty($shiftIds)) {
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
-                    <p>Αίτηση για τη βάρδια: <strong id="applyShiftDate"></strong></p>
+                    <p>Αίτηση για τον Κύκλο Εγγραφών: <strong id="applyShiftDate"></strong></p>
                     <div class="mb-3">
                         <label class="form-label">Σημειώσεις (προαιρετικά)</label>
                         <textarea class="form-control" name="member_notes" rows="3" 
@@ -2222,9 +2222,9 @@ document.querySelectorAll('.apply-btn').forEach(function(btn) {
                     <hr>
                     
                     <div class="mb-3">
-                        <label class="form-label"><strong>Επιλογή Βαρδιών</strong> (μπορείτε να επιλέξετε πολλές)</label>
+                        <label class="form-label"><strong>Επιλογή Κύκλων Εγγραφών</strong> (μπορείτε να επιλέξετε πολλούς)</label>
                         <?php if (empty($shifts)): ?>
-                            <p class="text-muted">Δεν υπάρχουν διαθέσιμες βάρδιες.</p>
+                            <p class="text-muted">Δεν υπάρχουν διαθέσιμοι Κύκλοι Εγγραφών.</p>
                         <?php else: ?>
                             <div class="list-group" style="max-height: 300px; overflow-y: auto;">
                                 <?php foreach ($shifts as $shift): ?>
@@ -2253,7 +2253,7 @@ document.querySelectorAll('.apply-btn').forEach(function(btn) {
                     
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle me-1"></i>
-                        Το μέλος θα προστεθεί αυτόματα ως <strong>εγκεκριμένο</strong> σε όλες τις επιλεγμένες βάρδιες και θα λάβει ειδοποιήσεις.
+                        Το μέλος θα προστεθεί αυτόματα ως <strong>εγκεκριμένο</strong> σε όλους τους επιλεγμένους Κύκλους Εγγραφών και θα λάβει ειδοποιήσεις.
                     </div>
                 </div>
                 <div class="modal-footer">

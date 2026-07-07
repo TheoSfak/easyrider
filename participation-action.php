@@ -72,7 +72,7 @@ try {
             
             if ($currentCount >= $maxMembers) {
                 db()->rollBack();
-                setFlash('error', 'Η βάρδια είναι πλήρης.');
+                setFlash('error', 'Ο Κύκλος Εγγραφών είναι πλήρης.');
                 redirect('dashboard.php');
             }
             
@@ -104,7 +104,7 @@ try {
             sendNotification(
                 $request['member_id'],
                 'Η αίτησή σας εγκρίθηκε',
-                'Η αίτησή σας για τη βάρδια "' . $request['mission_title'] . '" στις ' . 
+                'Η αίτησή σας για τον Κύκλο Εγγραφών "' . $request['mission_title'] . '" στις ' .
                 formatDateTime($request['start_time']) . ' εγκρίθηκε.'
             );
         }
@@ -133,7 +133,7 @@ try {
             sendNotification(
                 $request['member_id'],
                 'Η αίτησή σας απορρίφθηκε',
-                'Η αίτησή σας για τη βάρδια "' . $request['mission_title'] . '" στις ' . 
+                'Η αίτησή σας για τον Κύκλο Εγγραφών "' . $request['mission_title'] . '" στις ' .
                 formatDateTime($request['start_time']) . ' απορρίφθηκε. Λόγος: Η αίτηση απορρίφθηκε από τον διαχειριστή'
             );
         }

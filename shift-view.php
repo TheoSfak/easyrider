@@ -22,7 +22,7 @@ $shift = dbFetchOne(
 );
 
 if (!$shift) {
-    setFlash('error', 'Η βάρδια δεν βρέθηκε.');
+    setFlash('error', 'Ο Κύκλος Εγγραφών δεν βρέθηκε.');
     redirect('shifts.php');
 }
 
@@ -30,11 +30,11 @@ $pageTitle = $shift['mission_title'] . ' - ' . formatDateTime($shift['start_time
 $user = getCurrentUser();
 $missionCompleted = ($shift['mission_status'] === STATUS_COMPLETED);
 
-// Τ.Ε.Π.: αποκλεισμός βάρδιας Τ.Ε.Π. για μη-εξουσιοδοτημένους
+// Τ.Ε.Π.: αποκλεισμός Κύκλου Εγγραφών Τ.Ε.Π. για μη-εξουσιοδοτημένους
 $missionTypeId = (int) $shift['mission_type_id'];
 $missionResponsible = (int) $shift['responsible_user_id'];
 if (isTepMission($missionTypeId) && !canSeeTep($missionResponsible)) {
-    setFlash('error', 'Δεν έχετε πρόσβαση σε βάρδιες αποστολών Τ.Ε.Π.');
+    setFlash('error', 'Δεν έχετε πρόσβαση σε Κύκλους Εγγραφών αποστολών Τ.Ε.Π.');
     redirect('missions.php');
 }
 $canManage = isAdmin() && !$missionCompleted;
@@ -139,7 +139,7 @@ if (isPost()) {
                     sendNotification(
                         $prInfo['member_id'],
                         'Η αίτησή σας εγκρίθηκε',
-                        'Η αίτησή σας για τη βάρδια "' . $shift['mission_title'] . '" στις ' . 
+                        'Η αίτησή σας για τον Κύκλο Εγγραφών "' . $shift['mission_title'] . '" στις ' .
                         formatDateTime($shift['start_time']) . ' εγκρίθηκε.'
                     );
                 }
@@ -178,7 +178,7 @@ if (isPost()) {
                     ]);
                     
                     // Send in-app notification
-                    $message = 'Η αίτηση συμμετοχής σας στη βάρδια "' . $shift['mission_title'] . '" (' . formatDateTime($shift['start_time']) . ') απορρίφθηκε.';
+                    $message = 'Η αίτηση συμμετοχής σας στον Κύκλο Εγγραφών "' . $shift['mission_title'] . '" (' . formatDateTime($shift['start_time']) . ') απορρίφθηκε.';
                     if ($reason) {
                         $message .= ' Αιτία: ' . $reason;
                     }
@@ -230,7 +230,7 @@ if (isPost()) {
                     sendNotification(
                         (int) $pr['member_id'],
                         'Επανενεργοποίηση Συμμετοχής',
-                        'Η συμμετοχή σας στη βάρδια "' . $shift['mission_title'] . '" (' . formatDateTime($shift['start_time']) . ') επανενεργοποιήθηκε και είναι πλέον εγκεκριμένη.'
+                        'Η συμμετοχή σας στον Κύκλο Εγγραφών "' . $shift['mission_title'] . '" (' . formatDateTime($shift['start_time']) . ') επανενεργοποιήθηκε και είναι πλέον εγκεκριμένη.'
                     );
 
                     logAudit('reactivate', 'participation_requests', $prId, "Member: {$pr['member_id']}");
@@ -332,7 +332,7 @@ if (isPost()) {
                         sendBulkNotifications(
                             $userIds,
                             'Ακύρωση Κύκλου Εγγραφών',
-                            'Η βάρδια στην αποστολή "' . $shift['mission_title'] . '" (' . formatDateTime($shift['start_time']) . ') διαγράφηκε. Η αίτησή σας ακυρώθηκε αυτόματα.'
+                            'Ο Κύκλος Εγγραφών στην αποστολή "' . $shift['mission_title'] . '" (' . formatDateTime($shift['start_time']) . ') διαγράφηκε. Η αίτησή σας ακυρώθηκε αυτόματα.'
                         );
                     }
                     
@@ -345,14 +345,14 @@ if (isPost()) {
                     
                     db()->commit();
                     
-                    $msg = 'Η βάρδια διαγράφηκε.';
+                    $msg = 'Ο Κύκλος Εγγραφών διαγράφηκε.';
                     if (count($affectedParticipants) > 0) {
                         $msg .= ' Ειδοποιήθηκαν ' . count($affectedParticipants) . ' μέλη.';
                     }
                     setFlash('success', $msg);
                 } catch (Exception $e) {
                     db()->rollBack();
-                    setFlash('error', 'Σφάλμα κατά τη διαγραφή της βάρδιας.');
+                    setFlash('error', 'Σφάλμα κατά τη διαγραφή του Κύκλου Εγγραφών.');
                 }
                 redirect('mission-view.php?id=' . $shift['mission_id']);
             }
@@ -371,7 +371,7 @@ if (isPost()) {
                 
                 if ($exists && in_array($exists['status'], [PARTICIPATION_APPROVED, PARTICIPATION_PENDING])) {
                     // Already active — block
-                    setFlash('error', 'Το μέλος έχει ήδη ενεργή αίτηση σε αυτή τη βάρδια.');
+                    setFlash('error', 'Το μέλος έχει ήδη ενεργή αίτηση σε αυτόν τον Κύκλο Εγγραφών.');
                 } else {
                     if ($exists) {
                         // Reactivate existing rejected/canceled record
@@ -416,12 +416,12 @@ if (isPost()) {
                     // In-app notification
                     sendNotification(
                         (int) $memberId,
-                        'Τοποθετήθηκατε σε βάρδια',
-                        'Ο διαχειριστής σας τοποθέτησε στη βάρδια: ' . $shift['mission_title'] . ' - ' . formatDateTime($shift['start_time'])
+                        'Τοποθετήθηκατε σε Κύκλο Εγγραφών',
+                        'Ο διαχειριστής σας τοποθέτησε στον Κύκλο Εγγραφών: ' . $shift['mission_title'] . ' - ' . formatDateTime($shift['start_time'])
                     );
                     
                     logAudit('add_member', 'participation_requests', null, "Shift $id, User $memberId");
-                    setFlash('success', 'Το μέλος προστέθηκε στη βάρδια και ενημερώθηκε με email.');
+                    setFlash('success', 'Το μέλος προστέθηκε στον Κύκλο Εγγραφών και ενημερώθηκε με email.');
                 }
             }
             break;
@@ -500,8 +500,8 @@ if (isPost()) {
                     // In-app notification
                     sendNotification(
                         (int) $memberId,
-                        'Τοποθετήθηκατε σε βάρδια',
-                        'Ο διαχειριστής σας τοποθέτησε στη βάρδια: ' . $shift['mission_title'] . ' - ' . formatDateTime($shift['start_time'])
+                        'Τοποθετήθηκατε σε Κύκλο Εγγραφών',
+                        'Ο διαχειριστής σας τοποθέτησε στον Κύκλο Εγγραφών: ' . $shift['mission_title'] . ' - ' . formatDateTime($shift['start_time'])
                     );
                 }
                 
@@ -509,11 +509,11 @@ if (isPost()) {
                     logAudit('mass_add_members', 'participation_requests', null, "Shift $id, Added $addedCount users");
                     $msg = "Προστέθηκαν επιτυχώς $addedCount μέλη.";
                     if ($skippedCount > 0) {
-                        $msg .= " Παραλείφθηκαν $skippedCount που ήταν ήδη στη βάρδια.";
+                        $msg .= " Παραλείφθηκαν $skippedCount που ήταν ήδη στον Κύκλο Εγγραφών.";
                     }
                     setFlash('success', $msg);
                 } else {
-                    setFlash('warning', 'Δεν προστέθηκε κανένας μέλος (ήταν όλοι ήδη στη βάρδια).');
+                    setFlash('warning', 'Δεν προστέθηκε κανένας μέλος (ήταν όλοι ήδη στον Κύκλο Εγγραφών).');
                 }
             }
             break;
@@ -593,7 +593,7 @@ if (isPost()) {
                         sendNotification($swap['from_member_id'], 'Αντικατάσταση Εγκρίθηκε',
                             'Η αντικατάστασή σας από τον/την ' . $swap['to_name'] . ' εγκρίθηκε από τον διαχειριστή.');
                         sendNotification($swap['to_member_id'], 'Εγκρίθηκε η Συμμετοχή σας',
-                            'Εγκριθήκατε ως αντικατάσταση για τη βάρδια της αποστολής: ' . $missionTitle . '.');
+                            'Εγκριθήκατε ως αντικατάσταση για τον Κύκλο Εγγραφών της αποστολής: ' . $missionTitle . '.');
 
                         setFlash('success', 'Η αντικατάσταση εγκρίθηκε επιτυχώς.');
                     } catch (Exception $e) {
@@ -1027,7 +1027,7 @@ include __DIR__ . '/includes/header.php';
                         <?php if ($approvedCount >= $shift['max_members']): ?>
                             <div class="alert alert-warning mb-0">
                                 <i class="bi bi-exclamation-circle me-1"></i>
-                                Η βάρδια είναι πλήρης.
+                                Ο Κύκλος Εγγραφών είναι πλήρης.
                             </div>
                         <?php else: ?>
                             <form method="post">
@@ -1062,7 +1062,7 @@ include __DIR__ . '/includes/header.php';
             </div>
             <div class="card-body text-center">
                 <h2 class="text-warning"><?= calculatePoints($shift, calculateShiftHours($shift)) ?></h2>
-                <small class="text-muted">πόντοι για αυτή τη βάρδια</small>
+                <small class="text-muted">πόντοι για αυτόν τον Κύκλο Εγγραφών</small>
             </div>
         </div>
         <?php endif; ?>
@@ -1162,7 +1162,7 @@ include __DIR__ . '/includes/header.php';
                     <?php if (empty($availableMembers)): ?>
                         <p class="text-muted mb-0">Δεν υπάρχουν διαθέσιμα μέλη.</p>
                     <?php elseif ($approvedCount >= $shift['max_members']): ?>
-                        <p class="text-warning mb-0"><i class="bi bi-exclamation-triangle me-1"></i>Η βάρδια είναι πλήρης.</p>
+                        <p class="text-warning mb-0"><i class="bi bi-exclamation-triangle me-1"></i>Ο Κύκλος Εγγραφών είναι πλήρης.</p>
                     <?php else: ?>
                         <div class="d-grid gap-2">
                             <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addMemberModal">
@@ -1452,11 +1452,11 @@ $activeParticipants = array_filter($participants, function($p) {
                             Τα μέλη θα ειδοποιηθούν αυτόματα για την ακύρωση.
                         </p>
                     <?php else: ?>
-                        <p class="mb-0">Η βάρδια δεν έχει ενεργές αιτήσεις συμμετοχής.</p>
+                        <p class="mb-0">Ο Κύκλος Εγγραφών δεν έχει ενεργές αιτήσεις συμμετοχής.</p>
                     <?php endif; ?>
                     
                     <hr>
-                    <p class="mb-0"><strong>Είστε σίγουροι ότι θέλετε να διαγράψετε τη βάρδια;</strong></p>
+                    <p class="mb-0"><strong>Είστε σίγουροι ότι θέλετε να διαγράψετε τον Κύκλο Εγγραφών;</strong></p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Ακύρωση</button>

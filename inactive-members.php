@@ -335,7 +335,7 @@ include __DIR__ . '/includes/header.php';
                                                 </div>
                                                 <p>Πρόκειται να διαγράψετε τον/την <strong><?= h($v['name']) ?></strong>:</p>
                                                 <ul>
-                                                    <li>Συμμετοχές σε βάρδιες: <strong><?= $v['shifts_count'] ?></strong></li>
+                                                    <li>Συμμετοχές σε Κύκλους Εγγραφών: <strong><?= $v['shifts_count'] ?></strong></li>
                                                     <li>Συνολικοί πόντοι: <strong><?= number_format($v['total_points']) ?></strong></li>
                                                 </ul>
                                                 <p class="text-muted mb-0"><small><i class="bi bi-info-circle me-1"></i>Αυτή η ενέργεια μπορεί να αναιρεθεί μόνο απευθείας από τη βάση δεδομένων.</small></p>

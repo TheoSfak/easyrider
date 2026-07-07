@@ -1,7 +1,7 @@
 <?php
 /**
  * VolunteerOps - Shift Swap / Cover Request
- * Μέλος ζητά αντικαταστάτη για εγκεκριμένη βάρδιά του
+ * Μέλος ζητά αντικαταστάτη για εγκεκριμένο Κύκλο Εγγραφών του
  */
 
 require_once __DIR__ . '/bootstrap.php';
@@ -33,7 +33,7 @@ if (!$participation) {
 }
 
 if (strtotime($participation['start_time']) <= time()) {
-    setFlash('error', 'Δεν μπορείτε να ζητήσετε αντικατάσταση για βάρδια που έχει ήδη ξεκινήσει.');
+    setFlash('error', 'Δεν μπορείτε να ζητήσετε αντικατάσταση για Κύκλο Εγγραφών που έχει ήδη ξεκινήσει.');
     redirect('my-participations.php');
 }
 
@@ -44,7 +44,7 @@ $existingSwap = dbFetchOne(
 );
 
 if ($existingSwap) {
-    setFlash('warning', 'Υπάρχει ήδη ενεργό αίτημα αντικατάστασης για αυτή τη βάρδια.');
+    setFlash('warning', 'Υπάρχει ήδη ενεργό αίτημα αντικατάστασης για αυτόν τον Κύκλο Εγγραφών.');
     redirect('my-participations.php');
 }
 
@@ -76,7 +76,7 @@ if (isPost()) {
     );
 
     if ($alreadyIn) {
-        setFlash('error', 'Ο/Η ' . h($replacement['name']) . ' συμμετέχει ήδη σε αυτή τη βάρδια.');
+        setFlash('error', 'Ο/Η ' . h($replacement['name']) . ' συμμετέχει ήδη σε αυτόν τον Κύκλο Εγγραφών.');
         redirect('shift-swap.php?participation_id=' . $prId);
     }
 
@@ -114,7 +114,7 @@ if (isPost()) {
     sendNotification(
         $toMemberId,
         'Αίτημα Αντικατάστασης',
-        'Ο/Η ' . $user['name'] . ' σας ζητά να τον/την αντικαταστήσετε στη βάρδια: ' .
+        'Ο/Η ' . $user['name'] . ' σας ζητά να τον/την αντικαταστήσετε στον Κύκλο Εγγραφών: ' .
         $participation['mission_title'] . ' (' . formatDateTime($participation['start_time']) . ')'
     );
 
@@ -157,7 +157,7 @@ include __DIR__ . '/includes/header.php';
 <!-- Shift info card -->
 <div class="card mb-4 border-success">
     <div class="card-header bg-success text-white">
-        <h6 class="mb-0"><i class="bi bi-calendar-check me-1"></i>Η βάρδια σας</h6>
+        <h6 class="mb-0"><i class="bi bi-calendar-check me-1"></i>Ο Κύκλος Εγγραφών σας</h6>
     </div>
     <div class="card-body">
         <div class="row g-3">
@@ -191,7 +191,7 @@ include __DIR__ . '/includes/header.php';
         <?php if (empty($eligibleMembers)): ?>
             <div class="alert alert-warning">
                 <i class="bi bi-exclamation-triangle me-1"></i>
-                Δεν υπάρχουν διαθέσιμα μέλη για αντικατάσταση σε αυτή τη βάρδια.
+                Δεν υπάρχουν διαθέσιμα μέλη για αντικατάσταση σε αυτόν τον Κύκλο Εγγραφών.
             </div>
         <?php else: ?>
         <div class="alert alert-info d-flex gap-2">
@@ -210,7 +210,7 @@ include __DIR__ . '/includes/header.php';
                         <option value="<?= $v['id'] ?>"><?= h($v['name']) ?></option>
                     <?php endforeach; ?>
                 </select>
-                <div class="form-text">Εμφανίζονται μόνο ενεργοί μέλη που δεν συμμετέχουν ήδη στη βάρδια.</div>
+                <div class="form-text">Εμφανίζονται μόνο ενεργοί μέλη που δεν συμμετέχουν ήδη στον Κύκλο Εγγραφών.</div>
             </div>
             <div class="mb-4">
                 <label for="message" class="form-label fw-semibold">Μήνυμα <span class="text-muted">(προαιρετικό)</span></label>

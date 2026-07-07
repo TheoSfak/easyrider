@@ -299,7 +299,7 @@ $greekMonths = [
 
         <?php if (!empty($attendedShifts)): ?>
         <!-- ── Detailed shift history ── -->
-        <div class="section-title page-break"><i class="bi bi-list-check me-1"></i>Αναλυτικό Ιστορικό Βαρδιών</div>
+        <div class="section-title page-break"><i class="bi bi-list-check me-1"></i>Αναλυτικό Ιστορικό Κύκλων Εγγραφών</div>
         <table class="table table-sm table-hover report-table">
             <thead>
                 <tr>

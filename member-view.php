@@ -1206,7 +1206,7 @@ include __DIR__ . '/includes/header.php';
                     <li>Επιτεύγματα</li>
                     <li>Ειδοποιήσεις</li>
                 </ul>
-                <p class="text-muted"><small><i class="bi bi-info-circle me-1"></i>Οι συμμετοχές σε αποστολές και βάρδιες θα διατηρηθούν για στατιστικούς λόγους, αλλά θα συνδεθούν με ανωνυμοποιημένο χρήστη.</small></p>
+                <p class="text-muted"><small><i class="bi bi-info-circle me-1"></i>Οι συμμετοχές σε αποστολές και Κύκλους Εγγραφών θα διατηρηθούν για στατιστικούς λόγους, αλλά θα συνδεθούν με ανωνυμοποιημένο χρήστη.</small></p>
                 <p class="mb-0">Είστε σίγουροι ότι θέλετε να διαγράψετε τα προσωπικά δεδομένα του <strong><?= h($member['name']) ?></strong>;</p>
             </div>
             <div class="modal-footer">

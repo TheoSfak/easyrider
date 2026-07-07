@@ -1,7 +1,7 @@
 <?php
 /**
  * VolunteerOps - Member GPS Ping Endpoint
- * Το μέλος στέλνει θέση GPS κατά τη διάρκεια βάρδιας.
+ * Το μέλος στέλνει θέση GPS κατά τη διάρκεια Κύκλου Εγγραφών.
  * AJAX POST only.
  */
 
@@ -41,7 +41,7 @@ $pr = dbFetchOne(
 );
 
 if (!$pr) {
-    echo json_encode(['ok' => false, 'error' => 'Δεν έχετε εγκεκριμένη συμμετοχή σε αυτή τη βάρδια']);
+    echo json_encode(['ok' => false, 'error' => 'Δεν έχετε εγκεκριμένη συμμετοχή σε αυτόν τον Κύκλο Εγγραφών']);
     exit;
 }
 

@@ -56,7 +56,7 @@ if (!isAdmin()) {
     $params[] = getCurrentUser()['id'];
 }
 
-// Τ.Ε.Π.: κρύψε βάρδιες Τ.Ε.Π. από απλούς μέλη
+// Τ.Ε.Π.: κρύψε Κύκλους Εγγραφών Τ.Ε.Π. από απλούς μέλη
 if (!canSeeTep()) {
     $where[] = '(m.mission_type_id != ? OR m.responsible_user_id = ?)';
     $params[] = getTepMissionTypeId();
@@ -146,7 +146,7 @@ include __DIR__ . '/includes/header.php';
 
 <?php if (empty($shifts)): ?>
     <div class="alert alert-info">
-        <i class="bi bi-info-circle me-2"></i>Δεν βρέθηκαν βάρδιες.
+        <i class="bi bi-info-circle me-2"></i>Δεν βρέθηκαν Κύκλοι Εγγραφών.
     </div>
 <?php else: ?>
     <!-- Desktop/Tablet table view (hidden on portrait phones) -->
