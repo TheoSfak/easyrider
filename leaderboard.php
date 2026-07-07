@@ -187,7 +187,7 @@ include __DIR__ . '/includes/header.php';
                         <th class="text-center" style="width: 60px;">#</th>
                         <th>Μέλος</th>
                         <th>Τμήμα</th>
-                        <th class="text-center">Βάρδιες</th>
+                        <th class="text-center">Κύκλοι Εγγραφών</th>
                         <?php if ($achievementsEnabled): ?>
                         <th class="text-center">Επιτεύγματα</th>
                         <?php endif; ?>

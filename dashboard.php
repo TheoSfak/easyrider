@@ -107,7 +107,7 @@ if (isPost() && post('action') === 'bulk_complete_overdue') {
                     dbInsert(
                         "INSERT INTO member_points (user_id, points, reason, description, pointable_type, pointable_id, created_at)
                          VALUES (?, ?, ?, ?, ?, ?, NOW())",
-                        [$pr['member_id'], $points, 'SHIFT_COMPLETED', 'Σκέλος: ' . $bulkMission['title'], 'App\\Models\\Shift', $pr['shift_id']]
+                        [$pr['member_id'], $points, 'SHIFT_COMPLETED', 'Κύκλος Εγγραφών: ' . $bulkMission['title'], 'App\\Models\\Shift', $pr['shift_id']]
                     );
                     dbExecute(
                         "UPDATE users SET total_points = total_points + ?, monthly_points = monthly_points + ? WHERE id = ?",
@@ -948,7 +948,7 @@ $randomQuote = $quotes[array_rand($quotes)];
                             <i class="bi bi-calendar-check"></i>
                         </div>
                         <div>
-                            <div class="stat-label">Σκέλη</div>
+                            <div class="stat-label">Κύκλοι Εγγραφών</div>
                             <div class="stat-number"><?= $stats['my_shifts'] ?></div>
                         </div>
                     </div>
@@ -1098,7 +1098,7 @@ $randomQuote = $quotes[array_rand($quotes)];
                 </small>
                     <div class="row g-2 mt-2">
                         <div class="col-sm-4">
-                            <span class="badge bg-secondary"><?= (int)$om['shift_count'] ?> σκέλη</span>
+                            <span class="badge bg-secondary"><?= (int)$om['shift_count'] ?> κύκλοι εγγραφών</span>
                             <span class="badge bg-primary"><?= $approved ?> εγκεκριμένοι</span>
                         </div>
                         <div class="col-sm-4">
@@ -1178,7 +1178,7 @@ $randomQuote = $quotes[array_rand($quotes)];
                                     <strong class="d-block" style="font-size:.9rem"><?= h($vol['name']) ?></strong>
                                     <small class="text-muted">
                                         <?= number_format($vol['total_hours'], 1) ?>ω · 
-                                        <?= $vol['shifts_count'] ?> σκέλη
+                                        <?= $vol['shifts_count'] ?> κύκλοι εγγραφών
                                     </small>
                                 </div>
                                 <?php if (getSetting('points_enabled', '1') === '1'): ?>
@@ -1237,7 +1237,7 @@ $randomQuote = $quotes[array_rand($quotes)];
                     UNION ALL
                     SELECT 
                         'participation' as type,
-                        CONCAT(u.name, ' αιτήθηκε για σκέλος') as description,
+                        CONCAT(u.name, ' αιτήθηκε για κύκλο εγγραφών') as description,
                         pr.created_at as timestamp,
                         pr.status
                     FROM participation_requests pr
@@ -1941,14 +1941,14 @@ document.getElementById('clearPreferencesBtn')?.addEventListener('click', functi
         <div class="col-lg-6">
             <div class="card ds-widget accent-blue h-100">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5><i class="bi bi-calendar-event text-primary me-2"></i>Επόμενα Σκέλη</h5>
+                    <h5><i class="bi bi-calendar-event text-primary me-2"></i>Επόμενοι Κύκλοι Εγγραφών</h5>
                     <a href="my-participations.php" class="btn btn-sm btn-outline-primary">Όλες</a>
                 </div>
                 <div class="card-body p-0">
                     <?php if (empty($myShifts)): ?>
                         <div class="text-center py-5">
                             <i class="bi bi-calendar-x text-muted" style="font-size:2.5rem;opacity:.3"></i>
-                            <p class="text-muted mt-2 mb-0">Δεν έχετε προγραμματισμένα σκέλη.</p>
+                            <p class="text-muted mt-2 mb-0">Δεν έχετε προγραμματισμένους κύκλους εγγραφών.</p>
                         </div>
                     <?php else: ?>
                         <div class="list-group list-group-flush">
@@ -1998,7 +1998,7 @@ document.getElementById('clearPreferencesBtn')?.addEventListener('click', functi
                                             <strong><?= h($mission['title']) ?></strong>
                                             <br>
                                             <small class="text-muted">
-                                                <?= $mission['shift_count'] ?> σκέλη
+                                                <?= $mission['shift_count'] ?> κύκλοι εγγραφών
                                             </small>
                                         </div>
                                         <span class="badge bg-success">

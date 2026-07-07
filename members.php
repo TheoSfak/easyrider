@@ -368,7 +368,7 @@ include __DIR__ . '/includes/header.php';
                     <th>Μέλος</th>
                     <th>Ρόλος</th>
                     <th class="text-center">Χρονιά</th>
-                    <th class="text-center">Σκέλη</th>
+                    <th class="text-center">Κύκλοι Εγγραφών</th>
                     <?php if (getSetting('points_enabled', '1') === '1'): ?>
                     <th class="text-center">Πόντοι</th>
                     <?php endif; ?>
@@ -528,7 +528,7 @@ include __DIR__ . '/includes/header.php';
                                                 </div>
                                                 <p>Πρόκειται να διαγράψετε τον/την <strong><?= h($v['name']) ?></strong>:</p>
                                                 <ul>
-                                                    <li>Συμμετοχές σε σκέλη: <strong><?= $v['shifts_count'] ?></strong></li>
+                                                    <li>Συμμετοχές σε κύκλους εγγραφών: <strong><?= $v['shifts_count'] ?></strong></li>
                                                     <li>Συνολικοί πόντοι: <strong><?= number_format($v['total_points']) ?></strong></li>
                                                 </ul>
                                                 <p class="text-danger mb-0"><i class="bi bi-info-circle me-1"></i>Ο χρήστης θα μπορεί να αποκατασταθεί από τη σελίδα <em>Διαγραμμένοι Χρήστες</em>.</p>

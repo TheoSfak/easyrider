@@ -652,7 +652,7 @@ include __DIR__ . '/includes/header.php';
                 <div class="stat-icon" style="background:linear-gradient(135deg,#667eea,#764ba2)"><i class="bi bi-calendar2-check"></i></div>
                 <div>
                     <div class="stat-value text-dark"><?= $stats['total_shifts'] ?></div>
-                    <small class="text-muted">Βάρδιες</small>
+                    <small class="text-muted">Κύκλοι Εγγραφών</small>
                 </div>
             </div>
         </div>
@@ -801,7 +801,7 @@ include __DIR__ . '/includes/header.php';
                         <table class="table table-sm">
                             <thead>
                                 <tr>
-                                    <th>Βάρδια</th>
+                                    <th>Κύκλος Εγγραφών</th>
                                     <th>Αποστολή</th>
                                     <th>Ημ/νία</th>
                                     <th>Κατάσταση</th>

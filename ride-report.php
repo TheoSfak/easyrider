@@ -241,13 +241,13 @@ function reportEventLabel(array $event, array $typeLabels): string {
         </table>
     <?php endif; ?>
 
-    <h2>Σκέλη & Συμμετοχές</h2>
+    <h2>Κύκλοι Εγγραφών & Συμμετοχές</h2>
     <table>
-        <thead><tr><th>Σκέλος</th><th>Ώρες</th><th>Εγκεκριμένα μέλη</th></tr></thead>
+        <thead><tr><th>Κύκλος Εγγραφών</th><th>Ώρες</th><th>Εγκεκριμένα μέλη</th></tr></thead>
         <tbody>
         <?php foreach ($shifts as $shift): ?>
             <tr>
-                <td><?= h($shift['title'] ?? 'Σκέλος #' . $shift['id']) ?></td>
+                <td><?= h($shift['title'] ?? 'Κύκλος Εγγραφών #' . $shift['id']) ?></td>
                 <td><?= formatDateTime($shift['start_time']) ?> - <?= formatDateTime($shift['end_time']) ?></td>
                 <td><?= (int)$shift['approved_count'] ?></td>
             </tr>

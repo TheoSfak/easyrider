@@ -244,7 +244,7 @@ include __DIR__ . '/includes/header.php';
                 <tr>
                     <th>Μέλος</th>
                     <th>Ρόλος</th>
-                    <th class="text-center">Βάρδιες</th>
+                    <th class="text-center">Κύκλοι Εγγραφών</th>
                     <?php if (getSetting('points_enabled', '1') === '1'): ?>
                     <th class="text-center">Πόντοι</th>
                     <?php endif; ?>

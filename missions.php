@@ -279,7 +279,7 @@ include __DIR__ . '/includes/header.php';
                             <th>Τίτλος</th>
                             <th>Τύπος</th>
                             <th>Ημερομηνία</th>
-                            <th>Σκέλη</th>
+                            <th>Κύκλοι Εγγραφών</th>
                             <th>Μέλη</th>
                             <th>Κατάσταση</th>
                             <th class="text-end">Ενέργειες</th>
@@ -461,14 +461,14 @@ include __DIR__ . '/includes/header.php';
                             <div class="mobile-card-row">
                                 <small>
                                     <span class="badge bg-secondary"><?= $mission['shift_count'] ?></span>
-                                    <span class="text-muted ms-1">σκέλη</span>
+                                    <span class="text-muted ms-1">κύκλοι εγγραφών</span>
                                 </small>
                             </div>
                             <?php else: ?>
                             <div class="mobile-card-row">
                                 <small>
                                     <span class="badge bg-secondary"><?= $mission['shift_count'] ?></span>
-                                    <span class="text-muted ms-1">σκέλη</span>
+                                    <span class="text-muted ms-1">κύκλοι εγγραφών</span>
                                     <span class="badge bg-info ms-2"><?= $mission['member_count'] ?></span>
                                     <span class="text-muted ms-1">μέλη</span>
                                 </small>

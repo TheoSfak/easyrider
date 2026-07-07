@@ -275,7 +275,7 @@ if (isPost()) {
                     sendBulkNotifications(
                         $userIds,
                         'Υπενθύμιση Δράσης: ' . $mission['title'],
-                        'Η δράση είναι ακόμα ανοιχτή και αναζητά μέλη. Δείτε τα διαθέσιμα σκέλη.'
+                        'Η δράση είναι ακόμα ανοιχτή και αναζητά μέλη. Δείτε τους διαθέσιμους κύκλους εγγραφών.'
                     );
                 }
                 
@@ -429,7 +429,7 @@ if (isPost()) {
                         sendBulkNotifications(
                             $userIds,
                             'Νέα Δράση: ' . $mission['title'],
-                            'Μια νέα δράση δημοσιεύτηκε και αναζητά μέλη. Δείτε τα διαθέσιμα σκέλη.'
+                            'Μια νέα δράση δημοσιεύτηκε και αναζητά μέλη. Δείτε τους διαθέσιμους κύκλους εγγραφών.'
                         );
                     }
                     
@@ -1340,10 +1340,10 @@ include __DIR__ . '/includes/header.php';
         <!-- Shifts -->
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="bi bi-calendar3 me-1"></i>Σκέλη</h5>
+                <h5 class="mb-0"><i class="bi bi-calendar3 me-1"></i>Κύκλοι Εγγραφών</h5>
                 <?php if ($canManageMissions && $mission['status'] !== STATUS_COMPLETED): ?>
                     <a href="shift-form.php?mission_id=<?= $mission['id'] ?>" class="btn btn-sm btn-primary">
-                        <i class="bi bi-plus-lg"></i> Νέο Σκέλος
+                        <i class="bi bi-plus-lg"></i> Νέος Κύκλος Εγγραφών
                     </a>
                 <?php endif; ?>
             </div>
@@ -2261,7 +2261,7 @@ document.querySelectorAll('.apply-btn').forEach(function(btn) {
                         <i class="bi bi-x me-1"></i>Ακύρωση
                     </button>
                     <button type="submit" class="btn btn-success">
-                        <i class="bi bi-person-plus me-1"></i>Προσθήκη σε Επιλεγμένα Σκέλη
+                        <i class="bi bi-person-plus me-1"></i>Προσθήκη σε Επιλεγμένους Κύκλους Εγγραφών
                     </button>
                 </div>
             </form>

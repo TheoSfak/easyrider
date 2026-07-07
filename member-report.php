@@ -242,7 +242,7 @@ $greekMonths = [
             <div class="col-6 col-md-3">
                 <div class="stat-card" style="background:#eff6ff;">
                     <div class="num" style="color:#1d4ed8;"><?= $totalShifts ?></div>
-                    <div class="lbl">Βάρδιες</div>
+                    <div class="lbl">Κύκλοι Εγγραφών</div>
                 </div>
             </div>
             <div class="col-6 col-md-3">
@@ -274,7 +274,7 @@ $greekMonths = [
             <thead>
                 <tr>
                     <th>Μήνας</th>
-                    <th class="text-center">Βάρδιες</th>
+                    <th class="text-center">Κύκλοι Εγγραφών</th>
                     <th class="text-center">Ώρες</th>
                 </tr>
             </thead>
@@ -305,7 +305,7 @@ $greekMonths = [
                 <tr>
                     <th>Αποστολή</th>
                     <th>Ημερομηνία</th>
-                    <th>Ώρες Βάρδιας</th>
+                    <th>Ώρες Κύκλου Εγγραφών</th>
                     <th class="text-center">Πραγμ. Ώρες</th>
                     <th>Τοποθεσία</th>
                 </tr>

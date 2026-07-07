@@ -660,7 +660,7 @@ include __DIR__ . '/includes/header.php';
         <div class="flex-grow-1">
             🆘 <strong><?= h($al['name']) ?></strong>: <?= h($al['status_label'] ?? 'Ειδοποίηση') ?> στη δράση
             <strong><?= h($al['mission_title']) ?></strong>!
-            <a href="shift-view.php?id=<?= $al['shift_id'] ?>" class="alert-link ms-2">Σκέλος →</a>
+            <a href="shift-view.php?id=<?= $al['shift_id'] ?>" class="alert-link ms-2">Κύκλος Εγγραφών →</a>
         </div>
         <form method="post" class="m-0 p-0">
             <?= csrfField() ?>
@@ -674,7 +674,7 @@ include __DIR__ . '/includes/header.php';
         <i class="bi bi-exclamation-triangle-fill fs-5"></i>
         <div>
             <strong><?= h($al['mission_title']) ?></strong> —
-            Σκέλος <?= formatDateTime($al['start_time']) ?>:
+            Κύκλος Εγγραφών <?= formatDateTime($al['start_time']) ?>:
             μόνο <strong><?= $al['approved'] ?>/<?= $al['min'] ?></strong> μέλη εγκεκριμένα!
             <a href="shift-view.php?id=<?= $al['shift_id'] ?>" class="alert-link ms-2">Διαχείριση →</a>
         </div>
@@ -1298,7 +1298,7 @@ function updateAlertBanner(alerts) {
                   + `<i class="bi bi-sos fs-5"></i>`
                   + `<div class="flex-grow-1">🆘 <strong>${al.name}</strong>: ${label} στη δράση `
                   + `<strong>${al.mission_title}</strong>!`
-                  + ` <a href="shift-view.php?id=${al.shift_id}" class="alert-link ms-2">Σκέλος →</a></div>`
+                  + ` <a href="shift-view.php?id=${al.shift_id}" class="alert-link ms-2">Κύκλος Εγγραφών →</a></div>`
                   + `<form method="post" class="m-0 p-0">`
                   + `<?= csrfField() ?>`
                   + `<input type="hidden" name="action" value="dismiss_help">`
@@ -1308,7 +1308,7 @@ function updateAlertBanner(alerts) {
         } else if (al.type === 'understaffed') {
             html += `<div class="alert alert-warning py-2 d-flex align-items-center gap-2">`
                   + `<i class="bi bi-exclamation-triangle-fill fs-5"></i>`
-                  + `<div><strong>${al.mission_title}</strong> — Σκέλος ${al.start_time}: `
+                  + `<div><strong>${al.mission_title}</strong> — Κύκλος Εγγραφών ${al.start_time}: `
                   + `μόνο <strong>${al.approved}/${al.min}</strong> μέλη εγκεκριμένα!`
                   + ` <a href="shift-view.php?id=${al.shift_id}" class="alert-link ms-2">Διαχείριση →</a></div></div>`;
         }
