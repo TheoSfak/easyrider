@@ -4635,6 +4635,9 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                      WHERE code = 'shift_swap_approved'"
                 );
 
+                dbExecute("UPDATE email_templates SET name = ? WHERE code = ?", ['Αίτημα Αντικατάστασης Κύκλου Εγγραφών', 'shift_swap_requested']);
+                dbExecute("UPDATE email_templates SET name = ? WHERE code = ?", ['Έγκριση Αντικατάστασης Κύκλου Εγγραφών', 'shift_swap_approved']);
+
                 $notificationUpdates = [
                     ['participation_approved', null, 'Όταν εγκρίνεται η αίτηση συμμετοχής σε Κύκλο Εγγραφών'],
                     ['shift_reminder', 'Υπενθύμιση Κύκλου Εγγραφών', 'Μία μέρα πριν τον Κύκλο Εγγραφών'],
