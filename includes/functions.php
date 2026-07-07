@@ -157,7 +157,7 @@ function buildGcalLink(string $title, string $startTime, string $endTime, string
     return 'https://calendar.google.com/calendar/render?action=TEMPLATE'
         . '&text=' . rawurlencode($title)
         . '&dates=' . date('Ymd\THis', strtotime($startTime)) . '/' . date('Ymd\THis', strtotime($endTime))
-        . '&details=' . rawurlencode('Βάρδια Λέσχης')
+        . '&details=' . rawurlencode('Κύκλος Εγγραφών Λέσχης')
         . '&location=' . rawurlencode($location);
 }
 

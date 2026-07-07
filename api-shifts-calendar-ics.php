@@ -148,7 +148,7 @@ $lines[] = 'VERSION:2.0';
 $lines[] = 'PRODID:' . $prodId;
 $lines[] = 'CALSCALE:GREGORIAN';
 $lines[] = 'METHOD:PUBLISH';
-$lines[] = 'X-WR-CALNAME:' . icsText($appName . ' - Βάρδιες');
+$lines[] = 'X-WR-CALNAME:' . icsText($appName . ' - Κύκλοι Εγγραφών');
 $lines[] = 'X-WR-TIMEZONE:' . $tzid;
 
 // VTIMEZONE block for Europe/Athens (EET/EEST)
@@ -171,7 +171,7 @@ $lines[] = 'END:DAYLIGHT';
 $lines[] = 'END:VTIMEZONE';
 
 foreach ($shifts as $s) {
-    $title       = ($s['is_urgent'] ? '[ΕΠΕΙΓΟΝ] ' : '') . $s['mission_title'] . ' — Βάρδια #' . $s['id'];
+    $title       = ($s['is_urgent'] ? '[ΕΠΕΙΓΟΝ] ' : '') . $s['mission_title'] . ' — Κύκλος Εγγραφών #' . $s['id'];
     $uid         = 'shift-' . $s['id'] . '@volunteerops';
     $dtstamp     = gmdate('Ymd\THis\Z');
     $dtstart     = icsDate($s['start_time']);

@@ -157,7 +157,7 @@ foreach ($shifts as $s) {
     }
 
     // Build title
-    $shiftLabel  = 'Βάρδια #' . $s['id'];
+    $shiftLabel  = 'Κύκλος Εγγραφών #' . $s['id'];
     $title       = $s['mission_title'] . ' — ' . $shiftLabel;
     if ($s['is_urgent']) {
         $title = '🔴 ' . $title;
