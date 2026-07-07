@@ -40,7 +40,7 @@ foreach ($missionDays as &$day) {
     $day['metrics'] = rideMissionRouteMetrics($day, $day['route_points_decoded']);
     $day['geometry'] = rideRouteGeometry($day);
     $day['replay_points'] = rideReplayPoints($day['geometry'], $day['route_points_decoded']);
-    $day['date_label'] = formatDateGreek($day['day_date']);
+    $day['date_label'] = formatDayShort($day['day_date']) . ' ' . date('d/m', strtotime($day['day_date']));
 }
 unset($day);
 
