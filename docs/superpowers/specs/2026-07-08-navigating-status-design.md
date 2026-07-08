@@ -10,7 +10,7 @@ This spec adds a live "🧭 Στην πλοήγηση" indicator so the mission'
 
 **In scope:**
 - A `navigating_since` timestamp set the moment a rider taps "Πλοήγηση" in Ride Mode (the live-ride screen only — not the pre-ride planning links on `mission-view.php`, which aren't tied to an active rider on the road).
-- Surfacing this as a distinct, reassuring status wherever staleness is already shown (`api-ride-data.php`'s shared participant feed, consumed by both `ops-dashboard.php` and `ride-mode.php`'s own participant list).
+- Surfacing this as a distinct, reassuring status wherever staleness is already shown (`api-ride-data.php`'s participant feed, consumed by `ride-mode.php` in both rider and Controller/"Ride Control" mode — the mission's responsible person watches the same page, just with `$isController` enabling extra affordances, not a separate page).
 - Suppressing the app's existing automatic "stale" `ride_events` logging (see Background below) while a rider is in this navigating state, so no permanent record is created purely because someone used Google Maps.
 - A passive, non-blocking "welcome back" message in Ride Mode when the rider's own tab regains visibility after a real gap in their GPS signal — reminding them to keep the screen open, without a push notification.
 
@@ -80,8 +80,8 @@ if ($isNavigating) {
 
 ### Where this surfaces
 
-Because `api-ride-data.php` is the single shared data source for both `ops-dashboard.php` and `ride-mode.php`'s own participant list/map, adding `is_navigating` here means both views pick it up automatically — no separate UI work needed to decide "does this show in ride-mode too." Client-side rendering in both:
-- Participant list/badges: where `is_stale` currently renders a muted "Χωρίς στίγμα" badge (`ride-mode.php:505`) or feeds `ops-dashboard.php`'s stale styling, check `is_navigating` first and render "🧭 Στην πλοήγηση" instead, in a neutral/informational color (not the muted-gray "stale" treatment, not a warning color) — it should read as "expected, not urgent."
+Because `ride-mode.php` renders the exact same participant list/map for a rider and for the mission's controller (only `$isController` differs — there's no separate admin-only page for this), adding `is_navigating` to `api-ride-data.php`'s response means both audiences pick it up automatically from one code change. `ops-dashboard.php` is a separate, multi-mission overview (aggregate staffing/mission map, no per-participant staleness rendering) and is out of scope here. Client-side rendering:
+- Participant list/badges: where `is_stale` currently renders a muted "Χωρίς στίγμα" badge (`ride-mode.php:505`), check `is_navigating` first and render "🧭 Στην πλοήγηση" instead, in a neutral/informational color (not the muted-gray "stale" treatment, not a warning color) — it should read as "expected, not urgent."
 - Map markers (`markerHtml()`, `ride-mode.php:477-478`): navigating participants keep full marker opacity (they're not actually lost), just with the same badge treatment as the list.
 - Readiness summary (`ride-mode.php:311` `Stale` metric-lite, `mission-view.php:1801-1802` Ride Readiness card): add a "Στην πλοήγηση" count next to the existing Stale count, so the aggregate numbers don't lump navigating riders in with genuinely stale ones.
 
@@ -159,7 +159,7 @@ Auto-dismisses after 6 seconds or on manual close — never a `confirm()`/`alert
 
 No automated test framework in this repo (project convention). Manual verification:
 1. `php -l` on all touched/new files (`api-ride-navigate.php`, `api-ride-data.php`, `ride-mode.php`, `includes/migrations.php`, `config.php`).
-2. As a rider with an active Ride Mode session, tap "Πλοήγηση"; confirm (via a second browser/session as the responsible person, or the DB directly) that `navigating_since` updates and `ops-dashboard.php` shows "🧭 Στην πλοήγηση" instead of Stale for that participant within the 120s window.
+2. As a rider with an active Ride Mode session, tap "Πλοήγηση"; confirm (via a second browser/session as the responsible person viewing `ride-mode.php` in Controller mode, or the DB directly) that `navigating_since` updates and the participant list shows "🧭 Στην πλοήγηση" instead of Stale for that participant within the 120s window.
 3. Background the rider's tab for over 2 minutes (simulating the real-world GPS stall), confirm the badge reverts to normal "Stale" after the 120s window elapses.
 4. Confirm no new `ride_events` rows are created for that participant while `is_navigating` is true (query `ride_events WHERE event_type = 'stale' AND participation_id = ...` before/after); confirm stale-event logging resumes normally once the navigating window expires.
 5. Bring the rider's tab back to visible after a >120s gap; confirm the passive toast appears once, with a roughly-correct elapsed-minutes count, and does not block interaction or require dismissal via a modal.
