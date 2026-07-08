@@ -4693,6 +4693,19 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                 }
             },
         ],
+        [
+            'version'     => 81,
+            'description' => 'Add participation_requests.navigating_since for live "navigating to Google Maps" rider status',
+            'up' => function () {
+                $colExists = dbFetchValue(
+                    "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+                     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'participation_requests' AND COLUMN_NAME = 'navigating_since'"
+                );
+                if (!$colExists) {
+                    dbExecute("ALTER TABLE participation_requests ADD COLUMN navigating_since TIMESTAMP NULL AFTER field_status_updated_at");
+                }
+            },
+        ],
 
     ];
     // ────────────────────────────────────────────────────────────────────────
