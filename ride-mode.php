@@ -846,6 +846,10 @@ function startTracking() {
     clearGpsError();
     requestWakeLock();
 
+    if (window.AndroidRideBridge) {
+        window.AndroidRideBridge.startTracking(String(missionId), String(shiftId), csrfTokenValue);
+    }
+
     watchId = navigator.geolocation.watchPosition(async position => {
         updateSelfPosition(position);
         const elapsed = Date.now() - lastSentAt;
@@ -871,6 +875,10 @@ function stopTracking() {
     setPill(false, 'Ανενεργό');
     startBtn.disabled = false;
     stopBtn.disabled = true;
+
+    if (window.AndroidRideBridge) {
+        window.AndroidRideBridge.stopTracking();
+    }
 }
 
 function sendStatus(status) {
