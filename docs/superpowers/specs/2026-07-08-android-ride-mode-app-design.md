@@ -33,13 +33,26 @@ Also considered and rejected: `WorkManager` periodic background sync instead of 
 **New, separate repo** (e.g. `TheoSfak/easyride-android`), not a subfolder of this PHP repo. It has an entirely different build/release lifecycle (Gradle, APK signing, its own version number) from the web app's git-tag/robocopy release flow ([[easyride-release-workflow]]); keeping it separate avoids bloating htdocs syncs or mixing two unrelated toolchains in one repo.
 
 Components:
-- **`MainActivity`** — single Activity, fullscreen `WebView` pointed at the app's existing public HTTPS domain (already deployed — no new hosting work needed).
+- **`MainActivity`** — single Activity, fullscreen `WebView` pointed at `BASE_URL` (resolved at launch — see Domain Configuration below, since the deployment domain is still in transition as of this writing: localhost XAMPP today → a temporary domain shortly → a permanent domain later).
 - **`RideTrackingService`** — a foreground service (manifest type `location`, required Android 10+) that:
   - Uses `FusedLocationProviderClient.requestLocationUpdates()` for GPS fixes, matching Ride Mode's existing ~10s ping cadence ([ride-mode.php:852](../../../ride-mode.php), `elapsed > 10000`).
   - POSTs to `api-ride-ping.php` via OkHttp with the same payload shape `sendPing()` already builds ([ride-mode.php:788-798](../../../ride-mode.php)): `shift_id`, `lat`, `lng`, `accuracy`, `speed`, `heading`, `battery_level`, `status`, plus `csrf_token`.
   - Shows a persistent notification ("EasyRide — Ride Mode ενεργό") with a one-tap Stop action, satisfying Android's foreground-service UX requirement and doubling as rider reassurance that tracking is alive.
   - Stops itself when the rider taps Stop (native or in-page), or when a ping response indicates the session/auth is no longer valid — never runs unattended indefinitely.
 - **`AndroidRideBridge`** — a `WebView.addJavascriptInterface` bridge exposing `startTracking(shiftId, csrfToken)` / `stopTracking()` to page JS.
+
+## Domain Configuration: surviving the temp-domain → permanent-domain transition
+
+As of this writing, EasyRide is deployed on localhost/XAMPP for development, moving to a temporary domain shortly, then a permanent domain once that's finalized — at least two domain changes are already expected after v1 of this app exists. Baking `BASE_URL` into `BuildConfig` at compile time would mean every domain change requires a new APK build *and* every rider re-sideloading it — acceptable once, painful to repeat.
+
+Instead, `MainActivity` resolves `BASE_URL` via a small remote-config indirection, before ever loading the WebView:
+
+1. On launch, fetch a tiny static JSON file — `{"base_url": "https://current-domain.example"}` — from one **fixed, permanent URL that never changes**: a raw file in the `easyride-android` GitHub repo itself (e.g. `https://raw.githubusercontent.com/TheoSfak/easyride-android/main/server-config.json`). This URL is independent of the EasyRide web app's own domain migrations, so it can't be caught in the same churn it's meant to route around.
+2. On a successful fetch, cache the value in `SharedPreferences` and use it as `BASE_URL` for this session.
+3. On failure (no network at launch, GitHub unreachable), fall back to the last cached value. On a first-ever launch with no cache and no network, fall back to a bootstrap default compiled into `BuildConfig` (whatever domain was current when that APK was built) — this only matters for the single edge case of a brand-new install with zero connectivity, which requires network at least once anyway to log in.
+4. Show a brief loading state while this resolves (a single small JSON GET, typically well under a second) before the WebView starts loading `login.php`.
+
+**Migrating domains later is then a one-line edit** to `server-config.json` in the `easyride-android` repo — no APK rebuild, no asking riders to reinstall. Already-installed apps pick up the new domain on their next cold start.
 
 ## Auth: reusing the existing PHP session, no backend changes
 
@@ -93,6 +106,8 @@ Requested at first "Start" tap, with an in-app explanation screen before the OS 
 - **Rider force-quits the app entirely** (not just backgrounds it) while tracking: Android will kill the foreground service along with the process — this is expected and matches the reality that no app can guarantee GPS after the user explicitly kills it. The existing web app's own staleness/stale-badge handling (v3.87.0) already covers this case identically to today.
 - **Session expires mid-ride** (e.g. hits `SESSION_LIFETIME`): the native ping's response will fail auth; the service stops itself and the persistent notification is dismissed rather than silently pinging into the void.
 - **Rider switches to a different active shift mid-app-session** (multi-day mission): each `startTracking()` call passes a fresh `shift_id`, so the service always pings for whichever shift the rider most recently started tracking on.
+- **Domain changes while the app is already installed** (e.g. temp → permanent domain cutover): resolved automatically on the app's next cold start once `server-config.json` is updated — no rebuild, no reinstall. A rider whose app stays running/backgrounded through the cutover keeps using the old `BASE_URL` for that session until they next fully restart the app.
+- **`server-config.json` fetch fails and there's no cache yet** (fresh install, no network at first launch): falls back to the `BuildConfig` bootstrap default; if that's already stale by the time someone installs it, login will simply fail against an unreachable/wrong host until they get connectivity for the remote-config fetch to succeed.
 
 ## Testing
 
@@ -103,3 +118,4 @@ No automated test framework for the native app in v1 (matches this repo's own no
 4. Force-stop the app; confirm the foreground service and notification are torn down, and that the mission's live view correctly shows the rider going stale (existing v3.87.0 behavior, unchanged).
 5. Tap Stop from the persistent notification; confirm the service stops and the in-page tracking UI reflects Stopped state next time the WebView is foregrounded.
 6. Load `ride-mode.php` in a normal desktop/mobile browser (bridge absent); confirm tracking behaves exactly as it does today, with no errors from the missing bridge.
+7. Edit `server-config.json` to point at a different (test) host, relaunch the app cold, confirm it picks up the new `BASE_URL` without a rebuild; then disable network entirely before launch and confirm it falls back to the last cached value instead of failing to load.
