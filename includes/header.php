@@ -985,7 +985,13 @@ if (isLoggedIn()) {
             <?php endif; ?>
             
             <div class="sidebar-section">Δρόμος</div>
-            
+
+            <li class="nav-item">
+                <a class="nav-link" href="downloads/easyride-ridemode.apk" download>
+                    <i class="bi bi-phone"></i> Εφαρμογή Android
+                </a>
+            </li>
+
             <li class="nav-item">
                 <a class="nav-link <?= in_array($currentPage, ['partners', 'partner-form']) ? 'active' : '' ?>" href="partners.php">
                     <i class="bi bi-tools"></i> Συνεργάτες
