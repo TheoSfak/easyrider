@@ -900,7 +900,7 @@ function showToast(message) {
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && tracking) {
         const goneMs = Date.now() - lastSentAt;
-        if (goneMs > 120000) {
+        if (lastSentAt > 0 && goneMs > 120000) {
             const minutes = Math.round(goneMs / 60000);
             showToast('Το στίγμα σου διακόπηκε ' + minutes + ' λεπτά. Άφησε ανοιχτή αυτή την οθόνη για να συνεχίσει η μετάδοση.');
         }

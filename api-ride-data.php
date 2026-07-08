@@ -123,7 +123,8 @@ if (!empty($shiftIds)) {
         $status = $row['field_status'] ?: ($ping['status'] ?? null);
         $navigatingSinceTs = !empty($row['navigating_since']) ? strtotime($row['navigating_since']) : null;
         $isNavigating = $navigatingSinceTs !== null
-            && $navigatingSinceTs > ($lastPingTs ?? 0)
+            && $lastPingTs !== null
+            && $navigatingSinceTs > $lastPingTs
             && (time() - $navigatingSinceTs) <= 120;
         $distanceFromRoute = null;
         $isOffRoute = false;
