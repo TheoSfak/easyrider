@@ -316,6 +316,7 @@ $pageTitle = $isController ? 'Ride Control' : 'Ride Mode';
                 <div class="metric-lite"><strong>0</strong><span>Εγκεκριμένοι</span></div>
                 <div class="metric-lite"><strong>0</strong><span>Στέλνουν GPS</span></div>
                 <div class="metric-lite"><strong>0</strong><span>Δεν ξεκίνησαν</span></div>
+                <div class="metric-lite"><strong>0</strong><span>Στην πλοήγηση</span></div>
                 <div class="metric-lite"><strong>0</strong><span>Stale</span></div>
                 <div class="metric-lite"><strong>0</strong><span>Status</span></div>
                 <div class="metric-lite"><strong>0%</strong><span>Έτοιμοι</span></div>
@@ -499,7 +500,7 @@ function renderParticipants(participants) {
     }
 
     list.innerHTML = participants.map(p => {
-        const color = p.is_stale ? '#94a3b8' : (p.status_color || '#0d6efd');
+        const color = p.is_navigating ? '#0dcaf0' : (p.is_stale ? '#94a3b8' : (p.status_color || '#0d6efd'));
         const last = p.last_ping_at ? 'Στίγμα ' + p.last_ping_at : 'Χωρίς στίγμα';
         const phoneLink = p.phone
             ? '<a class="btn btn-sm btn-outline-success" href="tel:' + htmlEscape(p.phone) + '"><i class="bi bi-telephone-fill"></i></a>'
@@ -510,7 +511,7 @@ function renderParticipants(participants) {
         const badges = [
             p.is_off_route ? '<span class="badge bg-warning text-dark ms-1">Εκτός διαδρομής</span>' : '',
             p.is_stationary ? '<span class="badge bg-warning text-dark ms-1">Ακίνητος</span>' : '',
-            p.is_stale ? '<span class="badge bg-secondary ms-1">Χωρίς στίγμα</span>' : ''
+            p.is_navigating ? '<span class="badge bg-info text-dark ms-1"><i class="bi bi-sign-turn-right me-1"></i>Στην πλοήγηση</span>' : (p.is_stale ? '<span class="badge bg-secondary ms-1">Χωρίς στίγμα</span>' : '')
         ].join('');
         return '<div class="participant-row">'
             + '<div><div class="fw-semibold"><span class="participant-dot" style="background:' + color + '"></span>' + htmlEscape(p.name) + (p.is_self ? ' <span class="badge bg-primary">Εσύ</span>' : '') + badges + '</div>'
@@ -521,10 +522,10 @@ function renderParticipants(participants) {
 
     participants.forEach(p => {
         if (!p.lat || !p.lng) return;
-        const color = p.is_stale ? '#94a3b8' : (p.status_color || '#0d6efd');
+        const color = p.is_navigating ? '#0dcaf0' : (p.is_stale ? '#94a3b8' : (p.status_color || '#0d6efd'));
         const icon = L.divIcon({
             className: '',
-            html: markerHtml(color, p.is_self, p.is_stale),
+            html: markerHtml(color, p.is_self, p.is_stale && !p.is_navigating),
             iconSize: [p.is_self ? 26 : 22, p.is_self ? 26 : 22],
             iconAnchor: [p.is_self ? 13 : 11, p.is_self ? 13 : 11]
         });
@@ -610,6 +611,7 @@ function renderReadiness(readiness) {
         approved,
         tracking,
         Number(readiness.not_started || 0),
+        Number(readiness.navigating || 0),
         Number(readiness.stale || 0),
         Number(readiness.with_status || 0),
         readyPct + '%'
