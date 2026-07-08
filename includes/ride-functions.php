@@ -726,6 +726,7 @@ function getRideReadinessSummary(int $missionId): array {
     $summary = [
         'approved' => 0,
         'tracking' => 0,
+        'navigating' => 0,
         'stale' => 0,
         'not_started' => 0,
         'ready_percent' => 0,
@@ -759,14 +760,38 @@ function getRideReadinessSummary(int $missionId): array {
         foreach ($pingRows as $row) {
             $lastByUser[(int)$row['user_id']] = $row['last_ping'];
         }
+
+        $navRows = dbFetchAll(
+            "SELECT member_id, MAX(navigating_since) as navigating_since
+             FROM participation_requests
+             WHERE shift_id IN ($placeholders)
+               AND status = ?
+             GROUP BY member_id",
+            array_merge($shiftIds, [PARTICIPATION_APPROVED])
+        );
+        $navigatingByUser = [];
+        foreach ($navRows as $row) {
+            if (!empty($row['navigating_since'])) {
+                $navigatingByUser[(int)$row['member_id']] = $row['navigating_since'];
+            }
+        }
+
         foreach ($participants as $participant) {
             $uid = (int)$participant['member_id'];
             if (empty($lastByUser[$uid])) {
                 $summary['not_started']++;
                 continue;
             }
-            $age = time() - strtotime($lastByUser[$uid]);
-            if ($age > 120) {
+            $lastPingTs = strtotime($lastByUser[$uid]);
+            $age = time() - $lastPingTs;
+            $navSince = $navigatingByUser[$uid] ?? null;
+            $navSinceTs = $navSince ? strtotime($navSince) : null;
+            $isNavigating = $navSinceTs !== null
+                && $navSinceTs > $lastPingTs
+                && (time() - $navSinceTs) <= 120;
+            if ($isNavigating) {
+                $summary['navigating']++;
+            } elseif ($age > 120) {
                 $summary['stale']++;
             } else {
                 $summary['tracking']++;

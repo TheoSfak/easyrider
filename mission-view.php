@@ -1798,6 +1798,10 @@ include __DIR__ . '/includes/header.php';
                     <strong class="text-muted"><?= (int)$rideReadiness['not_started'] ?></strong>
                 </div>
                 <div class="d-flex justify-content-between mb-2">
+                    <span><i class="bi bi-signpost-2 me-1"></i>Στην πλοήγηση:</span>
+                    <strong class="text-info"><?= (int)$rideReadiness['navigating'] ?></strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
                     <span>Stale:</span>
                     <strong class="text-warning"><?= (int)$rideReadiness['stale'] ?></strong>
                 </div>
