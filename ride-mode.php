@@ -212,6 +212,14 @@ $pageTitle = $isController ? 'Ride Control' : 'Ride Mode';
     </style>
 </head>
 <body>
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
+    <div id="rideModeToast" class="toast align-items-center text-white bg-dark border-0" role="status">
+        <div class="d-flex">
+            <div class="toast-body" id="rideModeToastBody"></div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" onclick="document.getElementById('rideModeToast').classList.remove('show')"></button>
+        </div>
+    </div>
+</div>
 <div class="ride-shell">
     <header class="ride-topbar">
         <div class="d-flex align-items-start justify-content-between gap-3">
@@ -347,7 +355,7 @@ $pageTitle = $isController ? 'Ride Control' : 'Ride Mode';
                     <?php endif; ?>
                 </div>
                 <?php if ($directionsUrl): ?>
-                    <a href="<?= h($directionsUrl) ?>" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener noreferrer">
+                    <a href="<?= h($directionsUrl) ?>" id="navigateBtn" class="btn btn-sm btn-outline-primary" target="_blank" rel="noopener noreferrer">
                         <i class="bi bi-sign-turn-right me-1"></i>Πλοήγηση
                     </a>
                 <?php endif; ?>
@@ -877,11 +885,40 @@ function sendStatus(status) {
     sendPing(status);
 }
 
+let toastTimer = null;
+function showToast(message) {
+    const toastEl = document.getElementById('rideModeToast');
+    if (!toastEl) return;
+    document.getElementById('rideModeToastBody').textContent = message;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 6000);
+}
+
 document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'visible' && tracking) {
+        const goneMs = Date.now() - lastSentAt;
+        if (goneMs > 120000) {
+            const minutes = Math.round(goneMs / 60000);
+            showToast('Το στίγμα σου διακόπηκε ' + minutes + ' λεπτά. Άφησε ανοιχτή αυτή την οθόνη για να συνεχίσει η μετάδοση.');
+        }
         requestWakeLock();
         rideMap.invalidateSize();
     }
+});
+
+document.getElementById('navigateBtn')?.addEventListener('click', () => {
+    fetch('api-ride-navigate.php', {
+        method: 'POST',
+        credentials: 'same-origin',
+        keepalive: true,
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+        body: new URLSearchParams({
+            csrf_token: csrfTokenValue,
+            mission_id: String(missionId),
+            shift_id: String(shiftId),
+        }),
+    }).catch(() => {});
 });
 
 startBtn.addEventListener('click', startTracking);
