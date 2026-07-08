@@ -39,6 +39,7 @@ $partnerPinsById = [];
 $readiness = [
     'approved' => 0,
     'tracking' => 0,
+    'navigating' => 0,
     'stale' => 0,
     'not_started' => 0,
     'with_status' => 0,
@@ -57,7 +58,7 @@ if (!empty($shiftIds)) {
     $placeholders = implode(',', array_fill(0, count($shiftIds), '?'));
 
     $participantRows = dbFetchAll(
-        "SELECT pr.id as participation_id, pr.shift_id, pr.field_status, pr.field_status_updated_at,
+        "SELECT pr.id as participation_id, pr.shift_id, pr.field_status, pr.field_status_updated_at, pr.navigating_since,
                 u.id as user_id, u.name, u.phone
          FROM participation_requests pr
          JOIN users u ON u.id = pr.member_id
@@ -120,6 +121,10 @@ if (!empty($shiftIds)) {
         $lastPingTs = $ping ? strtotime($ping['created_at']) : null;
         $ageSeconds = $lastPingTs ? max(0, time() - $lastPingTs) : null;
         $status = $row['field_status'] ?: ($ping['status'] ?? null);
+        $navigatingSinceTs = !empty($row['navigating_since']) ? strtotime($row['navigating_since']) : null;
+        $isNavigating = $navigatingSinceTs !== null
+            && $navigatingSinceTs > ($lastPingTs ?? 0)
+            && (time() - $navigatingSinceTs) <= 120;
         $distanceFromRoute = null;
         $isOffRoute = false;
         $stationaryDistance = null;
@@ -160,6 +165,7 @@ if (!empty($shiftIds)) {
             'last_ping_at' => $ping ? date('H:i:s', $lastPingTs) : null,
             'last_ping_age_seconds' => $ageSeconds,
             'is_stale' => $ageSeconds !== null && $ageSeconds > 120,
+            'is_navigating' => $isNavigating,
             'lat' => $ping ? (float)$ping['lat'] : null,
             'lng' => $ping ? (float)$ping['lng'] : null,
             'accuracy' => $ping && $ping['accuracy'] !== null ? (float)$ping['accuracy'] : null,
@@ -173,7 +179,9 @@ if (!empty($shiftIds)) {
         ];
         $participants[] = $participant;
         $readiness['approved']++;
-        if ($ping && !$participant['is_stale']) {
+        if ($isNavigating) {
+            $readiness['navigating']++;
+        } elseif ($ping && !$participant['is_stale']) {
             $readiness['tracking']++;
         } elseif ($participant['is_stale']) {
             $readiness['stale']++;
@@ -236,7 +244,7 @@ if (!empty($shiftIds)) {
                     'movement_meters' => $stationaryDistance !== null ? round($stationaryDistance) : null,
                 ],
             ];
-        } elseif ($participant['is_stale']) {
+        } elseif ($participant['is_stale'] && !$isNavigating) {
             $alert = [
                 'type' => 'stale',
                 'severity' => 'secondary',
