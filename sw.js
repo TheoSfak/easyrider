@@ -3,7 +3,7 @@
  * Handles caching, offline fallback, and push notifications
  */
 
-const CACHE_VERSION = 'er-v3.70.10-logo-icons';
+const CACHE_VERSION = 'er-v3.87.0';
 const STATIC_CACHE = CACHE_VERSION + '-static';
 const RUNTIME_CACHE = CACHE_VERSION + '-runtime';
 
