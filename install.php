@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Web Installer
+ * EasyRide - Web Installer
  * Comprehensive installation wizard with debug & demo data options
  */
 
@@ -292,7 +292,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     // Create config.local.php
                     $configContent = "<?php\n";
                     $configContent .= "/**\n";
-                    $configContent .= " * VolunteerOps - Local Configuration\n";
+                    $configContent .= " * EasyRide - Local Configuration\n";
                     $configContent .= " * Generated: " . date('Y-m-d H:i:s') . "\n";
                     $configContent .= " * DO NOT COMMIT TO VERSION CONTROL\n";
                     $configContent .= " */\n\n";
@@ -539,7 +539,7 @@ if (!empty($_SESSION['debug_log'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Εγκατάσταση - VolunteerOps</title>
+    <title>Εγκατάσταση - EasyRide</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <style>
@@ -640,7 +640,7 @@ if (!empty($_SESSION['debug_log'])) {
 <body>
     <div class="install-card">
         <div class="install-header">
-            <h2><i class="bi bi-heart-pulse me-2"></i>VolunteerOps</h2>
+            <h2><i class="bi bi-heart-pulse me-2"></i>EasyRide</h2>
             <p class="mb-0 opacity-75">Οδηγός Εγκατάστασης</p>
         </div>
         <div class="install-body">
@@ -929,7 +929,7 @@ if (!empty($_SESSION['debug_log'])) {
                     </div>
                     
                     <a href="login.php" class="btn btn-success btn-lg">
-                        <i class="bi bi-box-arrow-in-right me-1"></i>Σύνδεση στο VolunteerOps
+                        <i class="bi bi-box-arrow-in-right me-1"></i>Σύνδεση στο EasyRide
                     </a>
                     
                     <?php if (!empty($debugLog)): ?>

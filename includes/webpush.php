@@ -98,7 +98,7 @@ function sendWebPush(string $endpoint, string $userPublicKey, string $userAuthTo
 
     $vapidPublicKey  = getSetting('vapid_public_key', '');
     $vapidPrivateKey = getSetting('vapid_private_key', '');
-    $vapidContact    = getSetting('vapid_contact', 'mailto:admin@volunteerops.gr');
+    $vapidContact    = getSetting('vapid_contact', 'mailto:admin@theeasyride.eu');
 
     if (!$vapidPublicKey || !$vapidPrivateKey) {
         return false;

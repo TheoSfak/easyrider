@@ -88,7 +88,7 @@ if (isPost()) {
                     );
                     
                     $missionUrl = rtrim(BASE_URL, '/') . '/mission-view.php?id=' . $id;
-                    $appName = getSetting('app_name', 'VolunteerOps');
+                    $appName = getSetting('app_name', 'EasyRide');
                     
                     foreach ($participants as $p) {
                         // In-app notification

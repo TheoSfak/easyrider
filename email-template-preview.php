@@ -24,7 +24,7 @@ if (!$template) {
 
 // Sample data for preview
 $sampleData = [
-    'app_name' => getSetting('app_name', 'VolunteerOps'),
+    'app_name' => getSetting('app_name', 'EasyRide'),
     'user_name' => 'Γιάννης Παπαδόπουλος',
     'user_email' => 'giannis@example.com',
     'mission_title' => 'Δράση Καθαρισμού Παραλίας',

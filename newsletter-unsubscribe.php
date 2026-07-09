@@ -39,7 +39,7 @@ if (!empty($token)) {
     }
 }
 
-$appName = getSetting('smtp_from_name', 'VolunteerOps');
+$appName = getSetting('smtp_from_name', 'EasyRide');
 ?>
 <!DOCTYPE html>
 <html lang="el">

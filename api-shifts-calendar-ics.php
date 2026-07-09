@@ -138,8 +138,8 @@ function icsDate(string $mysqlDt): string {
 }
 
 // ── Build ICS ─────────────────────────────────────────────────────────────────
-$appName  = getSetting('app_name', 'VolunteerOps');
-$prodId   = '-//VolunteerOps//ShiftCalendar//EL';
+$appName  = getSetting('app_name', 'EasyRide');
+$prodId   = '-//EasyRide//ShiftCalendar//EL';
 $tzid     = 'Europe/Athens';
 
 $lines = [];

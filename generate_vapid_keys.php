@@ -71,7 +71,7 @@ if ($existCheck2) {
 }
 
 // Also store contact email (required by VAPID spec)
-$contactEmail = getSetting('contact_email', getSetting('smtp_from', 'admin@volunteerops.gr'));
+$contactEmail = getSetting('contact_email', getSetting('smtp_from', 'admin@theeasyride.eu'));
 $existCheck3 = dbFetchOne("SELECT id FROM settings WHERE setting_key = ?", ['vapid_contact']);
 if (!$existCheck3) {
     dbInsert("INSERT INTO settings (setting_key, setting_value) VALUES (?, ?)", ['vapid_contact', 'mailto:' . $contactEmail]);

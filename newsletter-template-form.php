@@ -182,7 +182,7 @@ include __DIR__ . '/includes/header.php';
 
 <script>
 $(function() {
-    var fromName = <?= json_encode(getSetting('smtp_from_name', 'VolunteerOps')) ?>;
+    var fromName = <?= json_encode(getSetting('smtp_from_name', 'EasyRide')) ?>;
     var logoUrl  = <?= json_encode(getSetting('app_logo', '')) ?>;
     var logoHtml = logoUrl ? '<img src="uploads/logos/' + logoUrl + '" alt="" style="max-height:50px;margin-bottom:10px;">' : '';
 

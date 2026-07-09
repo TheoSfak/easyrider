@@ -57,7 +57,7 @@ if (isPost()) {
     }
 }
 
-$appName = getSetting('app_name', 'VolunteerOps');
+$appName = getSetting('app_name', 'EasyRide');
 $appLogo = getSetting('app_logo', '');
 ?>
 <!DOCTYPE html>

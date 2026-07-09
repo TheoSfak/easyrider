@@ -288,7 +288,7 @@ function previewEmail() {
     
     // Replace variables with sample data
     const sampleData = {
-        'app_name': '<?= h(getSetting('app_name', 'VolunteerOps')) ?>',
+        'app_name': '<?= h(getSetting('app_name', 'EasyRide')) ?>',
         'user_name': 'Γιάννης Παπαδόπουλος',
         'user_email': 'giannis@example.com',
         'mission_title': 'Δράση Καθαρισμού Παραλίας',

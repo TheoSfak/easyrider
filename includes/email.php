@@ -506,7 +506,7 @@ function sendNotificationEmail(string $notificationCode, string $to, array $vari
     }
     
     // Add default variables (using getSetting() which is cached per request — zero extra queries)
-    $appName = getSetting('app_name', 'VolunteerOps');
+    $appName = getSetting('app_name', 'EasyRide');
     $variables['app_name'] = $appName;
     $variables['login_url'] = rtrim(BASE_URL ?? 'http://localhost/volunteerops', '/') . '/login.php';
 

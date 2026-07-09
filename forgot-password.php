@@ -36,7 +36,7 @@ if (isPost()) {
                 [$user['id'], $token, $expires]
             );
 
-            $appName = getSetting('app_name', 'VolunteerOps');
+            $appName = getSetting('app_name', 'EasyRide');
             $proto   = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
             $host    = $_SERVER['HTTP_HOST'] ?? 'localhost';
             $path    = dirname($_SERVER['SCRIPT_NAME'] ?? '/');
@@ -68,7 +68,7 @@ if (isPost()) {
     }
 }
 
-$appName = getSetting('app_name', 'VolunteerOps');
+$appName = getSetting('app_name', 'EasyRide');
 $appLogo = getSetting('app_logo', '');
 ?>
 <!DOCTYPE html>

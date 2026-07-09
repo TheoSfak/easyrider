@@ -295,7 +295,7 @@ function registerUser($data) {
         logAudit('register', 'users', $userId);
         
         // Build verification URL
-        $appName = getSetting('app_name', 'VolunteerOps');
+        $appName = getSetting('app_name', 'EasyRide');
         $proto   = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
         $host    = $_SERVER['HTTP_HOST'] ?? 'localhost';
         $path    = dirname($_SERVER['SCRIPT_NAME'] ?? '/volunteerops');

@@ -1424,7 +1424,7 @@ document.querySelectorAll('form.js-confirm-submit').forEach(function (f) {
                             <label class="form-label">Email Αποστολέα</label>
                             <input type="email" class="form-control" name="smtp_from_email" 
                                    value="<?= h($settings['smtp_from_email']) ?>"
-                                   placeholder="π.χ. noreply@volunteerops.gr">
+                                   placeholder="π.χ. noreply@theeasyride.eu">
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Όνομα Αποστολέα</label>
