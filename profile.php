@@ -278,7 +278,7 @@ include __DIR__ . '/includes/header.php';
 <style>
 /* Profile Page Beautification */
 .profile-hero {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--primary-gradient);
     border-radius: 1rem;
     padding: 1.5rem;
     color: #fff;
@@ -357,7 +357,7 @@ include __DIR__ . '/includes/header.php';
     padding: .75rem 1rem;
 }
 .pp-card .card-header h5 { font-size: .95rem; font-weight: 600; }
-.pp-card.accent-primary .card-header { border-bottom-color: #667eea; }
+.pp-card.accent-primary .card-header { border-bottom-color: var(--accent-color); }
 .pp-card.accent-success .card-header { border-bottom-color: #10b981; }
 .pp-card.accent-warning .card-header { border-bottom-color: #f59e0b; }
 .pp-card.accent-danger .card-header { border-bottom-color: #ef4444; }
@@ -515,7 +515,7 @@ include __DIR__ . '/includes/header.php';
     <div class="col-6 col-md-3">
         <div class="card pp-stat-card">
             <div class="card-body d-flex align-items-center gap-3 py-3 px-3">
-                <div class="stat-icon" style="background:linear-gradient(135deg,#667eea,#764ba2)"><i class="bi bi-calendar2-check"></i></div>
+                <div class="stat-icon" style="background:var(--primary-gradient)"><i class="bi bi-calendar2-check"></i></div>
                 <div>
                     <div class="stat-value text-dark"><?= $stats['total_shifts'] ?></div>
                     <small class="text-muted">Κύκλοι Εγγραφών</small>

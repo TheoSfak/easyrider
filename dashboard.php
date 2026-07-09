@@ -486,7 +486,7 @@ $liveExams = dbFetchAll("
 <style>
 /* ===== Dashboard Beautification ===== */
 .dash-hero {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: var(--primary-gradient);
     border-radius: 1rem;
     padding: 1.25rem 1.5rem;
     color: #fff;
@@ -589,7 +589,7 @@ $liveExams = dbFetchAll("
     padding: .75rem 1rem;
 }
 .ds-widget .card-header h5 { font-size: .92rem; font-weight: 600; margin: 0; }
-.ds-widget.accent-blue .card-header { border-bottom-color: #667eea; }
+.ds-widget.accent-blue .card-header { border-bottom-color: var(--accent-color); }
 .ds-widget.accent-gold .card-header { border-bottom-color: #f59e0b; }
 .ds-widget.accent-green .card-header { border-bottom-color: #10b981; }
 .ds-widget.accent-red .card-header { border-bottom-color: #ef4444; }
@@ -602,7 +602,7 @@ $liveExams = dbFetchAll("
     transition: background .15s;
     border-left: 3px solid transparent;
 }
-.ds-leader-item:hover { background: #f8f9ff; border-left-color: #667eea; }
+.ds-leader-item:hover { background: #fdf7ef; border-left-color: var(--accent-color); }
 .ds-leader-rank {
     width: 28px;
     height: 28px;
@@ -618,7 +618,7 @@ $liveExams = dbFetchAll("
 .ds-leader-rank.bronze { background: linear-gradient(135deg, #d97706, #b45309); color: #fff; }
 .ds-leader-rank.default { background: #e5e7eb; color: #6b7280; }
 .member-shift-card {
-    border-left: 4px solid #667eea;
+    border-left: 4px solid var(--accent-color);
     transition: transform .15s, box-shadow .15s;
 }
 .member-shift-card:hover { transform: translateX(4px); box-shadow: 0 2px 12px rgba(0,0,0,.08); }
@@ -863,7 +863,7 @@ $randomQuote = $quotes[array_rand($quotes)];
             <div class="card ds-stat h-100">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-start gap-3">
-                        <div class="stat-icon-box" style="background:linear-gradient(135deg,#667eea,#764ba2)">
+                        <div class="stat-icon-box" style="background:var(--primary-gradient)">
                             <i class="bi bi-flag"></i>
                         </div>
                         <div class="flex-grow-1">
@@ -944,7 +944,7 @@ $randomQuote = $quotes[array_rand($quotes)];
             <div class="card ds-stat">
                 <div class="card-body p-3">
                     <div class="d-flex align-items-start gap-3">
-                        <div class="stat-icon-box" style="background:linear-gradient(135deg,#667eea,#764ba2)">
+                        <div class="stat-icon-box" style="background:var(--primary-gradient)">
                             <i class="bi bi-calendar-check"></i>
                         </div>
                         <div>
@@ -1407,7 +1407,7 @@ $randomQuote = $quotes[array_rand($quotes)];
 .sortable-ghost {
     opacity: 0.3;
     background: #f0f4ff;
-    border: 2px dashed #667eea;
+    border: 2px dashed var(--accent-color);
     border-radius: .85rem;
 }
 .sortable-drag {
