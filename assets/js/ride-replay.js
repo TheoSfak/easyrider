@@ -8,15 +8,19 @@ function initRideReplayController(options) {
 
     var DURATION_MS = 25000;
     var map = null;
-    var marker = null;
+    var markers = [];
+    var polylines = [];
+    var referencePolyline = null;
     var eventMarkers = [];
+    var timelineEntries = [];
     var rafId = null;
     var playing = false;
     var elapsedMs = 0;
     var lastFrameTime = null;
     var data = null;
-    var cumulative = [];
-    var totalDistance = 0;
+    var startTs = 0;
+    var endTs = 0;
+    var durationSeconds = 0;
 
     var severityColor = {
         danger: '#dc3545',
@@ -36,31 +40,61 @@ function initRideReplayController(options) {
         return R * 2 * Math.atan2(Math.sqrt(sinA), Math.sqrt(1 - sinA));
     }
 
-    function computeCumulative() {
-        cumulative = [0];
-        for (var i = 1; i < data.points.length; i++) {
-            cumulative.push(cumulative[i - 1] + haversineMeters(data.points[i - 1], data.points[i]));
+    function normalizeData(raw) {
+        if (!raw) return null;
+        if (Array.isArray(raw.tracks) && raw.tracks.length) {
+            return raw;
         }
-        totalDistance = cumulative[cumulative.length - 1];
+
+        if (Array.isArray(raw.points) && raw.points.length >= 2) {
+            var now = Math.floor(Date.now() / 1000);
+            return {
+                mode: 'planned',
+                tracks: [{
+                    id: 'route',
+                    label: 'Προγραμματισμένη διαδρομή',
+                    color: '#198754',
+                    points: raw.points.map(function (p, index) {
+                        return { lat: p[0], lng: p[1], ts: now + index };
+                    }),
+                    distanceMeters: raw.distanceMeters || 0
+                }],
+                events: raw.events || [],
+                referenceRoute: [],
+                startTime: null,
+                endTime: null,
+                durationSeconds: Math.max(1, raw.points.length - 1),
+                distanceMeters: raw.distanceMeters || 0,
+                totalMinutes: raw.totalMinutes || 0
+            };
+        }
+
+        return null;
     }
 
-    function positionAtFraction(fraction) {
-        var targetDistance = fraction * totalDistance;
-        for (var i = 0; i < cumulative.length - 1; i++) {
-            if (targetDistance <= cumulative[i + 1] || i === cumulative.length - 2) {
-                var segStart = cumulative[i];
-                var segEnd = cumulative[i + 1];
-                var segFraction = segEnd > segStart ? (targetDistance - segStart) / (segEnd - segStart) : 0;
-                segFraction = Math.max(0, Math.min(1, segFraction));
-                var a = data.points[i];
-                var b = data.points[i + 1];
+    function pointLatLng(point) {
+        return [parseFloat(point.lat), parseFloat(point.lng)];
+    }
+
+    function positionAtTimestamp(track, ts) {
+        var points = track.points || [];
+        if (!points.length) return null;
+        if (ts <= points[0].ts || points.length === 1) return pointLatLng(points[0]);
+        if (ts >= points[points.length - 1].ts) return pointLatLng(points[points.length - 1]);
+
+        for (var i = 0; i < points.length - 1; i++) {
+            var a = points[i];
+            var b = points[i + 1];
+            if (ts >= a.ts && ts <= b.ts) {
+                var span = Math.max(1, b.ts - a.ts);
+                var f = Math.max(0, Math.min(1, (ts - a.ts) / span));
                 return [
-                    a[0] + (b[0] - a[0]) * segFraction,
-                    a[1] + (b[1] - a[1]) * segFraction
+                    parseFloat(a.lat) + (parseFloat(b.lat) - parseFloat(a.lat)) * f,
+                    parseFloat(a.lng) + (parseFloat(b.lng) - parseFloat(a.lng)) * f
                 ];
             }
         }
-        return data.points[data.points.length - 1];
+        return pointLatLng(points[points.length - 1]);
     }
 
     function formatKm(meters) {
@@ -76,6 +110,11 @@ function initRideReplayController(options) {
         return hours > 0 ? (hours + 'ω ' + mins + 'λ') : (mins + ' λεπτά');
     }
 
+    function formatClockFromTs(ts) {
+        var date = new Date(ts * 1000);
+        return date.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+
     function esc(value) {
         return String(value || '').replace(/[&<>"']/g, function(ch) {
             return {'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;'}[ch];
@@ -83,15 +122,20 @@ function initRideReplayController(options) {
     }
 
     function updateFrame(fraction) {
-        var pos = positionAtFraction(fraction);
-        marker.setLatLng(pos);
+        var currentTs = startTs + (durationSeconds * fraction);
+        markers.forEach(function (entry) {
+            var pos = positionAtTimestamp(entry.track, currentTs);
+            if (pos) {
+                entry.marker.setLatLng(pos);
+            }
+        });
 
         document.getElementById(elIds.km).textContent = formatKm(fraction * data.distanceMeters);
-        document.getElementById(elIds.time).textContent = formatMinutes(fraction * data.totalMinutes);
+        document.getElementById(elIds.time).textContent = data.startTime ? formatClockFromTs(currentTs) : formatMinutes(fraction * data.totalMinutes);
         document.getElementById(elIds.scrubber).value = fraction;
 
         eventMarkers.forEach(function (entry) {
-            var shouldHighlight = fraction >= entry.routeFraction;
+            var shouldHighlight = entry.ts ? currentTs >= entry.ts : fraction >= (entry.routeFraction || 0);
             if (shouldHighlight !== entry.highlighted) {
                 entry.highlighted = shouldHighlight;
                 entry.marker.setStyle({
@@ -100,6 +144,13 @@ function initRideReplayController(options) {
                     opacity: shouldHighlight ? 1 : 0.4
                 });
             }
+        });
+
+        timelineEntries.forEach(function (entry) {
+            var active = entry.ts ? currentTs >= entry.ts : false;
+            entry.el.classList.toggle('text-dark', active);
+            entry.el.classList.toggle('fw-semibold', active);
+            entry.el.classList.toggle('text-muted', !active);
         });
     }
 
@@ -142,8 +193,44 @@ function initRideReplayController(options) {
             maxZoom: 19
         }).addTo(map);
 
-        L.polyline(data.points, { color: '#0d6efd', weight: 4, opacity: 0.4 }).addTo(map);
-        map.fitBounds(L.latLngBounds(data.points), { padding: [20, 20] });
+        var boundsPoints = [];
+
+        if (Array.isArray(data.referenceRoute) && data.referenceRoute.length >= 2) {
+            referencePolyline = L.polyline(data.referenceRoute, {
+                color: '#94a3b8',
+                weight: 3,
+                opacity: 0.35,
+                dashArray: '6,8'
+            }).addTo(map);
+            boundsPoints = boundsPoints.concat(data.referenceRoute);
+        }
+
+        (data.tracks || []).forEach(function (track) {
+            var latLngs = (track.points || []).map(pointLatLng);
+            boundsPoints = boundsPoints.concat(latLngs);
+            if (latLngs.length >= 2) {
+                polylines.push(L.polyline(latLngs, {
+                    color: track.color || '#2563eb',
+                    weight: 4,
+                    opacity: 0.65
+                }).addTo(map));
+            }
+
+            if (latLngs.length) {
+                var marker = L.circleMarker(latLngs[0], {
+                    radius: track.isLead ? 9 : 7,
+                    color: track.color || '#2563eb',
+                    fillColor: track.color || '#2563eb',
+                    fillOpacity: 1,
+                    weight: track.isLead ? 3 : 2
+                }).addTo(map).bindPopup(esc(track.label));
+                markers.push({ marker: marker, track: track });
+            }
+        });
+
+        if (boundsPoints.length) {
+            map.fitBounds(L.latLngBounds(boundsPoints), { padding: [20, 20] });
+        }
 
         (data.events || []).forEach(function (event) {
             var color = severityColor[event.severity] || severityColor.info;
@@ -154,19 +241,47 @@ function initRideReplayController(options) {
                 fillOpacity: 0.4,
                 opacity: 0.4,
                 weight: 2
-            }).addTo(map).bindPopup(esc(event.title));
-            eventMarkers.push({ marker: circleMarker, routeFraction: event.routeFraction, highlighted: false });
+            }).addTo(map).bindPopup(esc(event.label || event.title));
+            eventMarkers.push({ marker: circleMarker, routeFraction: event.routeFraction, ts: event.ts || null, highlighted: false });
         });
 
-        marker = L.circleMarker(data.points[0], {
-            radius: 8,
-            color: '#198754',
-            fillColor: '#198754',
-            fillOpacity: 1,
-            weight: 2
-        }).addTo(map);
-
         setTimeout(function () { map.invalidateSize(); }, 150);
+    }
+
+    function renderLegend() {
+        if (!elIds.legend) return;
+        var el = document.getElementById(elIds.legend);
+        if (!el) return;
+        el.innerHTML = (data.tracks || []).map(function (track) {
+            return '<span class="badge bg-light text-dark border d-inline-flex align-items-center gap-1">'
+                + '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + esc(track.color) + '"></span>'
+                + esc(track.label)
+                + '</span>';
+        }).join('');
+    }
+
+    function renderTimeline() {
+        timelineEntries = [];
+        if (!elIds.timeline) return;
+        var el = document.getElementById(elIds.timeline);
+        if (!el) return;
+        var events = (data.events || []).slice().sort(function (a, b) { return (a.ts || 0) - (b.ts || 0); });
+        if (!events.length) {
+            el.innerHTML = '<div class="text-muted">Δεν καταγράφηκαν συμβάντα διαδρομής.</div>';
+            return;
+        }
+        el.innerHTML = '<div class="d-flex flex-column gap-1">'
+            + events.map(function (event, index) {
+                return '<div class="text-muted" data-replay-event-index="' + index + '">'
+                    + '<span class="badge bg-light text-dark border me-1">' + esc(event.time || '') + '</span>'
+                    + esc(event.label || event.title)
+                    + '</div>';
+            }).join('')
+            + '</div>';
+        events.forEach(function (event, index) {
+            var row = el.querySelector('[data-replay-event-index="' + index + '"]');
+            if (row) timelineEntries.push({ el: row, ts: event.ts || null });
+        });
     }
 
     function reset() {
@@ -180,18 +295,35 @@ function initRideReplayController(options) {
     }
 
     function loadData() {
-        data = getData();
-        if (!data || !Array.isArray(data.points) || data.points.length < 2) {
+        data = normalizeData(getData());
+        if (!data || !Array.isArray(data.tracks) || !data.tracks.length) {
             return false;
         }
-        computeCumulative();
+        var allTs = [];
+        data.tracks.forEach(function (track) {
+            (track.points || []).forEach(function (point) {
+                if (point.ts) allTs.push(parseFloat(point.ts));
+            });
+        });
+        if (!allTs.length) return false;
+        startTs = Math.min.apply(null, allTs);
+        endTs = Math.max.apply(null, allTs);
+        durationSeconds = Math.max(1, data.durationSeconds || (endTs - startTs));
+        data.distanceMeters = data.distanceMeters || data.tracks.reduce(function (sum, track) {
+            return sum + (parseFloat(track.distanceMeters) || 0);
+        }, 0);
+        data.totalMinutes = data.totalMinutes || Math.ceil(durationSeconds / 60);
         eventMarkers = [];
+        timelineEntries = [];
+        markers = [];
+        polylines = [];
         if (map) {
             map.remove();
             map = null;
-            marker = null;
         }
         initMap();
+        renderLegend();
+        renderTimeline();
         reset();
         return true;
     }
@@ -210,8 +342,10 @@ function initRideReplayController(options) {
             if (map) {
                 map.remove();
                 map = null;
-                marker = null;
+                markers = [];
+                polylines = [];
                 eventMarkers = [];
+                timelineEntries = [];
             }
         });
     }
@@ -260,7 +394,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 time: 'rideReplayTime',
                 scrubber: 'rideReplayScrubber',
                 playPause: 'rideReplayPlayPause',
-                restart: 'rideReplayRestart'
+                restart: 'rideReplayRestart',
+                legend: 'rideReplayLegend',
+                timeline: 'rideReplayTimeline'
             },
             getData: function () { return window.easyRideReplayData || null; }
         });

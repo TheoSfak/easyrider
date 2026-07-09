@@ -25,43 +25,53 @@ $appLogo = getSetting('app_logo', '');
 $days = [];
 
 if ($state === 'ok') {
-    $routePoints = normalizeRideRoutePoints($mission['route_points'] ?? '[]');
-    $routeGeometry = rideRouteGeometry($mission);
-    $replayPoints = rideReplayPoints($routeGeometry, $routePoints);
-
     $missionDays = dbFetchAll("SELECT * FROM mission_days WHERE mission_id = ? ORDER BY day_number", [$mission['id']]);
     $isMultiDayMission = !empty($missionDays);
-    $rideEvents = getRideEvents((int)$mission['id'], 100, false);
 
     if ($isMultiDayMission) {
         foreach ($missionDays as $day) {
-            $dayPoints = normalizeRideRoutePoints($day['route_points'] ?? '[]');
-            $dayGeometry = rideRouteGeometry($day);
-            $dayReplayPoints = rideReplayPoints($dayGeometry, $dayPoints);
-            if (count($dayReplayPoints) < 2) {
+            $dayMission = array_merge($mission, [
+                'route_points' => $day['route_points'],
+                'route_geometry' => $day['route_geometry'],
+                'route_distance_meters' => $day['route_distance_meters'],
+                'route_duration_seconds' => $day['route_duration_seconds'],
+                'route_provider' => $day['route_provider'],
+            ]);
+            $dayReplay = buildActualRideReplayData($dayMission, $day['day_date'], true);
+            if (empty($dayReplay['hasActualData'])) {
                 continue;
             }
-            $dayMetrics = rideMissionRouteMetrics($day, $dayPoints);
-            $dayEvents = array_values(array_filter($rideEvents, function ($event) use ($day) {
-                return substr((string)$event['created_at'], 0, 10) === $day['day_date'];
-            }));
             $days[] = [
                 'label' => ($day['title'] ?: 'Μέρα ' . (int)$day['day_number']) . ' · ' . formatDateGreek($day['day_date']),
-                'points' => $dayReplayPoints,
-                'distanceMeters' => (float)($dayMetrics['distance_meters'] ?? 0),
-                'totalMinutes' => (int)($dayMetrics['total_minutes'] ?? 0),
-                'events' => buildReplayEvents($dayReplayPoints, $dayEvents),
+                'mode' => $dayReplay['mode'],
+                'tracks' => $dayReplay['tracks'],
+                'events' => $dayReplay['events'],
+                'referenceRoute' => $dayReplay['referenceRoute'],
+                'startTime' => $dayReplay['startTime'],
+                'endTime' => $dayReplay['endTime'],
+                'durationSeconds' => $dayReplay['durationSeconds'],
+                'distanceMeters' => $dayReplay['distanceMeters'],
+                'totalMinutes' => $dayReplay['totalMinutes'],
+                'hasActualData' => true,
             ];
         }
-    } elseif (count($replayPoints) >= 2) {
-        $routeMetrics = rideMissionRouteMetrics($mission, $routePoints);
-        $days[] = [
-            'label' => $mission['title'],
-            'points' => $replayPoints,
-            'distanceMeters' => (float)($routeMetrics['distance_meters'] ?? 0),
-            'totalMinutes' => (int)($routeMetrics['total_minutes'] ?? 0),
-            'events' => buildReplayEvents($replayPoints, $rideEvents),
-        ];
+    } else {
+        $actualReplay = buildActualRideReplayData($mission, null, true);
+        if (!empty($actualReplay['hasActualData'])) {
+            $days[] = [
+                'label' => $mission['title'],
+                'mode' => $actualReplay['mode'],
+                'tracks' => $actualReplay['tracks'],
+                'events' => $actualReplay['events'],
+                'referenceRoute' => $actualReplay['referenceRoute'],
+                'startTime' => $actualReplay['startTime'],
+                'endTime' => $actualReplay['endTime'],
+                'durationSeconds' => $actualReplay['durationSeconds'],
+                'distanceMeters' => $actualReplay['distanceMeters'],
+                'totalMinutes' => $actualReplay['totalMinutes'],
+                'hasActualData' => true,
+            ];
+        }
     }
 
     if (empty($days)) {
@@ -75,7 +85,7 @@ if ($state === 'ok') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex,nofollow">
-    <title><?= $state === 'ok' ? h($mission['title']) . ' - Ride Replay' : 'Ride Replay' ?> - <?= h($appName) ?></title>
+    <title><?= $state === 'ok' ? h($mission['title']) . ' - Actual Ride Replay' : 'Actual Ride Replay' ?> - <?= h($appName) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <?php if ($state === 'ok'): ?>
@@ -113,7 +123,7 @@ if ($state === 'ok') {
                 <p class="text-muted mb-0">Αυτός ο σύνδεσμος Ride Replay δεν είναι έγκυρος ή έχει ανακληθεί.</p>
             <?php else: ?>
                 <h4 class="fw-bold mb-2">Μη Διαθέσιμο</h4>
-                <p class="text-muted mb-0">Αυτό το Ride Replay δεν είναι διαθέσιμο αυτή τη στιγμή.</p>
+                <p class="text-muted mb-0">Αυτό το GPS replay δεν είναι διαθέσιμο αυτή τη στιγμή.</p>
             <?php endif; ?>
         </div>
     <?php else: ?>
@@ -122,7 +132,8 @@ if ($state === 'ok') {
                 <img src="<?= h($appLogo) ?>" alt="Logo" style="max-height:40px;margin-bottom:.75rem">
             <?php endif; ?>
             <h4 class="fw-bold mb-1"><i class="bi bi-film me-1 text-primary"></i><?= h($mission['title']) ?></h4>
-            <p class="text-muted small mb-3">Ολοκληρώθηκε: <?= h(formatDateGreek($mission['end_datetime'] ?? $mission['start_datetime'])) ?></p>
+            <p class="text-muted small mb-1">Ολοκληρώθηκε: <?= h(formatDateGreek($mission['end_datetime'] ?? $mission['start_datetime'])) ?></p>
+            <p class="text-muted small mb-3">Ανώνυμο GPS replay ομάδας από το Ride Mode.</p>
         </div>
 
         <?php if (count($days) > 1): ?>
@@ -137,6 +148,7 @@ if ($state === 'ok') {
 
         <div id="replayShareMap" style="height:360px;"></div>
         <div class="p-4 border-top">
+            <div id="replayShareLegend" class="d-flex flex-wrap gap-2 small mb-2"></div>
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <div>
                     <span id="replayShareKm" class="fw-bold">0 m</span>
@@ -153,6 +165,7 @@ if ($state === 'ok') {
                 </div>
             </div>
             <input type="range" id="replayShareScrubber" class="form-range" min="0" max="1" step="0.001" value="0">
+            <div id="replayShareTimeline" class="small mt-2"></div>
         </div>
         <div class="text-center py-3 border-top small text-muted">
             Powered by <?= h($appName) ?>
@@ -175,7 +188,9 @@ if ($state === 'ok') {
             time: 'replayShareTime',
             scrubber: 'replayShareScrubber',
             playPause: 'replaySharePlayPause',
-            restart: 'replayShareRestart'
+            restart: 'replayShareRestart',
+            legend: 'replayShareLegend',
+            timeline: 'replayShareTimeline'
         },
         getData: function () { return replayDays[currentDayIndex]; }
     });

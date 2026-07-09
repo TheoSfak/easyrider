@@ -355,6 +355,218 @@ function buildReplayEvents(array $routePoints, array $events): array {
     return $replayEvents;
 }
 
+function ridePingTableExists(): bool {
+    try {
+        return (bool) dbFetchValue(
+            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = 'member_pings'"
+        );
+    } catch (Exception $e) {
+        return false;
+    }
+}
+
+function rideReplayColor(int $index): string {
+    $colors = [
+        '#2563eb', '#dc2626', '#16a34a', '#f59e0b', '#7c3aed',
+        '#0891b2', '#db2777', '#65a30d', '#ea580c', '#475569',
+    ];
+    return $colors[$index % count($colors)];
+}
+
+function buildActualRideReplayData(array $mission, ?string $dayDate = null, bool $public = false): array {
+    $missionId = (int)($mission['id'] ?? 0);
+    $shiftIds = getRideShiftIds($missionId);
+    $empty = [
+        'mode' => 'actual',
+        'tracks' => [],
+        'events' => [],
+        'referenceRoute' => [],
+        'startTime' => null,
+        'endTime' => null,
+        'durationSeconds' => 0,
+        'distanceMeters' => 0.0,
+        'totalMinutes' => 0,
+        'hasActualData' => false,
+    ];
+
+    if ($missionId <= 0 || empty($shiftIds) || !ridePingTableExists()) {
+        return $empty;
+    }
+
+    $placeholders = implode(',', array_fill(0, count($shiftIds), '?'));
+    $params = $shiftIds;
+    $dayFilter = '';
+    if ($dayDate !== null && preg_match('/^\d{4}-\d{2}-\d{2}$/', $dayDate)) {
+        $dayFilter = ' AND DATE(mp.created_at) = ?';
+        $params[] = $dayDate;
+    }
+
+    try {
+        $rows = dbFetchAll(
+            "SELECT mp.user_id, mp.shift_id, mp.lat, mp.lng, mp.accuracy, mp.speed, mp.heading,
+                    mp.battery_level, mp.status, mp.created_at, u.name AS user_name
+             FROM member_pings mp
+             LEFT JOIN users u ON u.id = mp.user_id
+             WHERE mp.shift_id IN ($placeholders)
+               {$dayFilter}
+             ORDER BY mp.created_at ASC, mp.id ASC",
+            $params
+        );
+    } catch (Exception $e) {
+        return $empty;
+    }
+
+    if (empty($rows)) {
+        return $empty;
+    }
+
+    $statusOptions = rideStatusOptions();
+    $tracksByUser = [];
+    $firstTs = null;
+    $lastTs = null;
+
+    foreach ($rows as $row) {
+        $lat = (float)$row['lat'];
+        $lng = (float)$row['lng'];
+        if ($lat < -90 || $lat > 90 || $lng < -180 || $lng > 180 || ($lat == 0.0 && $lng == 0.0)) {
+            continue;
+        }
+
+        $ts = strtotime((string)$row['created_at']);
+        if (!$ts) {
+            continue;
+        }
+
+        $userId = (int)$row['user_id'];
+        if (!isset($tracksByUser[$userId])) {
+            $tracksByUser[$userId] = [
+                'user_id' => $userId,
+                'name' => trim((string)($row['user_name'] ?? '')) ?: 'Μέλος',
+                'points' => [],
+                'distanceMeters' => 0.0,
+            ];
+        }
+
+        $status = (string)($row['status'] ?? '');
+        $tracksByUser[$userId]['points'][] = [
+            'lat' => $lat,
+            'lng' => $lng,
+            'ts' => $ts,
+            'time' => date('H:i:s', $ts),
+            'status' => $status !== '' ? $status : null,
+            'statusLabel' => $status !== '' ? ($statusOptions[$status]['label'] ?? $status) : null,
+            'accuracy' => $row['accuracy'] !== null ? (float)$row['accuracy'] : null,
+            'speed' => $row['speed'] !== null ? (float)$row['speed'] : null,
+            'heading' => $row['heading'] !== null ? (float)$row['heading'] : null,
+            'battery' => $row['battery_level'] !== null ? (int)$row['battery_level'] : null,
+        ];
+
+        $firstTs = $firstTs === null ? $ts : min($firstTs, $ts);
+        $lastTs = $lastTs === null ? $ts : max($lastTs, $ts);
+    }
+
+    if ($firstTs === null || $lastTs === null) {
+        return $empty;
+    }
+
+    $tracks = [];
+    $publicLabels = [];
+    $trackIndex = 0;
+    foreach ($tracksByUser as $userId => $track) {
+        if (count($track['points']) < 1) {
+            continue;
+        }
+
+        $distance = 0.0;
+        for ($i = 1; $i < count($track['points']); $i++) {
+            $distance += rideDistanceMeters(
+                (float)$track['points'][$i - 1]['lat'],
+                (float)$track['points'][$i - 1]['lng'],
+                (float)$track['points'][$i]['lat'],
+                (float)$track['points'][$i]['lng']
+            );
+        }
+
+        $label = $public ? ('Αναβάτης ' . ($trackIndex + 1)) : $track['name'];
+        if (!$public && (int)($mission['responsible_user_id'] ?? 0) === (int)$userId) {
+            $label .= ' · Υπεύθυνος';
+        }
+        $publicLabels[$userId] = 'Αναβάτης ' . ($trackIndex + 1);
+
+        $tracks[] = [
+            'id' => $public ? ('rider_' . ($trackIndex + 1)) : $userId,
+            'label' => $label,
+            'color' => rideReplayColor($trackIndex),
+            'isLead' => (int)($mission['responsible_user_id'] ?? 0) === (int)$userId,
+            'distanceMeters' => $distance,
+            'points' => $track['points'],
+        ];
+        $trackIndex++;
+    }
+
+    if (empty($tracks)) {
+        return $empty;
+    }
+
+    $events = [];
+    $rideEvents = getRideEvents($missionId, 100, false);
+    foreach (array_reverse($rideEvents) as $event) {
+        if ($dayDate !== null && substr((string)$event['created_at'], 0, 10) !== $dayDate) {
+            continue;
+        }
+        if ($event['lat'] === null || $event['lng'] === null) {
+            continue;
+        }
+        $ts = strtotime((string)$event['created_at']);
+        if (!$ts) {
+            continue;
+        }
+
+        $type = (string)$event['event_type'];
+        if (str_starts_with($type, 'status_')) {
+            $type = substr($type, 7);
+        }
+        $title = $statusOptions[$type]['label'] ?? (string)$event['title'];
+        $userId = (int)($event['user_id'] ?? 0);
+        $userLabel = $public
+            ? ($publicLabels[$userId] ?? 'Αναβάτης')
+            : (trim((string)($event['user_name'] ?? '')) ?: 'Μέλος');
+
+        $events[] = [
+            'lat' => (float)$event['lat'],
+            'lng' => (float)$event['lng'],
+            'title' => $title,
+            'label' => $userLabel . ' · ' . $title,
+            'severity' => (string)($event['severity'] ?? 'info'),
+            'type' => $type,
+            'ts' => $ts,
+            'time' => date('H:i:s', $ts),
+        ];
+    }
+
+    $referenceRoute = rideReplayPoints(
+        rideRouteGeometry($mission),
+        normalizeRideRoutePoints($mission['route_points'] ?? '[]')
+    );
+    $distanceMeters = array_sum(array_map(fn($track) => (float)$track['distanceMeters'], $tracks));
+    $durationSeconds = max(0, $lastTs - $firstTs);
+
+    return [
+        'mode' => 'actual',
+        'tracks' => $tracks,
+        'events' => $events,
+        'referenceRoute' => $referenceRoute,
+        'startTime' => date('H:i:s', $firstTs),
+        'endTime' => date('H:i:s', $lastTs),
+        'durationSeconds' => $durationSeconds,
+        'distanceMeters' => $distanceMeters,
+        'totalMinutes' => (int)ceil($durationSeconds / 60),
+        'hasActualData' => true,
+    ];
+}
+
 function rideMissionRouteMetrics(array $mission, ?array $routePoints = null): array {
     if ($routePoints === null) {
         $routePoints = normalizeRideRoutePoints($mission['route_points'] ?? '[]');
