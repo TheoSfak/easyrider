@@ -7,6 +7,7 @@
 require_once __DIR__ . '/bootstrap.php';
 require_once __DIR__ . '/includes/inventory-functions.php';
 requireLogin();
+requireModuleEnabled('inventory_nav_enabled');
 requireInventoryTables();
 if (isTraineeRescuer()) {
     setFlash('error', 'Δεν έχετε πρόσβαση σε αυτή τη σελίδα.');
@@ -53,7 +54,7 @@ if (empty($items)) {
     redirect('inventory.php');
 }
 
-$appName = getSetting('app_name', 'VolunteerOps');
+$appName = getSetting('app_name', 'EasyRide');
 $pageTitle = 'Εκτύπωση Ετικετών';
 
 // Build JSON-safe item list for JS

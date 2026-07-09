@@ -7,6 +7,7 @@
 require_once __DIR__ . '/bootstrap.php';
 require_once __DIR__ . '/includes/inventory-functions.php';
 requireLogin();
+requireModuleEnabled('inventory_nav_enabled');
 requireInventoryTables();
 if (isTraineeRescuer()) {
     setFlash('error', 'Δεν έχετε πρόσβαση σε αυτή τη σελίδα.');
@@ -46,7 +47,7 @@ if ($status) {
 }
 
 // Organization name
-$orgName = getSetting('org_name', 'VolunteerOps');
+$orgName = getSetting('org_name', 'EasyRide');
 
 // Active filters description
 $activeFilters = [];

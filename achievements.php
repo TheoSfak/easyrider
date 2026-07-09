@@ -5,6 +5,7 @@
 
 require_once __DIR__ . '/bootstrap.php';
 requireLogin();
+requireModuleEnabled('gamification_nav_enabled');
 
 // Check if achievements are enabled
 if (getSetting('achievements_enabled', '1') !== '1') {

@@ -5,6 +5,7 @@
 
 require_once __DIR__ . '/bootstrap.php';
 requireLogin();
+requireModuleEnabled('gamification_nav_enabled');
 
 if (getSetting('points_enabled', '1') !== '1') {
     setFlash('warning', 'Το σύστημα πόντων είναι απενεργοποιημένο.');

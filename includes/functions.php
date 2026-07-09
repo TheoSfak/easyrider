@@ -37,6 +37,19 @@ function getFlash() {
 }
 
 /**
+ * Block access to a whole module when its *_nav_enabled setting is off.
+ * The sidebar/settings-tab links already hide themselves based on this
+ * same flag; this closes the matching gap where the page itself was
+ * still directly reachable by URL regardless of the flag.
+ */
+function requireModuleEnabled($settingKey) {
+    if (getSetting($settingKey, '0') !== '1') {
+        setFlash('warning', 'Αυτή η λειτουργία δεν είναι ενεργή.');
+        redirect('dashboard.php');
+    }
+}
+
+/**
  * Display flash messages as Bootstrap alerts
  */
 function displayFlash() {
@@ -544,7 +557,7 @@ function validateFields($validations) {
  */
 function getSettings() {
     $defaults = [
-        'app_name' => 'VolunteerOps',
+        'app_name' => 'EasyRide',
         'app_description' => 'Σύστημα Διαχείρισης Μελών',
         'app_logo' => '',
         'admin_email' => '',

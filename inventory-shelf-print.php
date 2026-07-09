@@ -6,6 +6,7 @@
 
 require_once __DIR__ . '/bootstrap.php';
 requireLogin();
+requireModuleEnabled('inventory_nav_enabled');
 
 // Ensure shelf table exists before querying
 try {
@@ -60,7 +61,7 @@ $expiredCount = count(array_filter($items, fn($i) => isset($i['expiry_days']) &&
 $soonCount    = count(array_filter($items, fn($i) => isset($i['expiry_days']) && $i['expiry_days'] >= 0 && $i['expiry_days'] <= 90));
 $warningCount = count(array_filter($items, fn($i) => $i['expiry_class'] === 'warning'));
 
-$orgName   = getSetting('org_name', 'VolunteerOps');
+$orgName   = getSetting('org_name', 'EasyRide');
 $printDate = date('d/m/Y H:i');
 ?><!DOCTYPE html>
 <html lang="el">

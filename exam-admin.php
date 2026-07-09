@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/bootstrap.php';
 requirePermission('training_view');
+requireModuleEnabled('training_nav_enabled');
 
 $pageTitle = 'Διαχείριση Διαγωνισμάτων & Κουίζ';
 

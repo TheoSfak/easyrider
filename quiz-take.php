@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/bootstrap.php';
 requireLogin();
+requireModuleEnabled('training_nav_enabled');
 
 $quizId = get('id');
 $user = getCurrentUser();

@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/bootstrap.php';
 requirePermission('questions_manage');
+requireModuleEnabled('training_nav_enabled');
 
 $examId = get('exam_id');
 if (empty($examId)) {

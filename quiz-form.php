@@ -1,6 +1,7 @@
 ﻿<?php
 require_once __DIR__ . '/bootstrap.php';
 requirePermission('training_manage');
+requireModuleEnabled('training_nav_enabled');
 
 $id = (int) get('id');
 $isEdit = !empty($id);
