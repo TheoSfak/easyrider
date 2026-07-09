@@ -115,12 +115,13 @@ $ogImage = rtrim(BASE_URL, '/') . $ogImagePath;
     <meta name="twitter:image" content="<?= h($ogImage) ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="<?= rtrim(BASE_URL, '/') ?>/assets/css/theme.css?v=<?= APP_VERSION ?>" rel="stylesheet">
     <?php if ($state === 'ok'): ?>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <?php endif; ?>
     <style>
         body {
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            background: var(--auth-bg-gradient);
             min-height: 100vh;
             padding: 2rem 0;
         }
