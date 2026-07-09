@@ -28,8 +28,8 @@ if (!regeneratePwaIconsFromImage($sourcePath)) {
 }
 echo "Wrote assets/icons/icon-{72,96,128,144,152,192,384,512}.png and icon-maskable-512.png\n";
 
-// Copy the source into uploads/logos/ under a fixed filename, following the
-// same naming convention settings.php uses for logo uploads ('logo_' . time()).
+// Copy the source into uploads/logos/ under a fixed filename (unlike
+// settings.php's uploads, which use 'logo_' . time() per upload).
 $logoFilename = 'club-badge.png';
 $logoDest = __DIR__ . '/../uploads/logos/' . $logoFilename;
 copy($sourcePath, $logoDest);
