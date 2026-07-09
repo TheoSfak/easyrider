@@ -391,7 +391,7 @@ include __DIR__ . '/includes/header.php';
     padding: 1.5rem;
     color: #fff;
     margin-bottom: 1.5rem;
-    box-shadow: 0 8px 32px rgba(102,126,234,.25);
+    box-shadow: 0 8px 32px rgba(232,121,44,.25);
     position: relative;
     overflow: hidden;
 }

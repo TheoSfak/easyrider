@@ -44,7 +44,7 @@ if (isLoggedIn()) {
     
     <!-- PWA -->
     <link rel="manifest" href="<?= rtrim(BASE_URL, '/') ?>/manifest.json">
-    <meta name="theme-color" content="#1e3c72">
+    <meta name="theme-color" content="#141110">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="<?= h($appName) ?>">
