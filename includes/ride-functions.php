@@ -375,6 +375,36 @@ function rideReplayColor(int $index): string {
     return $colors[$index % count($colors)];
 }
 
+/**
+ * Drops consecutive GPS pings that didn't move far enough to be real travel
+ * (typical stationary jitter is a few meters), so distance/replay motion
+ * reflect actual movement rather than noise. Always keeps the first and last
+ * point of the track so start/end position and total elapsed time are exact.
+ */
+function rideFilterJitterPoints(array $points, float $minMoveMeters = 12.0): array {
+    if (count($points) <= 2) {
+        return $points;
+    }
+
+    $kept = [$points[0]];
+    $lastKept = $points[0];
+    for ($i = 1; $i < count($points) - 1; $i++) {
+        $distance = rideDistanceMeters(
+            (float)$lastKept['lat'],
+            (float)$lastKept['lng'],
+            (float)$points[$i]['lat'],
+            (float)$points[$i]['lng']
+        );
+        if ($distance >= $minMoveMeters) {
+            $kept[] = $points[$i];
+            $lastKept = $points[$i];
+        }
+    }
+    $kept[] = $points[count($points) - 1];
+
+    return $kept;
+}
+
 function buildActualRideReplayData(array $mission, ?string $dayDate = null, bool $public = false): array {
     $missionId = (int)($mission['id'] ?? 0);
     $shiftIds = getRideShiftIds($missionId);
@@ -479,13 +509,15 @@ function buildActualRideReplayData(array $mission, ?string $dayDate = null, bool
             continue;
         }
 
+        $filteredPoints = rideFilterJitterPoints($track['points']);
+
         $distance = 0.0;
-        for ($i = 1; $i < count($track['points']); $i++) {
+        for ($i = 1; $i < count($filteredPoints); $i++) {
             $distance += rideDistanceMeters(
-                (float)$track['points'][$i - 1]['lat'],
-                (float)$track['points'][$i - 1]['lng'],
-                (float)$track['points'][$i]['lat'],
-                (float)$track['points'][$i]['lng']
+                (float)$filteredPoints[$i - 1]['lat'],
+                (float)$filteredPoints[$i - 1]['lng'],
+                (float)$filteredPoints[$i]['lat'],
+                (float)$filteredPoints[$i]['lng']
             );
         }
 
@@ -501,7 +533,7 @@ function buildActualRideReplayData(array $mission, ?string $dayDate = null, bool
             'color' => rideReplayColor($trackIndex),
             'isLead' => (int)($mission['responsible_user_id'] ?? 0) === (int)$userId,
             'distanceMeters' => $distance,
-            'points' => $track['points'],
+            'points' => $filteredPoints,
         ];
         $trackIndex++;
     }

@@ -7,9 +7,11 @@ function initRideReplayController(options) {
     if (!standalone && !modalEl) return;
 
     var DURATION_MS = 25000;
+    var MANY_RIDERS_THRESHOLD = 6;
     var map = null;
     var markers = [];
-    var polylines = [];
+    var trackLayers = {};
+    var visibility = {};
     var referencePolyline = null;
     var eventMarkers = [];
     var timelineEntries = [];
@@ -186,6 +188,29 @@ function initRideReplayController(options) {
         }
     }
 
+    function isTrackVisible(id) {
+        return !!visibility[id];
+    }
+
+    function applyTrackVisibility(id) {
+        var entry = trackLayers[id];
+        if (!entry) return;
+        var visible = visibility[id];
+        if (visible) {
+            if (entry.polyline && !map.hasLayer(entry.polyline)) entry.polyline.addTo(map);
+            if (entry.marker && !map.hasLayer(entry.marker)) entry.marker.addTo(map);
+        } else {
+            if (entry.polyline && map.hasLayer(entry.polyline)) map.removeLayer(entry.polyline);
+            if (entry.marker && map.hasLayer(entry.marker)) map.removeLayer(entry.marker);
+        }
+    }
+
+    function toggleTrack(id) {
+        visibility[id] = !visibility[id];
+        applyTrackVisibility(id);
+        renderLegend();
+    }
+
     function initMap() {
         map = L.map(elIds.map, { zoomControl: true, scrollWheelZoom: false });
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -194,6 +219,10 @@ function initRideReplayController(options) {
         }).addTo(map);
 
         var boundsPoints = [];
+        var tracks = data.tracks || [];
+        var manyRiders = tracks.length > MANY_RIDERS_THRESHOLD;
+        var leadIndex = tracks.findIndex(function (t) { return t.isLead; });
+        if (leadIndex === -1) leadIndex = 0;
 
         if (Array.isArray(data.referenceRoute) && data.referenceRoute.length >= 2) {
             referencePolyline = L.polyline(data.referenceRoute, {
@@ -205,26 +234,40 @@ function initRideReplayController(options) {
             boundsPoints = boundsPoints.concat(data.referenceRoute);
         }
 
-        (data.tracks || []).forEach(function (track) {
+        trackLayers = {};
+        visibility = {};
+
+        tracks.forEach(function (track, index) {
             var latLngs = (track.points || []).map(pointLatLng);
             boundsPoints = boundsPoints.concat(latLngs);
+            var visible = manyRiders ? (index === leadIndex) : true;
+            visibility[track.id] = visible;
+
+            var polyline = null;
             if (latLngs.length >= 2) {
-                polylines.push(L.polyline(latLngs, {
+                polyline = L.polyline(latLngs, {
                     color: track.color || '#2563eb',
                     weight: 4,
                     opacity: 0.65
-                }).addTo(map));
+                });
             }
 
+            var marker = null;
             if (latLngs.length) {
-                var marker = L.circleMarker(latLngs[0], {
+                marker = L.circleMarker(latLngs[0], {
                     radius: track.isLead ? 9 : 7,
                     color: track.color || '#2563eb',
                     fillColor: track.color || '#2563eb',
                     fillOpacity: 1,
                     weight: track.isLead ? 3 : 2
-                }).addTo(map).bindPopup(esc(track.label));
+                }).bindPopup(esc(track.label));
                 markers.push({ marker: marker, track: track });
+            }
+
+            trackLayers[track.id] = { polyline: polyline, marker: marker, track: track };
+            if (visible) {
+                if (polyline) polyline.addTo(map);
+                if (marker) marker.addTo(map);
             }
         });
 
@@ -253,11 +296,19 @@ function initRideReplayController(options) {
         var el = document.getElementById(elIds.legend);
         if (!el) return;
         el.innerHTML = (data.tracks || []).map(function (track) {
-            return '<span class="badge bg-light text-dark border d-inline-flex align-items-center gap-1">'
+            var active = isTrackVisible(track.id);
+            return '<span class="badge bg-light text-dark border d-inline-flex align-items-center gap-1'
+                + (active ? '' : ' opacity-50') + '" data-track-toggle="' + esc(track.id) + '" role="button" tabindex="0" style="cursor:pointer;">'
                 + '<span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:' + esc(track.color) + '"></span>'
                 + esc(track.label)
+                + (active ? '' : '<i class="bi bi-eye-slash ms-1"></i>')
                 + '</span>';
         }).join('');
+        el.querySelectorAll('[data-track-toggle]').forEach(function (badge) {
+            badge.addEventListener('click', function () {
+                toggleTrack(badge.getAttribute('data-track-toggle'));
+            });
+        });
     }
 
     function renderTimeline() {
@@ -316,7 +367,6 @@ function initRideReplayController(options) {
         eventMarkers = [];
         timelineEntries = [];
         markers = [];
-        polylines = [];
         if (map) {
             map.remove();
             map = null;
@@ -343,7 +393,6 @@ function initRideReplayController(options) {
                 map.remove();
                 map = null;
                 markers = [];
-                polylines = [];
                 eventMarkers = [];
                 timelineEntries = [];
             }

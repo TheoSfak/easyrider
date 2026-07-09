@@ -78,6 +78,23 @@ if ($state === 'ok') {
         $state = 'unavailable';
     }
 }
+
+$shareUrl = rtrim(BASE_URL, '/') . '/replay-share.php?token=' . urlencode($token);
+$ogTitle = $state === 'ok' ? ($mission['title'] . ' - GPS Replay') : ($appName . ' - Ride Replay');
+if ($state === 'ok') {
+    $ogDescription = count($days) === 1 && !empty($days[0]['distanceMeters'])
+        ? sprintf('Πραγματικό GPS replay: %.1f χλμ σε %s. Δες την διαδρομή στο %s.',
+            $days[0]['distanceMeters'] / 1000,
+            $days[0]['totalMinutes'] > 0 ? $days[0]['totalMinutes'] . ' λεπτά' : 'λίγα λεπτά',
+            $appName)
+        : 'Πραγματικό GPS replay ομαδικής διαδρομής μέσω ' . $appName . '.';
+} else {
+    $ogDescription = 'Δες το GPS replay αυτής της διαδρομής στο ' . $appName . '.';
+}
+$ogImagePath = ($appLogo && file_exists(__DIR__ . '/uploads/logos/' . $appLogo))
+    ? '/uploads/logos/' . rawurlencode($appLogo)
+    : '/assets/icons/icon-512.png';
+$ogImage = rtrim(BASE_URL, '/') . $ogImagePath;
 ?>
 <!DOCTYPE html>
 <html lang="el">
@@ -86,6 +103,16 @@ if ($state === 'ok') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="robots" content="noindex,nofollow">
     <title><?= $state === 'ok' ? h($mission['title']) . ' - Actual Ride Replay' : 'Actual Ride Replay' ?> - <?= h($appName) ?></title>
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="<?= h($shareUrl) ?>">
+    <meta property="og:title" content="<?= h($ogTitle) ?>">
+    <meta property="og:description" content="<?= h($ogDescription) ?>">
+    <meta property="og:image" content="<?= h($ogImage) ?>">
+    <meta property="og:site_name" content="<?= h($appName) ?>">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="<?= h($ogTitle) ?>">
+    <meta name="twitter:description" content="<?= h($ogDescription) ?>">
+    <meta name="twitter:image" content="<?= h($ogImage) ?>">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <?php if ($state === 'ok'): ?>
@@ -112,8 +139,8 @@ if ($state === 'ok') {
 <div class="replay-card">
     <?php if ($state !== 'ok'): ?>
         <div class="text-center py-5 px-4">
-            <?php if ($appLogo): ?>
-                <img src="<?= h($appLogo) ?>" alt="Logo" style="max-height:60px;margin-bottom:1rem">
+            <?php if ($appLogo && file_exists(__DIR__ . '/uploads/logos/' . $appLogo)): ?>
+                <img src="uploads/logos/<?= h($appLogo) ?>" alt="Logo" style="max-height:60px;margin-bottom:1rem">
             <?php else: ?>
                 <h4 class="fw-bold text-primary mb-4"><?= h($appName) ?></h4>
             <?php endif; ?>
@@ -128,8 +155,8 @@ if ($state === 'ok') {
         </div>
     <?php else: ?>
         <div class="px-4 pt-4 pb-0">
-            <?php if ($appLogo): ?>
-                <img src="<?= h($appLogo) ?>" alt="Logo" style="max-height:40px;margin-bottom:.75rem">
+            <?php if ($appLogo && file_exists(__DIR__ . '/uploads/logos/' . $appLogo)): ?>
+                <img src="uploads/logos/<?= h($appLogo) ?>" alt="Logo" style="max-height:40px;margin-bottom:.75rem">
             <?php endif; ?>
             <h4 class="fw-bold mb-1"><i class="bi bi-film me-1 text-primary"></i><?= h($mission['title']) ?></h4>
             <p class="text-muted small mb-1">Ολοκληρώθηκε: <?= h(formatDateGreek($mission['end_datetime'] ?? $mission['start_datetime'])) ?></p>
