@@ -270,7 +270,7 @@ if (!empty($shiftIds)) {
 
 foreach ($eventCandidates as $candidate) {
     $participant = $candidate['participant'];
-    $fingerprintBucket = date('YmdHi') . ':' . floor((int)date('i') / 5);
+    $fingerprintBucket = date('YmdH') . ':' . floor((int)date('i') / 5);
     $fingerprint = 'auto:' . $missionId . ':' . $participant['user_id'] . ':' . $candidate['event_type'] . ':' . $fingerprintBucket;
     if (isset($resolvedFingerprints[$fingerprint])) {
         continue;

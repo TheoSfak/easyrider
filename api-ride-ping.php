@@ -110,7 +110,7 @@ try {
             ? 'danger'
             : (in_array($status, ['breakdown', 'left_behind'], true) ? 'warning' : 'info');
         $statusLabel = $statusOptions[$status]['label'] ?? $status;
-        $fingerprintBucket = date('YmdHi') . ':' . floor((int)date('i') / 5);
+        $fingerprintBucket = date('YmdH') . ':' . floor((int)date('i') / 5);
         recordRideEvent([
             'mission_id' => $missionId,
             'shift_id' => (int)$participation['shift_id'],
