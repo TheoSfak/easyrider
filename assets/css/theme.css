@@ -471,6 +471,15 @@ h1, .h1, h2, .h2, h3, .h3, h4, .h4, h5, .h5, h6, .h6 {
     letter-spacing: -0.5px;
 }
 
+/* Headings inside dark chrome bands (auth-page header/hero blocks) need to
+   stay light, overriding the dark default above meant for the light content area. */
+.login-header h1, .login-header h2, .login-header h3,
+.register-header h1, .register-header h2, .register-header h3,
+.card-header-auth h1, .card-header-auth h2, .card-header-auth h3,
+.install-header h1, .install-header h2, .install-header h3 {
+    color: #fff;
+}
+
 /* Breadcrumb */
 .breadcrumb {
     background: transparent;
