@@ -4,6 +4,11 @@
  * Run once from the repo root: C:/xampp/php/php.exe scripts/regenerate-pwa-icons.php
  */
 
+if (php_sapi_name() !== 'cli') {
+    http_response_code(403);
+    exit('CLI only');
+}
+
 define('VOLUNTEEROPS', true);
 require_once __DIR__ . '/../config.php';
 if (file_exists(__DIR__ . '/../config.local.php')) {
@@ -24,7 +29,6 @@ if (!$source) {
 imagesavealpha($source, true);
 $srcW = imagesx($source);
 $srcH = imagesy($source);
-$srcSide = max($srcW, $srcH);
 
 /**
  * Resizes $source onto a square transparent canvas of $size x $size,
