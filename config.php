@@ -11,7 +11,7 @@ if (!defined('VOLUNTEEROPS')) {
 
 // Application
 define('APP_NAME', 'EasyRide');
-define('APP_VERSION', '3.88.5');
+define('APP_VERSION', '3.89.0');
 define('DB_SCHEMA_VERSION', 81);
 
 // Load local config if exists (created by installer)

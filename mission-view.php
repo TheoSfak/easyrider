@@ -1249,6 +1249,17 @@ include __DIR__ . '/includes/header.php';
                     Δεν έχουν καταγραφεί συμβάντα διαδρομής.
                 </div>
             <?php else: ?>
+                <?php if ($canResolveRideEvents && $activeRideEventCount > 0): ?>
+                <div class="d-flex align-items-center gap-2 px-3 py-2 border-bottom bg-light" id="ride-events-bulk-bar">
+                    <div class="form-check mb-0">
+                        <input class="form-check-input" type="checkbox" id="ride-event-select-all">
+                        <label class="form-check-label small" for="ride-event-select-all">Επιλογή όλων</label>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-success py-0 px-2 d-none" style="font-size:.75rem" id="ride-event-bulk-resolve-btn">
+                        <i class="bi bi-check2-all me-1"></i>Επίλυση επιλεγμένων
+                    </button>
+                </div>
+                <?php endif; ?>
                 <div class="list-group list-group-flush">
                     <?php foreach ($rideEvents as $event): ?>
                     <?php
@@ -1266,6 +1277,9 @@ include __DIR__ . '/includes/header.php';
                     ?>
                     <div class="list-group-item ride-event-row <?= $isResolvedEvent ? 'bg-light' : '' ?>" id="ride-event-<?= (int)$event['id'] ?>">
                         <div class="d-flex align-items-start gap-2">
+                            <?php if ($canResolveRideEvents && !$isResolvedEvent): ?>
+                                <input type="checkbox" class="form-check-input flex-shrink-0 mt-1 ride-event-checkbox" value="<?= (int)$event['id'] ?>">
+                            <?php endif; ?>
                             <span class="d-inline-block rounded-circle flex-shrink-0 mt-1" style="width:12px;height:12px;background:<?= h($dotColor) ?>"></span>
                             <div class="flex-grow-1">
                                 <div class="d-flex flex-wrap align-items-center gap-2">
@@ -2479,35 +2493,87 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php if ($canViewRideEvents): ?>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    var csrfToken = <?= json_encode(csrfToken()) ?>;
+
+    function resolveEvent(eventId) {
+        var body = new URLSearchParams({ csrf_token: csrfToken, event_id: eventId });
+        return fetch('api-ride-event-resolve.php', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'},
+            body: body
+        }).then(function(response) { return response.json(); });
+    }
+
     document.querySelectorAll('.ride-resolve-btn').forEach(function(button) {
         button.addEventListener('click', function() {
             var eventId = button.getAttribute('data-event-id');
-            var body = new URLSearchParams({
-                csrf_token: <?= json_encode(csrfToken()) ?>,
-                event_id: eventId
-            });
             button.disabled = true;
-            fetch('api-ride-event-resolve.php', {
-                method: 'POST',
-                credentials: 'same-origin',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'},
-                body: body
-            })
-            .then(function(response) { return response.json(); })
-            .then(function(data) {
-                if (!data.ok) {
-                    alert(data.error || 'Δεν επιλύθηκε το συμβάν.');
+            resolveEvent(eventId)
+                .then(function(data) {
+                    if (!data.ok) {
+                        alert(data.error || 'Δεν επιλύθηκε το συμβάν.');
+                        button.disabled = false;
+                        return;
+                    }
+                    window.location.reload();
+                })
+                .catch(function() {
+                    alert('Δεν επιλύθηκε το συμβάν.');
                     button.disabled = false;
-                    return;
-                }
-                window.location.reload();
-            })
-            .catch(function() {
-                alert('Δεν επιλύθηκε το συμβάν.');
-                button.disabled = false;
-            });
+                });
         });
     });
+
+    var selectAll = document.getElementById('ride-event-select-all');
+    var bulkResolveBtn = document.getElementById('ride-event-bulk-resolve-btn');
+    var checkboxes = document.querySelectorAll('.ride-event-checkbox');
+
+    function updateBulkResolveVisibility() {
+        var anyChecked = Array.prototype.some.call(checkboxes, function(cb) { return cb.checked; });
+        bulkResolveBtn.classList.toggle('d-none', !anyChecked);
+    }
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function() {
+            checkboxes.forEach(function(cb) { cb.checked = selectAll.checked; });
+            updateBulkResolveVisibility();
+        });
+    }
+
+    checkboxes.forEach(function(cb) {
+        cb.addEventListener('change', function() {
+            if (!cb.checked && selectAll) {
+                selectAll.checked = false;
+            }
+            updateBulkResolveVisibility();
+        });
+    });
+
+    if (bulkResolveBtn) {
+        bulkResolveBtn.addEventListener('click', function() {
+            var eventIds = Array.prototype.filter.call(checkboxes, function(cb) { return cb.checked; })
+                .map(function(cb) { return cb.value; });
+            if (eventIds.length === 0) {
+                return;
+            }
+            bulkResolveBtn.disabled = true;
+            Promise.all(eventIds.map(resolveEvent))
+                .then(function(results) {
+                    var failed = results.filter(function(data) { return !data.ok; });
+                    if (failed.length > 0) {
+                        alert('Δεν επιλύθηκαν ' + failed.length + ' από ' + eventIds.length + ' συμβάντα.');
+                        bulkResolveBtn.disabled = false;
+                        return;
+                    }
+                    window.location.reload();
+                })
+                .catch(function() {
+                    alert('Δεν επιλύθηκαν τα επιλεγμένα συμβάντα.');
+                    bulkResolveBtn.disabled = false;
+                });
+        });
+    }
 });
 </script>
 <?php endif; ?>
