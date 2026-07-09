@@ -3374,83 +3374,84 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                 // Seed 4 default presets
                 $presets = [
                     [
-                        'name' => 'Μηνιαία Ενημέρωση',
-                        'description' => 'Μηνιαία ανασκόπηση δραστηριοτήτων και νέων',
-                        'body' => '<h2 style="color:#2c3e50;">📋 Μηνιαία Ενημέρωση</h2>
-<p>Αγαπητοί μέλη,</p>
-<p>Ακολουθεί η μηνιαία ανασκόπηση των δραστηριοτήτων μας:</p>
+                        'name' => 'Μηνιαία Ενημέρωση Λέσχης',
+                        'description' => 'Μηνιαία ανασκόπηση δράσεων, βολτών και νέων της λέσχης',
+                        'body' => '<h2 style="color:#2c3e50;">Μηνιαία Ενημέρωση Λέσχης</h2>
+<p>Αγαπητά μέλη,</p>
+<p>Σας στέλνουμε τη μηνιαία ενημέρωση της λέσχης με τα σημαντικότερα νέα, τις πρόσφατες δράσεις και όσα προγραμματίζουμε για το επόμενο διάστημα.</p>
 
-<h3 style="color:#3498db;">🎯 Αποστολές του μήνα</h3>
+<h3 style="color:#3498db;">Νέα και αποφάσεις λέσχης</h3>
 <ul>
-<li>[Περιγραφή αποστολής 1]</li>
-<li>[Περιγραφή αποστολής 2]</li>
+<li>[Προσθέστε τις βασικές ανακοινώσεις ή αποφάσεις του μήνα]</li>
+<li>[Προσθέστε ενημέρωση για συνδρομές, συναντήσεις ή οργανωτικά θέματα]</li>
 </ul>
 
-<h3 style="color:#27ae60;">🏆 Κορυφαία Μέλη</h3>
-<p>[Αναφέρετε τα μέλη με τους περισσότερους πόντους]</p>
+<h3 style="color:#27ae60;">Δράσεις και βόλτες που ολοκληρώθηκαν</h3>
+<p>[Αναφέρετε πρόσφατες εκδρομές, συναντήσεις, συνεργασίες ή συμμετοχές της λέσχης]</p>
 
-<h3 style="color:#e67e22;">📅 Προσεχείς Δραστηριότητες</h3>
-<p>[Προσθέστε τις επερχόμενες αποστολές και εκδηλώσεις]</p>
+<h3 style="color:#e67e22;">Προσεχείς δραστηριότητες</h3>
+<p>[Προσθέστε τις επόμενες βόλτες, εκδρομές, συναντήσεις ή εκδηλώσεις]</p>
 
-<p>Σας ευχαριστούμε για την προσφορά σας!</p>
-<p>Με εκτίμηση,<br>{name}</p>',
+<p>Σας ευχαριστούμε για τη συμμετοχή και τη στήριξή σας.</p>
+<p>Με εκτίμηση,<br>Το Διοικητικό Συμβούλιο</p>',
                     ],
                     [
-                        'name' => 'Πρόσκληση Αποστολής',
-                        'description' => 'Πρόσκληση συμμετοχής σε νέα αποστολή',
-                        'body' => '<h2 style="color:#e74c3c;">🚨 Νέα Αποστολή - Χρειαζόμαστε τη βοήθειά σας!</h2>
+                        'name' => 'Πρόσκληση Βόλτας ή Εκδρομής',
+                        'description' => 'Πρόσκληση συμμετοχής σε οργανωμένη βόλτα, εκδρομή ή συνάντηση',
+                        'body' => '<h2 style="color:#e74c3c;">Πρόσκληση σε Βόλτα ή Εκδρομή</h2>
 <p>Αγαπητέ/ή {name},</p>
-<p>Σας ενημερώνουμε για μια <strong>νέα αποστολή</strong> που χρειάζεται μέλη:</p>
+<p>Η λέσχη διοργανώνει νέα δραστηριότητα και θα χαρούμε να σας έχουμε μαζί μας.</p>
 
 <table style="width:100%;border-collapse:collapse;margin:16px 0;">
-<tr style="background:#f8f9fa;"><td style="padding:10px;border:1px solid #dee2e6;font-weight:bold;">📍 Τοποθεσία</td><td style="padding:10px;border:1px solid #dee2e6;">[Τοποθεσία]</td></tr>
-<tr><td style="padding:10px;border:1px solid #dee2e6;font-weight:bold;">📅 Ημερομηνία</td><td style="padding:10px;border:1px solid #dee2e6;">[Ημερομηνία]</td></tr>
-<tr style="background:#f8f9fa;"><td style="padding:10px;border:1px solid #dee2e6;font-weight:bold;">⏰ Ώρες</td><td style="padding:10px;border:1px solid #dee2e6;">[Ώρες]</td></tr>
-<tr><td style="padding:10px;border:1px solid #dee2e6;font-weight:bold;">👥 Μέλη που χρειάζονται</td><td style="padding:10px;border:1px solid #dee2e6;">[Αριθμός]</td></tr>
+<tr style="background:#f8f9fa;"><td style="padding:10px;border:1px solid #dee2e6;font-weight:bold;">Προορισμός</td><td style="padding:10px;border:1px solid #dee2e6;">[Προορισμός]</td></tr>
+<tr><td style="padding:10px;border:1px solid #dee2e6;font-weight:bold;">Ημερομηνία</td><td style="padding:10px;border:1px solid #dee2e6;">[Ημερομηνία]</td></tr>
+<tr style="background:#f8f9fa;"><td style="padding:10px;border:1px solid #dee2e6;font-weight:bold;">Ώρα και σημείο συνάντησης</td><td style="padding:10px;border:1px solid #dee2e6;">[Ώρα και σημείο συνάντησης]</td></tr>
+<tr><td style="padding:10px;border:1px solid #dee2e6;font-weight:bold;">Διαδρομή / χιλιόμετρα</td><td style="padding:10px;border:1px solid #dee2e6;">[Σύντομη περιγραφή διαδρομής]</td></tr>
+<tr style="background:#f8f9fa;"><td style="padding:10px;border:1px solid #dee2e6;font-weight:bold;">Σημαντικές οδηγίες</td><td style="padding:10px;border:1px solid #dee2e6;">[Εξοπλισμός, καύσιμα, στάσεις ή άλλες λεπτομέρειες]</td></tr>
 </table>
 
-<p><strong>Δηλώστε συμμετοχή</strong> μέσω της πλατφόρμας VolunteerOps το συντομότερο δυνατό!</p>
+<p><strong>Δηλώστε συμμετοχή</strong> μέσω της πλατφόρμας EasyRide, ώστε να οργανωθεί σωστά η ομάδα.</p>
 
-<p>Με εκτίμηση,<br>Η Ομάδα Διαχείρισης</p>',
+<p>Με εκτίμηση,<br>Το Διοικητικό Συμβούλιο</p>',
                     ],
                     [
-                        'name' => 'Γενική Ανακοίνωση',
-                        'description' => 'Γενικού σκοπού ανακοίνωση προς μέλη',
-                        'body' => '<h2 style="color:#2c3e50;">📢 Ανακοίνωση</h2>
-<p>Αγαπητοί μέλη,</p>
+                        'name' => 'Γενική Ανακοίνωση Λέσχης',
+                        'description' => 'Γενικού σκοπού ανακοίνωση προς τα μέλη της λέσχης',
+                        'body' => '<h2 style="color:#2c3e50;">Ανακοίνωση Λέσχης</h2>
+<p>Αγαπητά μέλη,</p>
 
 <p>[Γράψτε εδώ το κύριο μήνυμα της ανακοίνωσης]</p>
 
 <div style="background:#f8f9fa;border-left:4px solid #3498db;padding:16px;margin:16px 0;border-radius:4px;">
-<strong>ℹ️ Σημαντική πληροφορία:</strong><br>
+<strong>Σημαντική πληροφορία:</strong><br>
 [Προσθέστε οποιαδήποτε σημαντική λεπτομέρεια]
 </div>
 
 <p>Για ερωτήσεις ή διευκρινίσεις, μη διστάσετε να επικοινωνήσετε μαζί μας.</p>
 
-<p>Με εκτίμηση,<br>Η Ομάδα Διαχείρισης</p>',
+<p>Με εκτίμηση,<br>Το Διοικητικό Συμβούλιο</p>',
                     ],
                     [
-                        'name' => 'Καλωσόρισμα Νέων Μελών',
-                        'description' => 'Μήνυμα καλωσορίσματος για νέους μέλη',
-                        'body' => '<h2 style="color:#27ae60;">🎉 Καλώς ήρθατε στην ομάδα μας!</h2>
+                        'name' => 'Καλωσόρισμα Νέου Μέλους',
+                        'description' => 'Μήνυμα καλωσορίσματος για νέο μέλος της λέσχης',
+                        'body' => '<h2 style="color:#27ae60;">Καλώς ήρθατε στη λέσχη μας!</h2>
 <p>Αγαπητέ/ή {name},</p>
-<p>Σας καλωσορίζουμε στη λέσχη μας! Είμαστε χαρούμενοι που είστε μαζί μας.</p>
+<p>Σας καλωσορίζουμε στη λέσχη μοτοσικλετιστών μας. Χαιρόμαστε ιδιαίτερα που γίνεστε μέρος της κοινότητάς μας.</p>
 
-<h3 style="color:#3498db;">🚀 Πρώτα βήματα</h3>
+<h3 style="color:#3498db;">Πρώτα βήματα</h3>
 <ol>
-<li><strong>Συνδεθείτε</strong> στην πλατφόρμα VolunteerOps</li>
-<li><strong>Συμπληρώστε</strong> το προφίλ σας με τα στοιχεία σας</li>
-<li><strong>Δείτε</strong> τις διαθέσιμες αποστολές</li>
-<li><strong>Δηλώστε</strong> συμμετοχή στη βάρδια που σας ενδιαφέρει</li>
+<li><strong>Συνδεθείτε</strong> στην πλατφόρμα EasyRide</li>
+<li><strong>Συμπληρώστε</strong> το προφίλ σας και τα στοιχεία της μοτοσικλέτας σας</li>
+<li><strong>Ελέγξτε</strong> τις επερχόμενες βόλτες, εκδρομές και συναντήσεις</li>
+<li><strong>Δηλώστε</strong> συμμετοχή στις δραστηριότητες που σας ενδιαφέρουν</li>
 </ol>
 
-<h3 style="color:#e67e22;">🏆 Σύστημα Πόντων</h3>
-<p>Κερδίζετε πόντους για κάθε βάρδια που ολοκληρώνετε! Παρακολουθήστε τη βαθμολογία σας στο leaderboard.</p>
+<h3 style="color:#e67e22;">Η κοινότητά μας</h3>
+<p>Η συμμετοχή, η συνέπεια και ο σεβασμός στον δρόμο είναι η βάση για κάθε δραστηριότητα της λέσχης.</p>
 
-<p>Ανυπομονούμε να σας δούμε στην πρώτη σας αποστολή!</p>
+<p>Ανυπομονούμε να σας γνωρίσουμε στην επόμενη συνάντηση ή βόλτα μας.</p>
 
-<p>Με εκτίμηση,<br>Η Ομάδα Διαχείρισης</p>',
+<p>Με εκτίμηση,<br>Το Διοικητικό Συμβούλιο</p>',
                     ],
                 ];
 
@@ -4703,6 +4704,126 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                 );
                 if (!$colExists) {
                     dbExecute("ALTER TABLE participation_requests ADD COLUMN navigating_since TIMESTAMP NULL AFTER field_status_updated_at");
+                }
+            },
+        ],
+        [
+            'version'     => 82,
+            'description' => 'Update newsletter content presets for motorcycle club members',
+            'up' => function () {
+                $tableExists = dbFetchOne(
+                    "SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'newsletter_presets'"
+                );
+                if (!$tableExists) {
+                    return;
+                }
+
+                $presets = [
+                    [
+                        'old_names' => ['Μηνιαία Ενημέρωση', 'Μηνιαία Ενημέρωση Λέσχης'],
+                        'name' => 'Μηνιαία Ενημέρωση Λέσχης',
+                        'description' => 'Μηνιαία ανασκόπηση δράσεων, βολτών και νέων της λέσχης',
+                        'body' => '<h2 style="color:#2c3e50;">Μηνιαία Ενημέρωση Λέσχης</h2>
+<p>Αγαπητά μέλη,</p>
+<p>Σας στέλνουμε τη μηνιαία ενημέρωση της λέσχης με τα σημαντικότερα νέα, τις πρόσφατες δράσεις και όσα προγραμματίζουμε για το επόμενο διάστημα.</p>
+
+<h3 style="color:#3498db;">Νέα και αποφάσεις λέσχης</h3>
+<ul>
+<li>[Προσθέστε τις βασικές ανακοινώσεις ή αποφάσεις του μήνα]</li>
+<li>[Προσθέστε ενημέρωση για συνδρομές, συναντήσεις ή οργανωτικά θέματα]</li>
+</ul>
+
+<h3 style="color:#27ae60;">Δράσεις και βόλτες που ολοκληρώθηκαν</h3>
+<p>[Αναφέρετε πρόσφατες εκδρομές, συναντήσεις, συνεργασίες ή συμμετοχές της λέσχης]</p>
+
+<h3 style="color:#e67e22;">Προσεχείς δραστηριότητες</h3>
+<p>[Προσθέστε τις επόμενες βόλτες, εκδρομές, συναντήσεις ή εκδηλώσεις]</p>
+
+<p>Σας ευχαριστούμε για τη συμμετοχή και τη στήριξή σας.</p>
+<p>Με εκτίμηση,<br>Το Διοικητικό Συμβούλιο</p>',
+                    ],
+                    [
+                        'old_names' => ['Πρόσκληση Αποστολής', 'Πρόσκληση Βόλτας ή Εκδρομής'],
+                        'name' => 'Πρόσκληση Βόλτας ή Εκδρομής',
+                        'description' => 'Πρόσκληση συμμετοχής σε οργανωμένη βόλτα, εκδρομή ή συνάντηση',
+                        'body' => '<h2 style="color:#e74c3c;">Πρόσκληση σε Βόλτα ή Εκδρομή</h2>
+<p>Αγαπητέ/ή {name},</p>
+<p>Η λέσχη διοργανώνει νέα δραστηριότητα και θα χαρούμε να σας έχουμε μαζί μας.</p>
+
+<table style="width:100%;border-collapse:collapse;margin:16px 0;">
+<tr style="background:#f8f9fa;"><td style="padding:10px;border:1px solid #dee2e6;font-weight:bold;">Προορισμός</td><td style="padding:10px;border:1px solid #dee2e6;">[Προορισμός]</td></tr>
+<tr><td style="padding:10px;border:1px solid #dee2e6;font-weight:bold;">Ημερομηνία</td><td style="padding:10px;border:1px solid #dee2e6;">[Ημερομηνία]</td></tr>
+<tr style="background:#f8f9fa;"><td style="padding:10px;border:1px solid #dee2e6;font-weight:bold;">Ώρα και σημείο συνάντησης</td><td style="padding:10px;border:1px solid #dee2e6;">[Ώρα και σημείο συνάντησης]</td></tr>
+<tr><td style="padding:10px;border:1px solid #dee2e6;font-weight:bold;">Διαδρομή / χιλιόμετρα</td><td style="padding:10px;border:1px solid #dee2e6;">[Σύντομη περιγραφή διαδρομής]</td></tr>
+<tr style="background:#f8f9fa;"><td style="padding:10px;border:1px solid #dee2e6;font-weight:bold;">Σημαντικές οδηγίες</td><td style="padding:10px;border:1px solid #dee2e6;">[Εξοπλισμός, καύσιμα, στάσεις ή άλλες λεπτομέρειες]</td></tr>
+</table>
+
+<p><strong>Δηλώστε συμμετοχή</strong> μέσω της πλατφόρμας EasyRide, ώστε να οργανωθεί σωστά η ομάδα.</p>
+
+<p>Με εκτίμηση,<br>Το Διοικητικό Συμβούλιο</p>',
+                    ],
+                    [
+                        'old_names' => ['Γενική Ανακοίνωση', 'Γενική Ανακοίνωση Λέσχης'],
+                        'name' => 'Γενική Ανακοίνωση Λέσχης',
+                        'description' => 'Γενικού σκοπού ανακοίνωση προς τα μέλη της λέσχης',
+                        'body' => '<h2 style="color:#2c3e50;">Ανακοίνωση Λέσχης</h2>
+<p>Αγαπητά μέλη,</p>
+
+<p>[Γράψτε εδώ το κύριο μήνυμα της ανακοίνωσης]</p>
+
+<div style="background:#f8f9fa;border-left:4px solid #3498db;padding:16px;margin:16px 0;border-radius:4px;">
+<strong>Σημαντική πληροφορία:</strong><br>
+[Προσθέστε οποιαδήποτε σημαντική λεπτομέρεια]
+</div>
+
+<p>Για ερωτήσεις ή διευκρινίσεις, μη διστάσετε να επικοινωνήσετε μαζί μας.</p>
+
+<p>Με εκτίμηση,<br>Το Διοικητικό Συμβούλιο</p>',
+                    ],
+                    [
+                        'old_names' => ['Καλωσόρισμα Νέων Μελών', 'Καλωσόρισμα Νέου Μέλους'],
+                        'name' => 'Καλωσόρισμα Νέου Μέλους',
+                        'description' => 'Μήνυμα καλωσορίσματος για νέο μέλος της λέσχης',
+                        'body' => '<h2 style="color:#27ae60;">Καλώς ήρθατε στη λέσχη μας!</h2>
+<p>Αγαπητέ/ή {name},</p>
+<p>Σας καλωσορίζουμε στη λέσχη μοτοσικλετιστών μας. Χαιρόμαστε ιδιαίτερα που γίνεστε μέρος της κοινότητάς μας.</p>
+
+<h3 style="color:#3498db;">Πρώτα βήματα</h3>
+<ol>
+<li><strong>Συνδεθείτε</strong> στην πλατφόρμα EasyRide</li>
+<li><strong>Συμπληρώστε</strong> το προφίλ σας και τα στοιχεία της μοτοσικλέτας σας</li>
+<li><strong>Ελέγξτε</strong> τις επερχόμενες βόλτες, εκδρομές και συναντήσεις</li>
+<li><strong>Δηλώστε</strong> συμμετοχή στις δραστηριότητες που σας ενδιαφέρουν</li>
+</ol>
+
+<h3 style="color:#e67e22;">Η κοινότητά μας</h3>
+<p>Η συμμετοχή, η συνέπεια και ο σεβασμός στον δρόμο είναι η βάση για κάθε δραστηριότητα της λέσχης.</p>
+
+<p>Ανυπομονούμε να σας γνωρίσουμε στην επόμενη συνάντηση ή βόλτα μας.</p>
+
+<p>Με εκτίμηση,<br>Το Διοικητικό Συμβούλιο</p>',
+                    ],
+                ];
+
+                foreach ($presets as $preset) {
+                    $placeholders = implode(',', array_fill(0, count($preset['old_names']), '?'));
+                    $params = array_merge(
+                        [$preset['name'], $preset['description'], $preset['body']],
+                        $preset['old_names']
+                    );
+                    $updated = dbExecute(
+                        "UPDATE newsletter_presets
+                         SET name = ?, description = ?, body_html = ?, updated_at = NOW()
+                         WHERE name IN ($placeholders)",
+                        $params
+                    );
+
+                    if ($updated === 0) {
+                        dbInsert(
+                            "INSERT INTO newsletter_presets (name, description, body_html, created_at, updated_at) VALUES (?, ?, ?, NOW(), NOW())",
+                            [$preset['name'], $preset['description'], $preset['body']]
+                        );
+                    }
                 }
             },
         ],

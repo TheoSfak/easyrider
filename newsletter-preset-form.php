@@ -100,7 +100,7 @@ include __DIR__ . '/includes/header.php';
                 <div class="card-body">
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Όνομα προτύπου <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="name" value="<?= h($preset['name'] ?? '') ?>" placeholder="π.χ. Μηνιαία Ενημέρωση, Πρόσκληση Αποστολής" required>
+                        <input type="text" class="form-control" name="name" value="<?= h($preset['name'] ?? '') ?>" placeholder="π.χ. Μηνιαία Ενημέρωση Λέσχης, Πρόσκληση Βόλτας" required>
                     </div>
                     <div>
                         <label class="form-label fw-semibold">Περιγραφή <small class="text-muted fw-normal">(προαιρετική)</small></label>
@@ -121,7 +121,7 @@ include __DIR__ . '/includes/header.php';
                         '{name}'             => 'Όνομα παραλήπτη',
                         '{email}'            => 'Email παραλήπτη',
                         '{role}'             => 'Ρόλος',
-                        '{department}'       => 'Τμήμα',
+                        '{department}'       => 'Λέσχη',
                         '{points}'           => 'Σύνολο πόντων',
                         '{unsubscribe_link}' => 'Σύνδεσμος διαγραφής',
                     ];

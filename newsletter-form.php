@@ -134,7 +134,7 @@ $countUrl = 'newsletter-form.php?action=count_recipients';
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Θέμα email <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" name="subject" id="subjectField" value="<?= h($nl['subject'] ?? '') ?>" placeholder="π.χ. Νέες αποστολές - {month}" required>
+                        <input type="text" class="form-control" name="subject" id="subjectField" value="<?= h($nl['subject'] ?? '') ?>" placeholder="π.χ. Νέες βόλτες και εκδηλώσεις - {month}" required>
                     </div>
                 </div>
             </div>
