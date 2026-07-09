@@ -852,6 +852,15 @@ function startTracking() {
 
     watchId = navigator.geolocation.watchPosition(async position => {
         updateSelfPosition(position);
+        // Inside the Android app, the native RideTrackingService already
+        // pings independently (including while backgrounded) — sending here
+        // too would double-post two different GPS sources on separate,
+        // uncoordinated timers, interleaving inconsistent readings into the
+        // same ride history. Keep the marker updating for visual feedback,
+        // just don't also post from here.
+        if (window.AndroidRideBridge) {
+            return;
+        }
         const elapsed = Date.now() - lastSentAt;
         if (elapsed > 10000) {
             await sendPing(lastStatus || 'on_way');
@@ -958,6 +967,14 @@ captureBattery();
 refreshRideData();
 setInterval(refreshRideData, 10000);
 setInterval(() => {
+    // Same reasoning as the watchPosition callback above: inside the
+    // Android app the native service is the sole ping source, so this
+    // watchdog must not resend on its own — lastSentAt never advances via
+    // the JS path there, so unguarded this would fire every 5s instead of
+    // only as a rare catch-up.
+    if (window.AndroidRideBridge) {
+        return;
+    }
     if (tracking && lastPosition && Date.now() - lastSentAt > 20000) {
         sendPing(lastStatus || 'on_way');
     }
