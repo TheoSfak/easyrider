@@ -68,9 +68,10 @@ $appLogo = getSetting('app_logo', '');
     <title>Επαναφορά Κωδικού - <?= h($appName) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="<?= rtrim(BASE_URL, '/') ?>/assets/css/theme.css?v=<?= APP_VERSION ?>" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            background: var(--auth-bg-gradient);
             min-height: 100vh;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
@@ -80,7 +81,7 @@ $appLogo = getSetting('app_logo', '');
             max-width: 420px; width: 100%;
         }
         .card-header-auth {
-            background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
+            background: var(--auth-header-gradient);
             color: white; padding: 2rem; text-align: center;
             border-radius: 1rem 1rem 0 0;
         }

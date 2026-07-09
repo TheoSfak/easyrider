@@ -53,9 +53,10 @@ $appLogo = getSetting('app_logo', '');
     <title>Σύνδεση - <?= h($appName) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="<?= rtrim(BASE_URL, '/') ?>/assets/css/theme.css?v=<?= APP_VERSION ?>" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            background: var(--auth-bg-gradient);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -70,7 +71,7 @@ $appLogo = getSetting('app_logo', '');
             width: 100%;
         }
         .login-header {
-            background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
+            background: var(--auth-header-gradient);
             color: white;
             padding: 2rem;
             text-align: center;
@@ -80,13 +81,13 @@ $appLogo = getSetting('app_logo', '');
             padding: 2rem;
         }
         .btn-login {
-            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            background: var(--primary-gradient);
             border: none;
             padding: 0.75rem;
             font-weight: 500;
         }
         .btn-login:hover {
-            background: linear-gradient(135deg, #2980b9 0%, #1f6691 100%);
+            background: var(--primary-gradient-hover);
         }
     </style>
 </head>

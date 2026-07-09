@@ -542,9 +542,10 @@ if (!empty($_SESSION['debug_log'])) {
     <title>Εγκατάσταση - EasyRide</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="assets/css/theme.css" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            background: var(--auth-bg-gradient);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -588,7 +589,7 @@ if (!empty($_SESSION['debug_log'])) {
             color: #6c757d;
         }
         .step.active {
-            background: #3498db;
+            background: var(--accent-color);
             color: white;
         }
         .step.completed {

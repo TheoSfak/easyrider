@@ -46,11 +46,11 @@ if (isPost()) {
             $subject = 'Επαναφορά Κωδικού - ' . $appName;
             $body = '
 <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
-  <h2 style="color:#2c3e50">Επαναφορά Κωδικού</h2>
+  <h2 style="color:#141110">Επαναφορά Κωδικού</h2>
   <p>Γεια σας <strong>' . htmlspecialchars($user['name']) . '</strong>,</p>
   <p>Λάβαμε αίτημα επαναφοράς κωδικού για τον λογαριασμό σας. Ο σύνδεσμος ισχύει για <strong>1 ώρα</strong>.</p>
   <p style="text-align:center;margin:2rem 0">
-    <a href="' . $resetUrl . '" style="background:#3498db;color:white;padding:14px 32px;text-decoration:none;border-radius:6px;display:inline-block;font-size:16px">
+    <a href="' . $resetUrl . '" style="background:#e8792c;color:white;padding:14px 32px;text-decoration:none;border-radius:6px;display:inline-block;font-size:16px">
       🔑 Επαναφορά Κωδικού
     </a>
   </p>
@@ -79,9 +79,10 @@ $appLogo = getSetting('app_logo', '');
     <title>Ξεχάσατε τον κωδικό; - <?= h($appName) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="<?= rtrim(BASE_URL, '/') ?>/assets/css/theme.css?v=<?= APP_VERSION ?>" rel="stylesheet">
     <style>
         body {
-            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            background: var(--auth-bg-gradient);
             min-height: 100vh;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
@@ -91,7 +92,7 @@ $appLogo = getSetting('app_logo', '');
             max-width: 420px; width: 100%;
         }
         .card-header-auth {
-            background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%);
+            background: var(--auth-header-gradient);
             color: white; padding: 2rem; text-align: center;
             border-radius: 1rem 1rem 0 0;
         }
