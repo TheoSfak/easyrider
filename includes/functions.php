@@ -628,6 +628,7 @@ function isTepMission(int $missionTypeId): bool {
  */
 function canSeeTep(?int $responsibleUserId = null): bool {
     if (isAdmin()) return true;
+    if (hasPagePermission('missions_view')) return true;
     if (isTraineeRescuer()) return true;
     if ($responsibleUserId && $responsibleUserId === getCurrentUserId()) return true;
     return false;

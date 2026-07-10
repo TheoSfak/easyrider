@@ -3,14 +3,20 @@
  * VolunteerOps - Full Automated Test Suite
  * Tests ALL pages, forms, buttons, and functionality
  * 
- * Run: php test_full.php
+ * Run only from the command line: php scripts/maintenance/test_full.php
  */
+
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
 
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
 class VolunteerOpsFullTester {
     private $baseUrl = 'http://localhost/volunteerops';
+    private $projectRoot;
     private $cookieFile;
     private $testResults = [];
     private $passed = 0;
@@ -25,6 +31,7 @@ class VolunteerOpsFullTester {
     private $testDepartmentId = null;
     
     public function __construct() {
+        $this->projectRoot = dirname(__DIR__, 2);
         $this->cookieFile = tempnam(sys_get_temp_dir(), 'volunteerops_test_');
     }
     
@@ -939,7 +946,7 @@ class VolunteerOpsFullTester {
         ];
         
         foreach ($exportFiles as $file) {
-            if (file_exists(__DIR__ . '/' . $file)) {
+            if (file_exists($this->projectRoot . '/' . $file)) {
                 $this->pass("Export file exists: $file");
             } else {
                 $this->fail("Export file exists: $file");
@@ -1050,12 +1057,12 @@ class VolunteerOpsFullTester {
         }
         
         // TEST IMPORT HELPER FUNCTIONS EXIST
-        $includesPath = dirname(__DIR__) . '/includes/import-functions.php';
-        if (file_exists(__DIR__ . '/includes/import-functions.php')) {
+        $includesPath = $this->projectRoot . '/includes/import-functions.php';
+        if (file_exists($includesPath)) {
             $this->pass('Import helper functions file exists');
             
             // Check for required functions by reading file
-            $importContent = file_get_contents(__DIR__ . '/includes/import-functions.php');
+            $importContent = file_get_contents($includesPath);
             if (strpos($importContent, 'function parseCsvFile') !== false) {
                 $this->pass('parseCsvFile function exists');
             } else {
@@ -1078,10 +1085,11 @@ class VolunteerOpsFullTester {
         }
         
         // TEST EXPORT HELPER FUNCTIONS EXIST
-        if (file_exists(__DIR__ . '/includes/export-functions.php')) {
+        $exportFunctionsPath = $this->projectRoot . '/includes/export-functions.php';
+        if (file_exists($exportFunctionsPath)) {
             $this->pass('Export helper functions file exists');
             
-            $exportContent = file_get_contents(__DIR__ . '/includes/export-functions.php');
+            $exportContent = file_get_contents($exportFunctionsPath);
             
             $expectedFunctions = [
                 'exportMissionsToCsv',

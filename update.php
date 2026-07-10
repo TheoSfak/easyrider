@@ -843,9 +843,11 @@ if (isPost()) {
                 }
                 updateLog("Αρχεία που ενημερώθηκαν: {$updateResult['updated']}");
                 
-                // Step 5: Run SQL file migrations
-                $migrations = runMigrations();
+                // Schema migration is intentionally a locked CLI deployment step.
+                // Do not execute DDL or eval migration code from an HTTP request.
+                updateLog('Τα schema migrations δεν εκτελούνται μέσω web update. Εκτελέστε: php scripts/maintenance/migrate.php', 'warning');
 
+                /*
                 // Step 5b: Run PHP schema migrations from the freshly applied migrations.php
                 // (the version loaded in memory via bootstrap is the OLD one, so we
                 //  re-read the new file, rename the function, and eval it)
@@ -923,6 +925,7 @@ if (isPost()) {
                 } catch (\Throwable $e) {
                     updateLog('SQL fallback migrations error: ' . $e->getMessage(), 'error');
                 }
+                */
 
                 // Step 6: Cleanup temp directory
                 if (is_dir($download['temp_dir'])) {

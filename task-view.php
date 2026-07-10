@@ -18,9 +18,10 @@ if (!$task) {
     redirect('tasks.php');
 }
 
-// Check if user has access (admins or assigned members)
+// Check if user has access (explicit task managers or assigned members)
+$canManageTasks = isAdmin() || hasPagePermission('tasks_manage');
 $isAssigned = dbFetchValue("SELECT COUNT(*) FROM task_assignments WHERE task_id = ? AND user_id = ?", [$id, $user['id']]);
-$hasAccess = isAdmin() || $isAssigned;
+$hasAccess = $canManageTasks || $isAssigned;
 
 if (!$hasAccess) {
     setFlash('error', 'Δεν έχετε δικαίωμα πρόσβασης σε αυτή την εργασία.');
@@ -43,7 +44,7 @@ if (isPost()) {
     
     switch ($action) {
         case 'add_subtask':
-            if (isAdmin()) {
+            if ($canManageTasks) {
                 $subtaskTitle = post('subtask_title');
                 if (!empty($subtaskTitle)) {
                     dbInsert("INSERT INTO subtasks (task_id, title) VALUES (?, ?)", [$id, $subtaskTitle]);
@@ -117,7 +118,7 @@ if (isPost()) {
             break;
             
         case 'delete_subtask':
-            if (isAdmin()) {
+            if ($canManageTasks) {
                 $subtaskId = post('subtask_id');
                 dbExecute("DELETE FROM subtasks WHERE id = ? AND task_id = ?", [$subtaskId, $id]);
                 setFlash('success', 'Η υποεργασία διαγράφηκε.');
@@ -183,7 +184,7 @@ if (isPost()) {
             break;
             
         case 'delete_task':
-            if (isAdmin()) {
+            if ($canManageTasks) {
                 dbExecute("DELETE FROM tasks WHERE id = ?", [$id]);
                 logAudit('delete_task', 'tasks', $id);
                 setFlash('success', 'Η εργασία διαγράφηκε.');
@@ -211,7 +212,7 @@ include __DIR__ . '/includes/header.php';
         <a href="tasks.php" class="btn btn-outline-secondary">
             <i class="bi bi-arrow-left me-1"></i>Πίσω
         </a>
-        <?php if (isAdmin()): ?>
+        <?php if ($canManageTasks): ?>
             <a href="task-form.php?id=<?= $id ?>" class="btn btn-primary">
                 <i class="bi bi-pencil me-1"></i>Επεξεργασία
             </a>
@@ -302,7 +303,7 @@ include __DIR__ . '/includes/header.php';
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-light d-flex justify-content-between align-items-center">
                 <h5 class="mb-0"><i class="bi bi-list-check me-2"></i>Υποεργασίες</h5>
-                <?php if (isAdmin()): ?>
+                <?php if ($canManageTasks): ?>
                     <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addSubtaskModal">
                         <i class="bi bi-plus"></i> Προσθήκη
                     </button>
@@ -341,7 +342,7 @@ include __DIR__ . '/includes/header.php';
                                         <?= h($subtask['title']) ?>
                                     </span>
                                 </form>
-                                <?php if (isAdmin()): ?>
+                                <?php if ($canManageTasks): ?>
                                     <form method="post" onsubmit="return confirm('Σίγουρα θέλετε να διαγράψετε αυτή την υποεργασία;')">
                                         <?= csrfField() ?>
                                         <input type="hidden" name="action" value="delete_subtask">
@@ -421,7 +422,7 @@ include __DIR__ . '/includes/header.php';
 </div>
 
 <!-- Add Subtask Modal -->
-<?php if (isAdmin()): ?>
+<?php if ($canManageTasks): ?>
 <div class="modal fade" id="addSubtaskModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">

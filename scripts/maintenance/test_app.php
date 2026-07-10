@@ -1,8 +1,13 @@
 <?php
 /**
  * VolunteerOps - Automated Test Script
- * Τρέχει από command line: php test_app.php
+ * Run only from the command line: php scripts/maintenance/test_app.php
  */
+
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
 
 // Colors for terminal output
 define('GREEN', "\033[32m");

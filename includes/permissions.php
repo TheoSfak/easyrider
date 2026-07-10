@@ -23,7 +23,7 @@ if (!defined('VOLUNTEEROPS')) {
 function getPermissionMap(): array {
     return [
         'Επιχειρήσεις' => [
-            ['slug' => 'ops_dashboard',      'label' => 'Live Επιχειρησιακό',                   'icon' => 'bi-broadcast',        'description' => 'Ζωντανή προβολή δράσεων, μελών & SOS'],
+            ['slug' => 'ops_dashboard',      'label' => 'Live Επιχειρησιακό',                   'icon' => 'bi-broadcast',        'description' => 'Ζωντανή προβολή δράσεων, μελών, SOS και διαχείριση συμβάντων'],
             ['slug' => 'attendance_manage',  'label' => 'Παρουσιολόγιο Δράσης',                'icon' => 'bi-clipboard-check',  'description' => 'Καταγραφή παρουσιών μελών'],
         ],
         'Δράσεις' => [
@@ -38,6 +38,7 @@ function getPermissionMap(): array {
             ['slug' => 'inactive_members','label' => 'Ανενεργά Μέλη',                       'icon' => 'bi-person-x',         'description' => 'Προβολή & ενεργοποίηση ανενεργών μελών'],
             ['slug' => 'complaints_view',    'label' => 'Παράπονα (Προβολή)',                  'icon' => 'bi-chat-left-dots',   'description' => 'Βλέπει παράπονα'],
             ['slug' => 'complaints_manage',  'label' => 'Παράπονα (Διαχείριση)',               'icon' => 'bi-chat-left-text',   'description' => 'Αλλαγή κατάστασης, ανάθεση, απάντηση σε παράπονα'],
+            ['slug' => 'certificates_manage','label' => 'Πιστοποιητικά Μελών',                'icon' => 'bi-patch-check',      'description' => 'Διαχείριση πιστοποιητικών μελών'],
         ],
         'Συνδρομές' => [
             ['slug' => 'citizens_view',      'label' => 'Συνδρομές (Προβολή)',                 'icon' => 'bi-person-vcard',     'description' => 'Λίστα συνδρομών'],
@@ -45,6 +46,13 @@ function getPermissionMap(): array {
         ],
         'Ρυθμίσεις' => [
             ['slug' => 'positions_manage',   'label' => 'Ρόλοι Μελών',                        'icon' => 'bi-person-badge',     'description' => 'Διαχείριση ρόλων μελών εντός της λέσχης'],
+            ['slug' => 'inventory_manage',   'label' => 'Απόθεμα',                            'icon' => 'bi-box-seam',         'description' => 'Διαχείριση αποθέματος και σημειώσεων'],
+            ['slug' => 'skills_manage',      'label' => 'Δεξιότητες',                         'icon' => 'bi-lightning-charge', 'description' => 'Διαχείριση δεξιοτήτων μελών'],
+        ],
+        'Εκπαίδευση' => [
+            ['slug' => 'training_view',      'label' => 'Εκπαίδευση (Προβολή)',               'icon' => 'bi-book',             'description' => 'Προβολή εκπαιδευτικού υλικού και στατιστικών'],
+            ['slug' => 'training_manage',    'label' => 'Εκπαίδευση (Διαχείριση)',            'icon' => 'bi-mortarboard',      'description' => 'Δημιουργία και επεξεργασία εξετάσεων και κουίζ'],
+            ['slug' => 'questions_manage',   'label' => 'Τράπεζα Ερωτήσεων',                  'icon' => 'bi-patch-question',   'description' => 'Διαχείριση ερωτήσεων εξετάσεων και κουίζ'],
         ],
     ];
 }
@@ -72,6 +80,7 @@ function getImpliedSlugs(): array {
         'complaints_view' => 'complaints_manage',
         'citizens_view'   => 'citizens_manage',
         'members_view' => 'members_manage',
+        'training_view' => 'training_manage',
     ];
 }
 

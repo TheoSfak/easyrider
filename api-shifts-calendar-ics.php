@@ -24,7 +24,8 @@ if (!isLoggedIn()) {
 $userId        = getCurrentUserId();
 $deptId        = (int) get('department_id', 0);
 $missionTypeId = (int) get('mission_type_id', 0);
-$mineOnly      = get('mine', isAdmin() ? '0' : '1') === '1';
+$canManageShifts = isAdmin() || hasPagePermission('shifts_manage');
+$mineOnly      = get('mine', $canManageShifts ? '0' : '1') === '1';
 $rangeDays     = min(max((int) get('range_days', 90), 7), 365);
 
 // ── Build date range ──────────────────────────────────────────────────────────
@@ -35,7 +36,7 @@ $rangeEnd = date('Y-m-d H:i:s', strtotime("+{$rangeDays} days"));
 $where  = ['m.deleted_at IS NULL', 's.end_time > ?', 's.start_time < ?'];
 $params = [$now, $rangeEnd];
 
-if (!isAdmin()) {
+if (!$canManageShifts) {
     $where[]  = "(m.status IN (?,?,?)
                    OR EXISTS (SELECT 1 FROM participation_requests pr2
                               WHERE pr2.shift_id = s.id AND pr2.member_id = ?))";
@@ -51,7 +52,7 @@ if (!canSeeTep()) {
     $params[] = $userId;
 }
 
-if ($deptId && isAdmin()) {
+if ($deptId && $canManageShifts) {
     $where[]  = 'm.department_id = ?';
     $params[] = $deptId;
 }

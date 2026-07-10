@@ -16,7 +16,8 @@ if (!$mission) {
 
 $currentUser = getCurrentUser();
 $isResponsibleForMission = !empty($mission['responsible_user_id']) && $mission['responsible_user_id'] == $currentUser['id'];
-if (!isAdmin() && !$isResponsibleForMission) {
+$canManageMissions = isAdmin() || hasPagePermission('missions_manage');
+if (!$canManageMissions && !$isResponsibleForMission) {
     setFlash('error', 'Δεν έχετε δικαίωμα πρόσβασης.');
     redirect('missions.php');
 }

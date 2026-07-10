@@ -29,6 +29,7 @@ if (!$member) {
 }
 
 $pageTitle = $member['name'];
+$canManageMembers = isAdmin() || hasPagePermission('members_manage');
 
 // Handle actions
 if (isPost()) {
@@ -83,7 +84,7 @@ if (isPost()) {
     }
 
     if ($action === 'upload_document') {
-        if (!isAdmin()) {
+        if (!$canManageMembers) {
             setFlash('error', 'Δεν έχετε δικαίωμα για αυτή την ενέργεια.');
             redirect('member-view.php?id=' . $id);
         }
@@ -145,7 +146,7 @@ if (isPost()) {
     }
 
     if ($action === 'delete_document') {
-        if (!isAdmin()) {
+        if (!$canManageMembers) {
             setFlash('error', 'Δεν έχετε δικαίωμα για αυτή την ενέργεια.');
             redirect('member-view.php?id=' . $id);
         }
@@ -162,7 +163,7 @@ if (isPost()) {
     }
 
     if ($action === 'upload_photo') {
-        if (!isAdmin()) {
+        if (!$canManageMembers) {
             setFlash('error', 'Δεν έχετε δικαίωμα για αυτή την ενέργεια.');
             redirect('member-view.php?id=' . $id);
         }
@@ -219,7 +220,7 @@ if (isPost()) {
     }
 
     if ($action === 'update_member_since') {
-        if (!isAdmin()) {
+        if (!$canManageMembers) {
             setFlash('error', 'Δεν έχετε δικαίωμα για αυτή την ενέργεια.');
             redirect('member-view.php?id=' . $id);
         }
@@ -530,7 +531,7 @@ include __DIR__ . '/includes/header.php';
                     <span class="badge bg-secondary" style="font-size:.72rem">Ανενεργός</span>
                 <?php endif; ?>
                 <?= roleBadge($member['role']) ?>
-                <span class="badge bg-light text-dark ms-1" style="font-size:.72rem"><i class="bi bi-calendar3 me-1"></i>Μέλος από <?= formatDate($member['created_at']) ?><?php if (isAdmin()): ?> <a href="#" data-bs-toggle="modal" data-bs-target="#memberSinceModal" style="color:#6c757d;" title="Αλλαγή ημερομηνίας"><i class="bi bi-pencil-square"></i></a><?php endif; ?></span>
+                <span class="badge bg-light text-dark ms-1" style="font-size:.72rem"><i class="bi bi-calendar3 me-1"></i>Μέλος από <?= formatDate($member['created_at']) ?><?php if ($canManageMembers): ?> <a href="#" data-bs-toggle="modal" data-bs-target="#memberSinceModal" style="color:#6c757d;" title="Αλλαγή ημερομηνίας"><i class="bi bi-pencil-square"></i></a><?php endif; ?></span>
             </div>
         </div>
         <div class="hero-actions d-flex gap-2 flex-shrink-0">
@@ -917,7 +918,7 @@ include __DIR__ . '/includes/header.php';
                 <h5 class="mb-1"><?= h($member['name']) ?></h5>
                 <small class="text-muted d-block mb-3"><?= h($member['email']) ?></small>
 
-                <?php if (isAdmin()): ?>
+                <?php if ($canManageMembers): ?>
                     <form method="post" enctype="multipart/form-data">
                         <?= csrfField() ?>
                         <input type="hidden" name="action" value="upload_photo">
@@ -987,7 +988,7 @@ include __DIR__ . '/includes/header.php';
                         <i class="bi bi-list-ul me-1"></i>Όλα (<?= $docCount ?>)
                     </button>
                     <?php endif; ?>
-                    <?php if (isAdmin()): ?>
+                    <?php if ($canManageMembers): ?>
                     <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#uploadDocModal">
                         <i class="bi bi-upload me-1"></i>Ανέβασμα
                     </button>
@@ -1018,7 +1019,7 @@ include __DIR__ . '/includes/header.php';
                                         <br>
                                         <small class="text-muted"><?= $sizeKb ?>KB &middot; <?= formatDate($doc['created_at']) ?></small>
                                     </div>
-                                    <?php if (isAdmin()): ?>
+                                    <?php if ($canManageMembers): ?>
                                     <form method="post" onsubmit="return confirm('Διαγραφή αρχείου;')" class="flex-shrink-0">
                                         <?= csrfField() ?>
                                         <input type="hidden" name="action" value="delete_document">
@@ -1072,7 +1073,7 @@ include __DIR__ . '/includes/header.php';
 </div>
 
 <!-- Upload Document Modal -->
-<?php if (isAdmin()): ?>
+<?php if ($canManageMembers): ?>
 <div class="modal fade" id="uploadDocModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -1131,7 +1132,7 @@ include __DIR__ . '/includes/header.php';
                                 <th>Μέγεθος</th>
                                 <th>Ημερομηνία</th>
                                 <th>Ανέβηκε από</th>
-                                <?php if (isAdmin()): ?><th></th><?php endif; ?>
+                                <?php if ($canManageMembers): ?><th></th><?php endif; ?>
                             </tr>
                         </thead>
                         <tbody>
@@ -1154,7 +1155,7 @@ include __DIR__ . '/includes/header.php';
                                 <td class="text-muted small align-middle"><?= $sizeKb ?>KB</td>
                                 <td class="text-muted small align-middle"><?= formatDate($doc['created_at']) ?></td>
                                 <td class="text-muted small align-middle"><?= h($doc['uploader_name']) ?></td>
-                                <?php if (isAdmin()): ?>
+                                <?php if ($canManageMembers): ?>
                                 <td class="align-middle">
                                     <form method="post" onsubmit="return confirm('Διαγραφή αρχείου;')">
                                         <?= csrfField() ?>
@@ -1175,7 +1176,7 @@ include __DIR__ . '/includes/header.php';
             </div>
             <div class="modal-footer justify-content-between">
                 <small class="text-muted">Σύνολο: <?= $docCount ?> αρχεία</small>
-                <?php if (isAdmin()): ?>
+                <?php if ($canManageMembers): ?>
                 <button type="button" class="btn btn-sm btn-success" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#uploadDocModal">
                     <i class="bi bi-upload me-1"></i>Ανέβασμα νέων
                 </button>
@@ -1225,7 +1226,7 @@ include __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<?php if (isAdmin()): ?>
+<?php if ($canManageMembers): ?>
 <!-- Member Since Date Edit Modal -->
 <div class="modal fade" id="memberSinceModal" tabindex="-1">
     <div class="modal-dialog modal-sm">

@@ -7,6 +7,62 @@ if (!defined('VOLUNTEEROPS')) {
     die('Direct access not permitted');
 }
 
+/**
+ * Return Ride Mode schema capabilities without repeatedly querying
+ * INFORMATION_SCHEMA during live polling. APCu shares the result across PHP
+ * requests when available; the static fallback keeps one request consistent.
+ */
+function rideSchemaCapabilities(): array {
+    static $capabilities = null;
+    if ($capabilities !== null) {
+        return $capabilities;
+    }
+
+    $cacheKey = 'easyride:ride-schema:' . (defined('DB_SCHEMA_VERSION') ? DB_SCHEMA_VERSION : 'current');
+    if (function_exists('apcu_fetch')) {
+        $cached = apcu_fetch($cacheKey, $hit);
+        if ($hit && is_array($cached)) {
+            return $capabilities = $cached;
+        }
+    }
+
+    $capabilities = [
+        'member_pings' => ['exists' => false, 'columns' => []],
+        'ride_events' => ['exists' => false, 'columns' => []],
+        'ride_checklist_items' => ['exists' => false, 'columns' => []],
+    ];
+
+    try {
+        $rows = dbFetchAll(
+            "SELECT TABLE_NAME, COLUMN_NAME
+             FROM INFORMATION_SCHEMA.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME IN ('member_pings', 'ride_events', 'ride_checklist_items')"
+        );
+        foreach ($rows as $row) {
+            $table = (string)$row['TABLE_NAME'];
+            if (!isset($capabilities[$table])) {
+                continue;
+            }
+            $capabilities[$table]['exists'] = true;
+            $capabilities[$table]['columns'][(string)$row['COLUMN_NAME']] = true;
+        }
+    } catch (Exception $e) {
+        // Callers gracefully disable optional Ride Mode features when absent.
+    }
+
+    if (function_exists('apcu_store')) {
+        apcu_store($cacheKey, $capabilities, 300);
+    }
+
+    return $capabilities;
+}
+
+function rideSchemaHasColumn(string $table, string $column): bool {
+    $capabilities = rideSchemaCapabilities();
+    return !empty($capabilities[$table]['columns'][$column]);
+}
+
 function rideStatusOptions(): array {
     return [
         'on_way'      => ['label' => 'Σε κίνηση', 'icon' => 'bi-signpost-2-fill', 'color' => '#fd7e14'],
@@ -77,8 +133,14 @@ function getRideMission(int $missionId): ?array {
 }
 
 function isRideController(array $mission, array $user): bool {
+    // The operations permission is an explicit grant for custom roles; merely
+    // having any custom role must never give access to live ride data.
+    $hasOperationsPermission = (int)($user['id'] ?? 0) === (int)getCurrentUserId()
+        && hasPagePermission('ops_dashboard');
+
     return isSystemAdmin()
         || isAdmin()
+        || $hasOperationsPermission
         || (($user['role'] ?? '') === ROLE_SHIFT_LEADER)
         || ((int)($mission['responsible_user_id'] ?? 0) === (int)$user['id']);
 }
@@ -356,15 +418,7 @@ function buildReplayEvents(array $routePoints, array $events): array {
 }
 
 function ridePingTableExists(): bool {
-    try {
-        return (bool) dbFetchValue(
-            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
-             WHERE TABLE_SCHEMA = DATABASE()
-               AND TABLE_NAME = 'member_pings'"
-        );
-    } catch (Exception $e) {
-        return false;
-    }
+    return !empty(rideSchemaCapabilities()['member_pings']['exists']);
 }
 
 function rideReplayColor(int $index): string {
@@ -669,15 +723,7 @@ function resolveActiveMissionDayRoute(array $mission): array {
 }
 
 function rideEventTableExists(): bool {
-    try {
-        return (bool) dbFetchValue(
-            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
-             WHERE TABLE_SCHEMA = DATABASE()
-               AND TABLE_NAME = 'ride_events'"
-        );
-    } catch (Exception $e) {
-        return false;
-    }
+    return !empty(rideSchemaCapabilities()['ride_events']['exists']);
 }
 
 function recordRideEvent(array $event): ?int {
@@ -1065,15 +1111,7 @@ function rideChecklistDefinitions(): array {
 }
 
 function rideChecklistTableExists(): bool {
-    try {
-        return (bool) dbFetchValue(
-            "SELECT COUNT(*) FROM INFORMATION_SCHEMA.TABLES
-             WHERE TABLE_SCHEMA = DATABASE()
-               AND TABLE_NAME = 'ride_checklist_items'"
-        );
-    } catch (Exception $e) {
-        return false;
-    }
+    return !empty(rideSchemaCapabilities()['ride_checklist_items']['exists']);
 }
 
 function getRideChecklist(int $missionId): array {

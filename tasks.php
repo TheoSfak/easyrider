@@ -2,8 +2,9 @@
 require_once __DIR__ . '/bootstrap.php';
 requireLogin();
 
-$pageTitle = isAdmin() ? 'Διαχείριση Εργασιών' : 'Οι Εργασίες μου';
 $user = getCurrentUser();
+$canManageTasks = isAdmin() || hasPagePermission('tasks_manage');
+$pageTitle = $canManageTasks ? 'Διαχείριση Εργασιών' : 'Οι Εργασίες μου';
 
 // Filters
 $status = get('status', '');
@@ -27,7 +28,7 @@ if ($assignedToMe) {
 }
 
 // Non-admins see only their assigned tasks
-if (!isAdmin()) {
+if (!$canManageTasks) {
     $where[] = 'EXISTS (SELECT 1 FROM task_assignments ta WHERE ta.task_id = t.id AND ta.user_id = ?)';
     $params[] = $user['id'];
 }
@@ -100,13 +101,13 @@ include __DIR__ . '/includes/header.php';
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h3 mb-0">
-        <?php if (isAdmin()): ?>
+        <?php if ($canManageTasks): ?>
             <i class="bi bi-list-task me-2"></i>Εργασίες
         <?php else: ?>
             <i class="bi bi-person-check me-2"></i>Οι Εργασίες μου
         <?php endif; ?>
     </h1>
-    <?php if (isAdmin()): ?>
+    <?php if ($canManageTasks): ?>
         <a href="task-form.php" class="btn btn-primary">
             <i class="bi bi-plus-lg me-1"></i>Νέα Εργασία
         </a>
@@ -114,7 +115,7 @@ include __DIR__ . '/includes/header.php';
 </div>
 
 <!-- Filters -->
-<?php if (isAdmin()): ?>
+<?php if ($canManageTasks): ?>
 <div class="card mb-4">
     <div class="card-body">
         <form method="get" class="row g-3">
@@ -150,7 +151,7 @@ include __DIR__ . '/includes/header.php';
 <?php endif; ?>
 
 <!-- Stats Cards -->
-<?php if (isAdmin()): ?>
+<?php if ($canManageTasks): ?>
 <div class="row mb-4">
     <?php
     $stats = [
@@ -191,7 +192,7 @@ include __DIR__ . '/includes/header.php';
     <div class="card">
         <div class="card-body text-center py-5">
             <i class="bi bi-inbox" style="font-size: 3rem; color: #ccc;"></i>
-            <?php if (isAdmin()): ?>
+            <?php if ($canManageTasks): ?>
                 <p class="text-muted mt-3">Δεν βρέθηκαν εργασίες.</p>
             <?php else: ?>
                 <p class="text-muted mt-3 mb-1">Δεν σας έχει ανατεθεί κάποια εργασία.</p>
@@ -281,7 +282,7 @@ include __DIR__ . '/includes/header.php';
                         </div>
                     </div>
                     <div class="card-footer bg-transparent">
-                        <?php if (isAdmin()): ?>
+                        <?php if ($canManageTasks): ?>
                             <small class="text-muted">
                                 Δημιουργήθηκε από <?= h($task['creator_name']) ?>
                             </small>

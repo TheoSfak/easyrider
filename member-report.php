@@ -10,8 +10,9 @@ if (!$id) {
     redirect('dashboard.php');
 }
 
-// Access control: members can only see their own report
-if (!isAdmin() && !hasRole(ROLE_SHIFT_LEADER) && (int)getCurrentUserId() !== $id) {
+// Access control: members can only see their own report.
+$canViewMembers = isAdmin() || hasPagePermission('members_view');
+if (!$canViewMembers && !hasRole(ROLE_SHIFT_LEADER) && (int)getCurrentUserId() !== $id) {
     setFlash('error', 'Δεν έχετε πρόσβαση σε αυτή την αναφορά.');
     redirect('dashboard.php');
 }
@@ -195,7 +196,7 @@ $greekMonths = [
     <button class="btn btn-primary btn-sm" onclick="window.print()">
         <i class="bi bi-printer me-1"></i>Εκτύπωση / Αποθήκευση ως PDF
     </button>
-    <?php if (isAdmin() || hasRole(ROLE_SHIFT_LEADER)): ?>
+    <?php if ($canViewMembers || hasRole(ROLE_SHIFT_LEADER)): ?>
         <a href="member-view.php?id=<?= $id ?>" class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-arrow-left me-1"></i>Πίσω στο Προφίλ
         </a>

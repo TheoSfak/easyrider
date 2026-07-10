@@ -38,6 +38,7 @@ if (!$rangeStart || !$rangeEnd) {
 }
 
 $userId = getCurrentUserId();
+$canManageShifts = isAdmin() || hasPagePermission('shifts_manage');
 
 // ── Build WHERE ───────────────────────────────────────────────────────────────
 $where  = ['m.deleted_at IS NULL'];
@@ -50,7 +51,7 @@ $where[]  = 's.end_time > ?';
 $params[] = date('Y-m-d H:i:s', strtotime($rangeStart));
 
 // Non-admins: only open/closed/completed missions they can see
-if (!isAdmin()) {
+if (!$canManageShifts) {
     $where[]  = "(m.status IN (?,?,?)
                    OR EXISTS (SELECT 1 FROM participation_requests pr2
                               WHERE pr2.shift_id = s.id AND pr2.member_id = ?))";
@@ -68,7 +69,7 @@ if (!canSeeTep()) {
 }
 
 // Department filter (admin-only; members only see their own dept shifts anyway)
-if ($deptId && isAdmin()) {
+if ($deptId && $canManageShifts) {
     $where[]  = 'm.department_id = ?';
     $params[] = $deptId;
 }

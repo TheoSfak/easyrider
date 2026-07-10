@@ -4,14 +4,14 @@
 
 The app is built as a plain PHP project without a framework, so it can run on common shared hosting, XAMPP, or a standard Apache/PHP/MySQL production server.
 
-**Version:** 3.87.1  
+**Version:** 3.91.1
 **Author:** Theodore Sfakianakis  
 **Repository:** https://github.com/TheoSfak/easyrider
 
 ![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?logo=php&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?logo=mysql&logoColor=white)
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white)
-![Version](https://img.shields.io/badge/version-3.87.1-blue)
+![Version](https://img.shields.io/badge/version-3.91.1-blue)
 
 ---
 
@@ -234,7 +234,7 @@ Main schema:
 sql/schema.sql
 ```
 
-Runtime migrations:
+Deployment-only PHP migrations:
 
 ```text
 includes/migrations.php
@@ -243,7 +243,7 @@ includes/migrations.php
 Current schema version:
 
 ```text
-71
+82
 ```
 
 ---
@@ -254,7 +254,7 @@ Current schema version:
 | --- | --- |
 | `config.php` | app constants and version |
 | `config.local.php` | local/production DB credentials, ignored by Git |
-| `bootstrap.php` | loads config, DB, auth, helpers, migrations |
+| `bootstrap.php` | loads config, DB, auth, and helpers |
 | `mission-view.php` | ride/action detail page |
 | `mission-form.php` | create/edit ride/action |
 | `ride-mode.php` | mobile ride mode |
@@ -265,6 +265,7 @@ Current schema version:
 | `update.php` | GitHub release updater |
 | `includes/ride-functions.php` | Ride Mode helpers |
 | `includes/migrations.php` | DB migrations |
+| `includes/features/` | Incremental feature modules (repository/service/controller/templates) |
 
 ---
 

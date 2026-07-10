@@ -7,9 +7,11 @@ require_once __DIR__ . '/bootstrap.php';
 requireLogin();
 
 $user = getCurrentUser();
+$canViewAllMissions = isAdmin() || hasPagePermission('missions_view');
+$canManageMissions = isAdmin() || hasPagePermission('missions_manage');
 
 // Handle duplicate action
-if (isPost() && post('action') === 'duplicate' && isAdmin()) {
+if (isPost() && post('action') === 'duplicate' && $canManageMissions) {
     verifyCsrf();
     $srcId = (int)post('mission_id');
     $src = dbFetchOne(
@@ -61,7 +63,7 @@ if (isPost() && post('action') === 'duplicate' && isAdmin()) {
 $status = get('status', STATUS_OPEN);
 
 // Non-admins can only see OPEN missions
-if (!isAdmin() && $status !== STATUS_OPEN) {
+if (!$canViewAllMissions && $status !== STATUS_OPEN) {
     $status = STATUS_OPEN;
 }
 
@@ -208,8 +210,9 @@ include __DIR__ . '/includes/header.php';
     <h1 class="h3 mb-0">
         <i class="bi bi-flag me-2"></i>Δράσεις
     </h1>
-    <?php if (isAdmin()): ?>
+    <?php if ($canManageMissions): ?>
         <div class="d-flex gap-2">
+            <?php if (isAdmin()): ?>
             <a href="exports/export-missions.php?status=<?= h($status) ?>&department_id=<?= h($department) ?>&search=<?= h($search) ?>&mission_type=<?= h($missionType) ?>" 
                class="btn btn-outline-success">
                 <i class="bi bi-download me-1"></i>Εξαγωγή CSV
@@ -218,6 +221,7 @@ include __DIR__ . '/includes/header.php';
                class="btn btn-outline-secondary" title="Εξαγωγή όλων των δράσεων">
                 <i class="bi bi-download me-1"></i>Εξαγωγή Όλων
             </a>
+            <?php endif; ?>
             <a href="mission-form.php" class="btn btn-primary">
                 <i class="bi bi-plus-lg me-1"></i>Νέα Δράση
             </a>
@@ -366,7 +370,7 @@ include __DIR__ . '/includes/header.php';
                                     <a href="mission-view.php?id=<?= $mission['id'] ?>" class="btn btn-sm btn-outline-primary" title="Προβολή">
                                         <i class="bi bi-eye"></i>
                                     </a>
-                                    <?php if (isAdmin()): ?>
+                                    <?php if ($canManageMissions): ?>
                                         <a href="mission-form.php?id=<?= $mission['id'] ?>" class="btn btn-sm btn-outline-secondary" title="Επεξεργασία">
                                             <i class="bi bi-pencil"></i>
                                         </a>
@@ -479,7 +483,7 @@ include __DIR__ . '/includes/header.php';
                                 <a href="mission-view.php?id=<?= $mission['id'] ?>" class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-eye me-1"></i>Προβολή
                                 </a>
-                                <?php if (isAdmin()): ?>
+                                <?php if ($canManageMissions): ?>
                                     <a href="mission-form.php?id=<?= $mission['id'] ?>" class="btn btn-sm btn-outline-secondary">
                                         <i class="bi bi-pencil me-1"></i>Επεξεργασία
                                     </a>

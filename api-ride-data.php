@@ -46,12 +46,10 @@ $readiness = [
 ];
 $latestByUser = [];
 $recentByUser = [];
-$eventCandidates = [];
 $statusOptions = rideStatusOptions();
 $offRouteThresholdMeters = 350;
 $stationaryWindowMinutes = 5;
 $stationaryThresholdMeters = 35;
-$resolvedFingerprints = getResolvedRideEventFingerprints($missionId);
 $checklist = getRideChecklistSummary($missionId);
 
 if (!empty($shiftIds)) {
@@ -69,15 +67,13 @@ if (!empty($shiftIds)) {
     );
 
     try {
-        $columns = dbFetchAll(
-            "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
-             WHERE TABLE_SCHEMA = DATABASE()
-               AND TABLE_NAME = 'member_pings'"
-        );
-        $existing = array_flip(array_column($columns, 'COLUMN_NAME'));
+        $capabilities = rideSchemaCapabilities();
+        if (empty($capabilities['member_pings']['exists'])) {
+            throw new RuntimeException('member_pings table is unavailable');
+        }
         $optionalSelect = [];
         foreach (['accuracy', 'speed', 'heading', 'battery_level', 'status'] as $column) {
-            $optionalSelect[] = isset($existing[$column]) ? "vp.{$column}" : "NULL as {$column}";
+            $optionalSelect[] = rideSchemaHasColumn('member_pings', $column) ? "vp.{$column}" : "NULL as {$column}";
         }
 
         $pingRows = dbFetchAll(
@@ -215,14 +211,6 @@ if (!empty($shiftIds)) {
                 'lng' => $participant['lng'],
             ];
             $alerts[] = $alert;
-            $eventCandidates[] = [
-                'event_type' => 'off_route',
-                'severity' => 'warning',
-                'title' => 'Εκτός διαδρομής',
-                'message' => $alert['message'],
-                'participant' => $participant,
-                'metadata' => ['distance_from_route_meters' => round($distanceFromRoute)],
-            ];
         } elseif ($isStationary) {
             $alert = [
                 'type' => 'stationary',
@@ -234,17 +222,6 @@ if (!empty($shiftIds)) {
                 'lng' => $participant['lng'],
             ];
             $alerts[] = $alert;
-            $eventCandidates[] = [
-                'event_type' => 'stationary',
-                'severity' => 'warning',
-                'title' => 'Ακίνητος',
-                'message' => $alert['message'],
-                'participant' => $participant,
-                'metadata' => [
-                    'window_minutes' => $stationaryWindowMinutes,
-                    'movement_meters' => $stationaryDistance !== null ? round($stationaryDistance) : null,
-                ],
-            ];
         } elseif ($participant['is_stale'] && !$isNavigating) {
             $alert = [
                 'type' => 'stale',
@@ -256,39 +233,8 @@ if (!empty($shiftIds)) {
                 'lng' => $participant['lng'],
             ];
             $alerts[] = $alert;
-            $eventCandidates[] = [
-                'event_type' => 'stale',
-                'severity' => 'secondary',
-                'title' => 'Χωρίς πρόσφατο στίγμα',
-                'message' => $alert['message'],
-                'participant' => $participant,
-                'metadata' => ['age_seconds' => $ageSeconds],
-            ];
         }
     }
-}
-
-foreach ($eventCandidates as $candidate) {
-    $participant = $candidate['participant'];
-    $fingerprintBucket = date('YmdH') . ':' . floor((int)date('i') / 5);
-    $fingerprint = 'auto:' . $missionId . ':' . $participant['user_id'] . ':' . $candidate['event_type'] . ':' . $fingerprintBucket;
-    if (isset($resolvedFingerprints[$fingerprint])) {
-        continue;
-    }
-    recordRideEvent([
-        'mission_id' => $missionId,
-        'shift_id' => $participant['shift_id'],
-        'user_id' => $participant['user_id'],
-        'participation_id' => $participant['participation_id'],
-        'event_type' => $candidate['event_type'],
-        'severity' => $candidate['severity'],
-        'title' => $candidate['title'],
-        'message' => $candidate['message'],
-        'lat' => $participant['lat'],
-        'lng' => $participant['lng'],
-        'metadata' => $candidate['metadata'],
-        'fingerprint' => $fingerprint,
-    ]);
 }
 
 $eventRows = getRideEvents($missionId, 25, false);
@@ -304,6 +250,11 @@ foreach (getRideEvents($missionId, 100, true) as $event) {
     $activeEventKeys[$event['user_id'] . ':' . $eventType] = true;
 }
 $alerts = array_values(array_filter($alerts, function ($alert) use ($activeEventKeys) {
+    // Telemetry anomalies are computed by this read model and deliberately
+    // remain transient. Explicit POST commands create persistent incidents.
+    if (in_array($alert['type'] ?? '', ['off_route', 'stationary', 'stale'], true)) {
+        return true;
+    }
     $userId = $alert['user_id'] ?? null;
     if (!$userId) {
         return true;

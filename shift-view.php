@@ -29,6 +29,7 @@ if (!$shift) {
 $pageTitle = $shift['mission_title'] . ' - ' . formatDateTime($shift['start_time']);
 $user = getCurrentUser();
 $missionCompleted = ($shift['mission_status'] === STATUS_COMPLETED);
+$canManageShifts = isAdmin() || hasPagePermission('shifts_manage');
 
 // Τ.Ε.Π.: αποκλεισμός Κύκλου Εγγραφών Τ.Ε.Π. για μη-εξουσιοδοτημένους
 $missionTypeId = (int) $shift['mission_type_id'];
@@ -37,7 +38,7 @@ if (isTepMission($missionTypeId) && !canSeeTep($missionResponsible)) {
     setFlash('error', 'Δεν έχετε πρόσβαση σε Κύκλους Εγγραφών αποστολών Τ.Ε.Π.');
     redirect('missions.php');
 }
-$canManage = isAdmin() && !$missionCompleted;
+$canManage = $canManageShifts && !$missionCompleted;
 
 // Get participants
 $participants = dbFetchAll(
@@ -77,7 +78,7 @@ if (isPost()) {
     switch ($action) {
         case 'apply':
             $missionExpired = in_array($shift['mission_status'], [STATUS_OPEN, STATUS_CLOSED]) && strtotime($shift['mission_end_datetime']) < time();
-            if ($missionExpired && !isAdmin()) {
+            if ($missionExpired && !$canManageShifts) {
                 setFlash('error', 'Η αποστολή είναι ακόμα ανοιχτή αλλά ο χρόνος διεξαγωγής έχει παρέλθει. Δεν μπορείτε να υποβάλετε αίτηση.');
             } elseif ($shift['mission_status'] !== STATUS_OPEN) {
                 setFlash('error', 'Η αποστολή δεν δέχεται αιτήσεις.');
@@ -287,7 +288,7 @@ if (isPost()) {
 
         case 'self_checkin':
             // Shift leader or admin self check-in via the "Είμαι Παρών" button
-            if ($qrEnabled && isAdmin()) {
+            if ($qrEnabled && $canManageShifts) {
                 $selfPr = dbFetchOne(
                     "SELECT * FROM participation_requests WHERE shift_id = ? AND member_id = ? AND status = ?",
                     [$id, $user['id'], PARTICIPATION_APPROVED]
@@ -745,7 +746,7 @@ include __DIR__ . '/includes/header.php';
 
 <?= showFlash() ?>
 
-<?php if ($missionCompleted && isAdmin()): ?>
+<?php if ($missionCompleted && $canManageShifts): ?>
 <div class="alert alert-warning d-flex align-items-center gap-2 mb-4">
     <i class="bi bi-lock-fill fs-5"></i>
     <div>
@@ -972,7 +973,7 @@ include __DIR__ . '/includes/header.php';
     
     <div class="col-lg-4">
         <!-- Apply / My Status -->
-        <?php if (!isAdmin()): ?>
+        <?php if (!$canManageShifts): ?>
             <div class="card mb-4">
                 <div class="card-header">
                     <h5 class="mb-0"><i class="bi bi-hand-index me-1"></i>Η Αίτησή μου</h5>
@@ -996,7 +997,7 @@ include __DIR__ . '/includes/header.php';
                                     <i class="bi bi-qr-code me-1"></i>
                                     Check-in: <strong><?= formatDateTime($myParticipation['attendance_confirmed_at']) ?></strong>
                                 </div>
-                            <?php elseif ($qrEnabled && isAdmin()): ?>
+                            <?php elseif ($qrEnabled && $canManageShifts): ?>
                                 <div class="alert alert-success mb-2">
                                     <i class="bi bi-check-circle me-1"></i>
                                     Η συμμετοχή σας έχει εγκριθεί!
@@ -1042,7 +1043,7 @@ include __DIR__ . '/includes/header.php';
                                 </button>
                             </form>
                         <?php endif; ?>
-                    <?php elseif ($missionOverdue && !isAdmin()): ?>
+                    <?php elseif ($missionOverdue && !$canManageShifts): ?>
                         <div class="alert alert-warning mb-0">
                             <i class="bi bi-clock-history me-1"></i>
                             Η αποστολή είναι ακόμα ανοιχτή αλλά <strong>ο χρόνος διεξαγωγής έχει παρέλθει</strong>. Δεν μπορείτε να υποβάλετε αίτηση.

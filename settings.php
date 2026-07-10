@@ -210,7 +210,7 @@ function runHealthChecks() {
     // Migration version
     try {
         $dbVersion = (int) dbFetchValue("SELECT setting_value FROM settings WHERE setting_key = 'db_schema_version'");
-        $latestVersion = defined('LATEST_MIGRATION_VERSION') ? LATEST_MIGRATION_VERSION : '?';
+        $latestVersion = DB_SCHEMA_VERSION;
         $dbStruct[] = ['label' => 'Schema Version', 'value' => "$dbVersion / $latestVersion",
                        'status' => ($dbVersion >= $latestVersion) ? 'ok' : 'warning',
                        'detail' => ($dbVersion >= $latestVersion) ? 'Ενημερωμένο' : 'Εκκρεμούν migrations'];

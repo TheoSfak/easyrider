@@ -1,9 +1,10 @@
 <?php
 /**
- * VolunteerOps - Auto Migrations
- * Runs pending schema migrations automatically on each request.
- * Tracks applied migrations in the settings table (db_schema_version).
- * Safe to run multiple times — each migration checks before applying.
+ * EasyRide - Schema migration definitions
+ *
+ * This file only defines runSchemaMigrations(). It is invoked exclusively by
+ * scripts/maintenance/migrate.php during deployment and is never loaded by a
+ * normal web request.
  */
 
 if (!defined('VOLUNTEEROPS')) {
@@ -4872,5 +4873,5 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
 } // end function runSchemaMigrations
 } // end function_exists check
 
-// Run on every request (fast: single SELECT if already up-to-date)
-runSchemaMigrations();
+// Intentionally no automatic invocation. The CLI deployment runner owns the
+// advisory lock and calls runSchemaMigrations() explicitly.

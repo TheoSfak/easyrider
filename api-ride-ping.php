@@ -64,12 +64,10 @@ $heading = is_numeric($heading) ? max(0, min(359.99, (float)$heading)) : null;
 $batteryLevel = is_numeric($batteryLevel) ? max(0, min(100, (int)round((float)$batteryLevel))) : null;
 
 try {
-    $columns = dbFetchAll(
-        "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
-         WHERE TABLE_SCHEMA = DATABASE()
-           AND TABLE_NAME = 'member_pings'"
-    );
-    $existing = array_flip(array_column($columns, 'COLUMN_NAME'));
+    $capabilities = rideSchemaCapabilities();
+    if (empty($capabilities['member_pings']['exists'])) {
+        throw new RuntimeException('member_pings table is unavailable');
+    }
 
     $insertColumns = ['user_id', 'shift_id', 'lat', 'lng'];
     $placeholders = ['?', '?', '?', '?'];
@@ -83,7 +81,7 @@ try {
         'status' => $status !== '' ? $status : null,
     ];
     foreach ($optional as $column => $value) {
-        if (isset($existing[$column])) {
+        if (rideSchemaHasColumn('member_pings', $column)) {
             $insertColumns[] = $column;
             $placeholders[] = '?';
             $values[] = $value;

@@ -129,15 +129,17 @@ function getPreviewRole(): ?array {
 }
 
 /**
- * Check if current user is admin.
+ * Check whether the current user holds a true administrative role.
+ *
+ * Custom roles are intentionally excluded. They must be authorised with an
+ * explicit hasPagePermission() check at each capability boundary.
  * Returns false during role preview so the UI renders as the previewed role.
  */
 function isAdmin() {
     if (isPreviewMode()) return false;
     $user = getCurrentUser();
     if (!$user) return false;
-    if (in_array($user['role'], [ROLE_SYSTEM_ADMIN, ROLE_DEPARTMENT_ADMIN])) return true;
-    return !empty($user['custom_role_id']);
+    return in_array($user['role'], [ROLE_SYSTEM_ADMIN, ROLE_DEPARTMENT_ADMIN], true);
 }
 
 /**

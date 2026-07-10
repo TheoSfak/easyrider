@@ -21,21 +21,15 @@ require_once __DIR__ . '/includes/training-functions.php';
 require_once __DIR__ . '/includes/achievements-functions.php';
 // inventory-functions.php is loaded on-demand by inventory pages and branches.php only
 
-// Migrations: only load the heavy 180KB file if schema needs updating.
-// IMPORTANT: Update this number whenever you add a new migration!
-define('LATEST_MIGRATION_VERSION', DB_SCHEMA_VERSION);
-try {
-    $__schemaVer = (int) dbFetchValue(
-        "SELECT setting_value FROM settings WHERE setting_key = 'db_schema_version'"
-    );
-    if ($__schemaVer < LATEST_MIGRATION_VERSION) {
-        require_once __DIR__ . '/includes/migrations.php';
-    }
-} catch (Exception $e) {
-    // Fresh install or settings table missing — load migrations to bootstrap the DB
-    require_once __DIR__ . '/includes/migrations.php';
+// Schema migrations are deliberately never loaded or run by web requests.
+// Run `php scripts/maintenance/migrate.php` as a locked deployment step.
+
+// CLI commands need the application services but must not create an HTTP
+// session, send headers, or be redirected by maintenance mode.
+if (PHP_SAPI === 'cli') {
+    return;
 }
-unset($__schemaVer);
+
 // Prevent PHP's default Session Garbage Collection from causing intermittent 5-7s pauses on shared hosting
 ini_set('session.gc_probability', 0);
 // Start session

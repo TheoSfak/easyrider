@@ -7,6 +7,7 @@ require_once __DIR__ . '/bootstrap.php';
 requireLogin();
 
 $pageTitle = 'Κύκλοι Εγγραφών';
+$canManageShifts = isAdmin() || hasPagePermission('shifts_manage');
 
 // Filters
 $missionId = get('mission_id', '');
@@ -50,7 +51,7 @@ if ($date) {
 }
 
 // Non-admins: only see shifts from open/closed missions or their own participations
-if (!isAdmin()) {
+if (!$canManageShifts) {
     $where[] = "(m.status IN ('OPEN', 'CLOSED', 'COMPLETED') OR 
                 EXISTS (SELECT 1 FROM participation_requests pr2 WHERE pr2.shift_id = s.id AND pr2.member_id = ?))";
     $params[] = getCurrentUser()['id'];
@@ -100,7 +101,7 @@ include __DIR__ . '/includes/header.php';
     <h1 class="h3 mb-0">
         <i class="bi bi-clock me-2"></i>Κύκλοι Εγγραφών
     </h1>
-    <?php if (isAdmin()): ?>
+    <?php if ($canManageShifts): ?>
     <a href="shift-form.php" class="btn btn-primary">
         <i class="bi bi-plus-lg me-1"></i>Νέος Κύκλος Εγγραφών
     </a>
@@ -211,7 +212,7 @@ include __DIR__ . '/includes/header.php';
                             <a href="shift-view.php?id=<?= $shift['id'] ?>" class="btn btn-sm btn-outline-primary">
                                 <i class="bi bi-eye"></i>
                             </a>
-                            <?php if (isAdmin()): ?>
+                            <?php if ($canManageShifts): ?>
                             <a href="shift-form.php?id=<?= $shift['id'] ?>" class="btn btn-sm btn-outline-secondary">
                                 <i class="bi bi-pencil"></i>
                             </a>
@@ -286,7 +287,7 @@ include __DIR__ . '/includes/header.php';
                         <a href="shift-view.php?id=<?= $shift['id'] ?>" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-eye me-1"></i>Προβολή
                         </a>
-                        <?php if (isAdmin()): ?>
+                        <?php if ($canManageShifts): ?>
                             <a href="shift-form.php?id=<?= $shift['id'] ?>" class="btn btn-sm btn-outline-secondary">
                                 <i class="bi bi-pencil me-1"></i>Επεξεργασία
                             </a>

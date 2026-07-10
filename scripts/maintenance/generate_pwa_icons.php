@@ -1,13 +1,19 @@
 <?php
 /**
  * Generate PWA icons for EasyRide from the configured app logo.
- * Run: php generate_pwa_icons.php
+ * Run only from the command line: php scripts/maintenance/generate_pwa_icons.php [logo-file]
  */
 
+if (PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit;
+}
+
 $sizes = [72, 96, 128, 144, 152, 192, 384, 512];
-$outDir = __DIR__ . '/assets/icons';
+$projectRoot = dirname(__DIR__, 2);
+$outDir = $projectRoot . '/assets/icons';
 $logoFile = $argv[1] ?? 'logo_1771739763.jpg';
-$logoPath = __DIR__ . '/uploads/logos/' . $logoFile;
+$logoPath = $projectRoot . '/uploads/logos/' . $logoFile;
 
 if (!$logoFile || !is_file($logoPath)) {
     fwrite(STDERR, "Logo not found: $logoPath\n");
