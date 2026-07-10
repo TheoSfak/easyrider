@@ -468,6 +468,13 @@ if (isPost()) {
                     dbInsert("INSERT INTO settings (setting_key, setting_value, created_at, updated_at) VALUES ('app_logo', ?, NOW(), NOW())", [$newFilename]);
                 }
                 $settings['app_logo'] = $newFilename;
+
+                // Keep the PWA install icon in sync with the newly-uploaded logo.
+                require_once __DIR__ . '/includes/pwa-icons.php';
+                if (!regeneratePwaIconsFromImage($uploadDir . $newFilename)) {
+                    error_log('regeneratePwaIconsFromImage failed for ' . $uploadDir . $newFilename);
+                    setFlash('warning', 'Το λογότυπο αποθηκεύτηκε, αλλά η ενημέρωση των εικονιδίων PWA απέτυχε.');
+                }
             } else {
                 setFlash('error', 'Σφάλμα κατά την αποθήκευση του αρχείου.');
                 redirect('settings.php?tab=general');
