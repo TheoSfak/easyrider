@@ -575,8 +575,63 @@ function runMigrations() {
     }
     
     updateLog("Migrations ολοκληρώθηκαν: {$executed} εκτελέστηκαν");
-    
+
     return ['executed' => $executed, 'errors' => $errors];
+}
+
+/**
+ * Post-update migration phase — makes updates fully automatic again.
+ *
+ * Runs on any admin GET of this page whenever the stored db_schema_version is
+ * behind the code's DB_SCHEMA_VERSION — which is exactly the state the very
+ * next request finds itself in right after perform_update replaced the files
+ * and redirected here. Because it runs in that NEW request, config.php and
+ * includes/migrations.php are already the updated versions: no eval of
+ * freshly-downloaded code (the old approach), no manual CLI step (the interim
+ * approach). Serialised against the CLI runner via the same named DB lock,
+ * and idempotent — a failed run simply retries on the next visit.
+ */
+function runPendingMigrationsIfNeeded(): void {
+    $storedVersion = (int) dbFetchValue(
+        "SELECT setting_value FROM settings WHERE setting_key = 'db_schema_version'"
+    );
+    if ($storedVersion >= DB_SCHEMA_VERSION) {
+        return; // schema is current
+    }
+
+    $lockName = 'easyride:deployment:migrations';
+    $lockAcquired = ((int) dbFetchValue('SELECT GET_LOCK(?, 0)', [$lockName])) === 1;
+    if (!$lockAcquired) {
+        setFlash('warning', 'Τα database migrations εκτελούνται ήδη από άλλη διεργασία. Ανανεώστε τη σελίδα σε λίγο.');
+        return;
+    }
+
+    try {
+        updateLog('=== ΑΥΤΟΜΑΤΗ ΕΚΤΕΛΕΣΗ MIGRATIONS (schema ' . $storedVersion . ' → ' . DB_SCHEMA_VERSION . ') ===');
+
+        // 1) SQL-file migrations (sql/migrations/*.sql)
+        runMigrations();
+
+        // 2) PHP schema migrations — this request already runs the updated codebase
+        require_once __DIR__ . '/includes/migrations.php';
+        runSchemaMigrations();
+
+        $after = (int) dbFetchValue(
+            "SELECT setting_value FROM settings WHERE setting_key = 'db_schema_version'"
+        );
+        if ($after >= DB_SCHEMA_VERSION) {
+            updateLog("Migrations ολοκληρώθηκαν αυτόματα: schema version {$after}");
+            setFlash('info', "Τα database migrations εκτελέστηκαν αυτόματα (schema v{$after}).");
+        } else {
+            updateLog('Migrations δεν έφτασαν τον στόχο: ' . $after . '/' . DB_SCHEMA_VERSION, 'error');
+            setFlash('warning', 'Τα migrations έφτασαν μέχρι schema v' . $after . ' (στόχος v' . DB_SCHEMA_VERSION . '). Δείτε το update log — θα επαναληφθούν αυτόματα στην επόμενη επίσκεψη της σελίδας.');
+        }
+    } catch (Throwable $e) {
+        updateLog('Αυτόματα migrations απέτυχαν: ' . $e->getMessage(), 'error');
+        setFlash('error', 'Η αυτόματη εκτέλεση migrations απέτυχε: ' . $e->getMessage() . ' — θα επαναληφθεί αυτόματα στην επόμενη επίσκεψη.');
+    } finally {
+        dbFetchValue('SELECT RELEASE_LOCK(?)', [$lockName]);
+    }
 }
 
 function patchConfigVersion($version) {
@@ -815,6 +870,12 @@ $updateAvailable = false;
 $checkError = null;
 $actionResult = null;
 
+// Post-update phase: the redirect after perform_update lands here running the
+// freshly-installed code, and any schema gap is closed automatically.
+if (!isPost()) {
+    runPendingMigrationsIfNeeded();
+}
+
 if (isPost()) {
     verifyCsrf();
     $action = post('action', '');
@@ -861,90 +922,10 @@ if (isPost()) {
                     updateLog("ΠΡΟΕΙΔΟΠΟΙΗΣΗ: {$updateResult['failed']} αρχεία δεν αντιγράφηκαν!", 'warning');
                 }
                 updateLog("Αρχεία που ενημερώθηκαν: {$updateResult['updated']}");
-                
-                // Schema migration is intentionally a locked CLI deployment step.
-                // Do not execute DDL or eval migration code from an HTTP request.
-                updateLog('Τα schema migrations δεν εκτελούνται μέσω web update. Εκτελέστε: php scripts/maintenance/migrate.php', 'warning');
 
-                /*
-                // Step 5b: Run PHP schema migrations from the freshly applied migrations.php
-                // (the version loaded in memory via bootstrap is the OLD one, so we
-                //  re-read the new file, rename the function, and eval it)
-                updateLog('Εκτέλεση PHP schema migrations από ενημερωμένο αρχείο...');
-                try {
-                    $newMigrCode = @file_get_contents(__DIR__ . '/includes/migrations.php');
-                    if ($newMigrCode) {
-                        // Rename function so PHP won't complain about redeclaration
-                        $newMigrCode = preg_replace(
-                            '/function\s+runSchemaMigrations\s*\(/',
-                            'function _runSchemaMigrations_postupdate(',
-                            $newMigrCode
-                        );
-                        // Remove the function_exists guard (opening if + its closing brace)
-                        $newMigrCode = preg_replace(
-                            '/if\s*\(\s*!\s*function_exists\s*\([^)]+\)\s*\)\s*\{/',
-                            '',
-                            $newMigrCode,
-                            1
-                        );
-                        // Remove the closing brace of the function_exists wrapper
-                        // It appears as "} // end function_exists check" (or similar comment)
-                        $newMigrCode = preg_replace('/\}\s*\/\/\s*end function_exists[^\n]*\n?/i', '', $newMigrCode, 1);
-                        // Also strip any auto-call at the bottom (we call it explicitly below)
-                        $newMigrCode = preg_replace('/^\s*runSchemaMigrations\s*\(\s*\)\s*;\s*$/m', '', $newMigrCode);
-                        // Strip PHP open tag for eval
-                        $newMigrCode = preg_replace('/<\?php\b/', '', $newMigrCode);
-                        eval($newMigrCode);
-                        if (function_exists('_runSchemaMigrations_postupdate')) {
-                            _runSchemaMigrations_postupdate();
-                            updateLog('PHP schema migrations εκτελέστηκαν επιτυχώς');
-                        }
-                    }
-                } catch (\Throwable $e) {
-                    updateLog('PHP schema migrations warning: ' . $e->getMessage(), 'warning');
-                }
-
-                // Step 5c: Direct SQL fallback — ensure critical v13 tables/columns exist
-                // regardless of whether the eval approach succeeded
-                updateLog('Εφαρμογή κρίσιμων SQL migrations (fallback)...');
-                try {
-                    $fsCol = dbFetchOne("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='participation_requests' AND COLUMN_NAME='field_status'");
-                    if (!$fsCol) {
-                        dbExecute("ALTER TABLE participation_requests ADD COLUMN field_status ENUM('on_way','on_site','needs_help') NULL DEFAULT NULL");
-                        updateLog('  + field_status column added');
-                    }
-                    $fsUpdCol = dbFetchOne("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='participation_requests' AND COLUMN_NAME='field_status_updated_at'");
-                    if (!$fsUpdCol) {
-                        dbExecute("ALTER TABLE participation_requests ADD COLUMN field_status_updated_at TIMESTAMP NULL DEFAULT NULL");
-                        updateLog('  + field_status_updated_at column added');
-                    }
-                    $vpTable = dbFetchOne("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='member_pings'");
-                    if (!$vpTable) {
-                        dbExecute("CREATE TABLE member_pings (
-                            id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-                            user_id     INT UNSIGNED NOT NULL,
-                            shift_id    INT UNSIGNED NOT NULL,
-                            lat         DECIMAL(10,8) NOT NULL,
-                            lng         DECIMAL(11,8) NOT NULL,
-                            created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                            CONSTRAINT fk_vp_user  FOREIGN KEY (user_id)  REFERENCES users(id)  ON DELETE CASCADE,
-                            CONSTRAINT fk_vp_shift FOREIGN KEY (shift_id) REFERENCES shifts(id) ON DELETE CASCADE,
-                            INDEX idx_pings_shift_time (shift_id, created_at),
-                            INDEX idx_pings_user_shift (user_id, shift_id)
-                        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-                        updateLog('  + member_pings table created');
-                    }
-                    // Update schema version to 13 if lower
-                    $curVer = (int) dbFetchValue("SELECT setting_value FROM settings WHERE setting_key='db_schema_version'");
-                    if ($curVer < 13) {
-                        dbExecute("INSERT INTO settings (setting_key,setting_value,updated_at) VALUES ('db_schema_version','13',NOW()) ON DUPLICATE KEY UPDATE setting_value='13',updated_at=NOW()");
-                        updateLog('  + db_schema_version set to 13');
-                    }
-                    updateLog('SQL fallback migrations ολοκληρώθηκαν');
-                } catch (\Throwable $e) {
-                    updateLog('SQL fallback migrations error: ' . $e->getMessage(), 'error');
-                }
-                */
+                // Step 5: Schema migrations run automatically on the redirect
+                // below — the next request executes the freshly-installed code
+                // and runPendingMigrationsIfNeeded() closes any schema gap.
 
                 // Step 6: Cleanup temp directory
                 if (is_dir($download['temp_dir'])) {

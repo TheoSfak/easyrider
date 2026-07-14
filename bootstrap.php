@@ -24,8 +24,11 @@ require_once __DIR__ . '/includes/training-functions.php';
 require_once __DIR__ . '/includes/achievements-functions.php';
 // inventory-functions.php is loaded on-demand by inventory pages and branches.php only
 
-// Schema migrations are deliberately never loaded or run by web requests.
-// Run `php scripts/maintenance/migrate.php` as a locked deployment step.
+// Schema migrations never run on ordinary web requests. They run from two
+// sanctioned entry points only, both serialised by the same named DB lock:
+// the CLI runner (`php scripts/maintenance/migrate.php`) and update.php's
+// admin-gated post-update phase (runPendingMigrationsIfNeeded), which keeps
+// Settings → Update fully automatic.
 
 // CLI commands need the application services but must not create an HTTP
 // session, send headers, or be redirected by maintenance mode.
