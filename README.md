@@ -4,14 +4,14 @@
 
 The app is built as a plain PHP project without a framework, so it can run on common shared hosting, XAMPP, or a standard Apache/PHP/MySQL production server.
 
-**Version:** 3.91.2
+**Version:** 3.92.0
 **Author:** Theodore Sfakianakis  
 **Repository:** https://github.com/TheoSfak/easyrider
 
 ![PHP](https://img.shields.io/badge/PHP-8.0+-777BB4?logo=php&logoColor=white)
 ![MySQL](https://img.shields.io/badge/MySQL-8.0+-4479A1?logo=mysql&logoColor=white)
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-5.3-7952B3?logo=bootstrap&logoColor=white)
-![Version](https://img.shields.io/badge/version-3.91.2-blue)
+![Version](https://img.shields.io/badge/version-3.92.0-blue)
 
 ---
 
@@ -300,6 +300,17 @@ php /path/to/easyride/cron_daily.php
 ---
 
 ## Current Release Highlights
+
+### v3.92.0
+
+- **Security hardening of the self-updater:** TLS certificate verification is now always enforced when downloading updates (it was silently disabled on production servers), and update archives may only ever be fetched from GitHub hosts over HTTPS.
+- **Real error visibility in production:** a global exception/fatal-error handler logs every crash with a unique request id (`logs/php-error.log`) and shows users a friendly error page carrying that id — instead of the previous blank white screen with no trace anywhere.
+- 28 one-off maintenance/seed/debug scripts moved out of the webroot into `scripts/oneoff/` (web access denied), and backup directories are now web-unreachable.
+- First automated test suite (`tests/run-tests.php`) and GitHub Actions CI (syntax check of every PHP file + unit tests on every push).
+- New `users.last_login_at` column (migration v83) — logins no longer overwrite the record-modification timestamp.
+- Settings are cached across requests (60s file cache), removing two queries from every page load.
+- Email links (verification, password reset, approval, shift swap) are built from the configured application URL, never from the request's Host header.
+- Registration now creates the user and member profile atomically.
 
 ### v3.87.1
 
