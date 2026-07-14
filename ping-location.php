@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Member GPS Ping Endpoint
+ * EasyRide - Member GPS Ping Endpoint
  * Το μέλος στέλνει θέση GPS κατά τη διάρκεια Κύκλου Εγγραφών.
  * AJAX POST only.
  */

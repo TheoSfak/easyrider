@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Shelf Item Expiry Reminders (Run daily via cron)
+ * EasyRide - Shelf Item Expiry Reminders (Run daily via cron)
  * Notifies admins about shelf items that are expiring soon or already expired.
  * 
  * Default threshold: 30 days before expiry

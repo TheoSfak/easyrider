@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Shifts List
+ * EasyRide - Shifts List
  */
 
 require_once __DIR__ . '/bootstrap.php';

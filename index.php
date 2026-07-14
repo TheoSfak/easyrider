@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Index / Redirect
+ * EasyRide - Index / Redirect
  */
 
 require_once __DIR__ . '/bootstrap.php';

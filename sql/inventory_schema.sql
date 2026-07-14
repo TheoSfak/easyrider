@@ -1,5 +1,5 @@
 -- =============================================
--- VolunteerOps - Inventory System Schema
+-- EasyRide - Inventory System Schema
 -- Version: 1.0.0 (Phase 1)
 -- Date: February 2026
 -- =============================================

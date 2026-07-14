@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "easyride-php-dev",
+      "runtimeExecutable": "C:/xampp/php/php.exe",
+      "runtimeArgs": ["-S", "localhost:8899", "-t", "C:/Users/user/Desktop/easyride"],
+      "port": 8899
+    }
+  ]
+}

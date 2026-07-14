@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Mission Types Management
+ * EasyRide - Mission Types Management
  * Διαχείριση τύπων αποστολών
  */
 

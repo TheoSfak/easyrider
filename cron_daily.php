@@ -1,10 +1,10 @@
 <?php
 /**
- * VolunteerOps - Daily Reminders (All-in-One)
+ * EasyRide - Daily Reminders (All-in-One)
  * Run this script once daily via Windows Task Scheduler or cron
  * 
  * Usage:
- * php C:\xampp\htdocs\volunteerops\cron_daily.php
+ * php C:\xampp\htdocs\easyride\cron_daily.php
  */
 
 // CLI only - prevent web access
@@ -15,7 +15,7 @@ if (php_sapi_name() !== 'cli') {
 require_once __DIR__ . '/bootstrap.php';
 
 echo "==============================================\n";
-echo "VolunteerOps - Daily Reminders\n";
+echo "EasyRide - Daily Reminders\n";
 echo "Started at: " . date('Y-m-d H:i:s') . "\n";
 echo "==============================================\n\n";
 

@@ -1,6 +1,6 @@
-﻿<?php
+<?php
 /**
- * VolunteerOps - Inventory Categories Management
+ * EasyRide - Inventory Categories Management
  * Admin page to manage inventory categories.
  */
 

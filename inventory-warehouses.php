@@ -1,6 +1,6 @@
-﻿<?php
+<?php
 /**
- * VolunteerOps - Inventory Warehouses Management
+ * EasyRide - Inventory Warehouses Management
  * Manage warehouse departments (multi-tenancy for inventory).
  * Each warehouse is a department with has_inventory=1.
  */

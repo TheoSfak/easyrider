@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Incomplete Mission Alerts (Run daily via cron)
+ * EasyRide - Incomplete Mission Alerts (Run daily via cron)
  * This script sends alerts for missions/shifts that are approaching and haven't been filled
  */
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Inventory Print View
+ * EasyRide - Inventory Print View
  * Clean print-friendly page showing all items matching current filters.
  */
 

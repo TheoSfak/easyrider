@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - QR Self Check-in for Members
+ * EasyRide - QR Self Check-in for Members
  * Member scans the QR code printed/shown by their shift leader → self check-in.
  */
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Attendance Management for Mission
+ * EasyRide - Attendance Management for Mission
  */
 
 require_once __DIR__ . '/bootstrap.php';

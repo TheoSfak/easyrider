@@ -1,6 +1,6 @@
-﻿<?php
+<?php
 /**
- * VolunteerOps - Inventory Locations Management
+ * EasyRide - Inventory Locations Management
  * Admin page to manage inventory locations (physical positions within warehouses).
  */
 

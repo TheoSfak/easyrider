@@ -39,7 +39,7 @@ curl_setopt_array($ch, [
     CURLOPT_MAXREDIRS      => 5,
     CURLOPT_TIMEOUT        => 8,
     CURLOPT_SSL_VERIFYPEER => true,
-    CURLOPT_USERAGENT      => 'Mozilla/5.0 (compatible; VolunteerOps/' . APP_VERSION . ')',
+    CURLOPT_USERAGENT      => 'Mozilla/5.0 (compatible; EasyRide/' . APP_VERSION . ')',
     // We only need the final URL, not the body
     CURLOPT_NOBODY         => false,
     CURLOPT_HEADER         => false,

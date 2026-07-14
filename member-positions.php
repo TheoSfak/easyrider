@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Θέσεις/Ρόλοι Μελών
+ * EasyRide - Θέσεις/Ρόλοι Μελών
  * Admin CRUD for member organizational positions.
  */
 

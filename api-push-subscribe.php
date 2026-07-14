@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Push Subscription API
+ * EasyRide - Push Subscription API
  * AJAX endpoint for managing push notification subscriptions
  *
  * POST: Subscribe (save endpoint + keys)

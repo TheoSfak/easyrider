@@ -1,6 +1,6 @@
-﻿<?php
+<?php
 /**
- * VolunteerOps - Υλικά Ραφιού (Shelf Materials)
+ * EasyRide - Υλικά Ραφιού (Shelf Materials)
  * Excel-style inline editing of consumable shelf items with expiry tracking.
  */
 

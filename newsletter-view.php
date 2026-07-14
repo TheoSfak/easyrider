@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Newsletter View & Send
+ * EasyRide - Newsletter View & Send
  */
 require_once __DIR__ . '/bootstrap.php';
 requireRole([ROLE_SYSTEM_ADMIN]);

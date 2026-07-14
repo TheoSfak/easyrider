@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - API: Shifts Calendar Feed
+ * EasyRide - API: Shifts Calendar Feed
  * Returns FullCalendar-compatible EventInput JSON for the given date range.
  *
  * GET params:

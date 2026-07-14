@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Reset Password
+ * EasyRide - Reset Password
  * Validates the reset token and allows the user to set a new password.
  */
 require_once __DIR__ . '/bootstrap.php';

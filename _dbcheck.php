@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Database Diagnostic Script
+ * EasyRide - Database Diagnostic Script
  * Checks schema version, table existence, and migration status.
  */
 
@@ -10,7 +10,7 @@ requireRole([ROLE_SYSTEM_ADMIN]);
 
 header('Content-Type: text/plain; charset=utf-8');
 
-echo "=== VolunteerOps DB Diagnostic ===\n";
+echo "=== EasyRide DB Diagnostic ===\n";
 echo "Time: " . date('Y-m-d H:i:s') . "\n";
 echo "PHP version: " . PHP_VERSION . "\n";
 echo "Memory limit: " . ini_get('memory_limit') . "\n";

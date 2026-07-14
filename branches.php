@@ -1,6 +1,6 @@
-﻿<?php
+<?php
 /**
- * VolunteerOps - Παραρτήματα (Regional Branches)
+ * EasyRide - Παραρτήματα (Regional Branches)
  * Manage city-based departments that serve dual purpose:
  *   - Τμήμα πόλης: assigned to members (users.warehouse_id)
  *   - Αποθήκη:     assigned to inventory items (inventory_items.department_id)

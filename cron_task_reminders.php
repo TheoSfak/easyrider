@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Task Deadline Reminders (Run daily via cron)
+ * EasyRide - Task Deadline Reminders (Run daily via cron)
  * This script sends reminders for tasks with deadlines within 24 hours
  */
 

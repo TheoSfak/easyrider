@@ -1,6 +1,6 @@
-﻿<?php
+<?php
 /**
- * VolunteerOps - Inventory List
+ * EasyRide - Inventory List
  * Main inventory page with search, filters, and pagination.
  */
 

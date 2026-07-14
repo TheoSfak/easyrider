@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Training Module Helper Functions
+ * EasyRide - Training Module Helper Functions
  * Extracted from functions.php for better organisation.
  */
 

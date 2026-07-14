@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Certificate Expiry Reminders (Run daily via cron)
+ * EasyRide - Certificate Expiry Reminders (Run daily via cron)
  * Sends reminders when certificates are about to expire (30-day and 7-day warnings)
  */
 

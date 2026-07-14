@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Email Template Edit with Summernote WYSIWYG Editor
+ * EasyRide - Email Template Edit with Summernote WYSIWYG Editor
  */
 
 require_once __DIR__ . '/bootstrap.php';

@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Newsletter Template Form (Create / Edit)
+ * EasyRide - Newsletter Template Form (Create / Edit)
  * Single body_html editor with {content} placeholder
  */
 require_once __DIR__ . '/bootstrap.php';

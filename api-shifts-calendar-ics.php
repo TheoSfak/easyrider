@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - ICS Calendar Export
+ * EasyRide - ICS Calendar Export
  * Downloads an iCalendar (.ics) file for upcoming / filtered shifts.
  * Compatible with Google Calendar, Apple Calendar, Outlook.
  *
@@ -173,7 +173,7 @@ $lines[] = 'END:VTIMEZONE';
 
 foreach ($shifts as $s) {
     $title       = ($s['is_urgent'] ? '[ΕΠΕΙΓΟΝ] ' : '') . $s['mission_title'] . ' — Κύκλος Εγγραφών #' . $s['id'];
-    $uid         = 'shift-' . $s['id'] . '@volunteerops';
+    $uid         = 'shift-' . $s['id'] . '@easyride';
     $dtstamp     = gmdate('Ymd\THis\Z');
     $dtstart     = icsDate($s['start_time']);
     $dtend       = icsDate($s['end_time']);
@@ -208,7 +208,7 @@ foreach ($shifts as $s) {
 $lines[] = 'END:VCALENDAR';
 
 // ── Output ────────────────────────────────────────────────────────────────────
-$filename = 'volunteerops-shifts-' . date('Ymd') . '.ics';
+$filename = 'easyride-shifts-' . date('Ymd') . '.ics';
 header('Content-Type: text/calendar; charset=utf-8');
 header('Content-Disposition: attachment; filename="' . $filename . '"');
 header('Cache-Control: no-cache, no-store, must-revalidate');

@@ -121,6 +121,33 @@ try {
             $assert(str_contains($endpoint, $needle), "{$file} missing command guard: {$needle}");
         }
     }
+
+    // Member rename compatibility: current routes and templates must exist,
+    // while incoming MEMBER labels are normalized to the stored enum value.
+    $membersPage = $source('members.php');
+    $assert(str_contains($membersPage, 'exports/export-members.php'), 'members.php must link to the member export endpoint');
+    $assert(is_file($projectRoot . '/exports/export-members.php'), 'Member export endpoint is missing');
+    $assert(is_file($projectRoot . '/exports/templates/members_template.csv'), 'Member import template is missing');
+    $importFunctions = $source('includes/import-functions.php');
+    $assert(substr_count($importFunctions, "if (\$role === 'MEMBER')") >= 2, 'CSV MEMBER role must be normalized for validation and import');
+    $assert(substr_count($importFunctions, "if (\$vtype === 'MEMBER')") === 1, 'CSV MEMBER type must be normalized for validation');
+    $assert(substr_count($importFunctions, "if (\$rawType === 'MEMBER')") === 1, 'CSV MEMBER type must be normalized for import');
+
+    // Retired public artifacts must not be restored, and web-server rules must
+    // deny operational endpoints and accidental SQL/log/config exposure.
+    foreach (['test_error.php', 'pwa-announcement-email.html', 'demo_data.sql', 'scripts/maintenance/test_app.php', 'scripts/maintenance/test_full.php'] as $retiredPath) {
+        $assert(!is_file($projectRoot . '/' . $retiredPath), "Retired legacy artifact restored: {$retiredPath}");
+    }
+    $htaccess = $source('.htaccess');
+    foreach (['backup-ajax', 'update', 'config\\.local\\.php', '(?:sql|log|bak|backup|dist|md)'] as $needle) {
+        $assert(str_contains($htaccess, $needle), ".htaccess missing legacy hardening rule: {$needle}");
+    }
+
+    // Outbound messages and exported calendar artefacts must use the current product name.
+    foreach (['includes/email.php', 'email-template-preview.php', 'api-shifts-calendar-ics.php'] as $file) {
+        $content = $source($file);
+        $assert(!str_contains($content, 'VolunteerOps') && !str_contains($content, 'volunteerops'), "Legacy brand remains in {$file}");
+    }
 } catch (Throwable $exception) {
     $failures[] = 'Test setup failure: ' . $exception->getMessage();
 }

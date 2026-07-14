@@ -1,5 +1,5 @@
 /**
- * VolunteerOps - Push Notification Client
+ * EasyRide - Push Notification Client
  * Manages browser push subscription lifecycle
  */
 var VoPush = (function() {

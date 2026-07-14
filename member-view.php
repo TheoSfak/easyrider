@@ -1,6 +1,6 @@
-﻿<?php
+<?php
 /**
- * VolunteerOps - Member View
+ * EasyRide - Member View
  */
 
 require_once __DIR__ . '/bootstrap.php';

@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Push Notification Diagnostics
+ * EasyRide - Push Notification Diagnostics
  * Accessible only by System Admin
  */
 require_once __DIR__ . '/bootstrap.php';

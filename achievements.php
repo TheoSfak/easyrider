@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Achievements
+ * EasyRide - Achievements
  */
 
 require_once __DIR__ . '/bootstrap.php';

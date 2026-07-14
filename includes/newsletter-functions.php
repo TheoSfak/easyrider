@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Newsletter Helper Functions
+ * EasyRide - Newsletter Helper Functions
  */
 
 if (!defined('VOLUNTEEROPS')) {
@@ -107,7 +107,7 @@ function getNewsletterLogoHtml(): string {
 
     $logoFile = rawurlencode(basename($appLogo));
     $logoUrl = $baseUrl . '/uploads/logos/' . $logoFile;
-    $alt = defined('APP_NAME') ? APP_NAME : 'VolunteerOps';
+    $alt = defined('APP_NAME') ? APP_NAME : 'EasyRide';
 
     return '<img src="' . h($logoUrl) . '" alt="' . h($alt) . '" width="48" '
         . 'style="display:block;max-width:48px;max-height:48px;border:0;outline:none;text-decoration:none;">';
@@ -137,7 +137,7 @@ function getDefaultNewsletterTemplateId(): ?int {
  * the UI shows the same HTML that recipients receive.
  */
 function wrapNewsletterBody(string $body, string $title, ?int $templateId = null): string {
-    $fromName = getSetting('smtp_from_name', 'VolunteerOps');
+    $fromName = getSetting('smtp_from_name', 'EasyRide');
 
     $tpl = null;
     if ($templateId) {

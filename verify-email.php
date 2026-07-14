@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Email Verification Page
+ * EasyRide - Email Verification Page
  * Validates the token sent during registration and marks the email as verified.
  * After verification the account still needs admin approval before login.
  */

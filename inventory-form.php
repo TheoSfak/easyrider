@@ -1,6 +1,6 @@
-﻿<?php
+<?php
 /**
- * VolunteerOps - Inventory Item Create/Edit Form
+ * EasyRide - Inventory Item Create/Edit Form
  */
 
 require_once __DIR__ . '/bootstrap.php';

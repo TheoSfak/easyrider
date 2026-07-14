@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Complaints Management (Admin)
+ * EasyRide - Complaints Management (Admin)
  * Διαχείριση παραπόνων
  */
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Σώματα (Corps/Units) Management
+ * EasyRide - Σώματα (Corps/Units) Management
  * Manages functional departments (Διασωστών, Πρόνοιας, Υγειονομική, etc.)
  * City-based branches (Ηράκλειο, Χερσόνησος) are managed in branches.php
  */

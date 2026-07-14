@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Ρυθμίσεις Ειδοποιήσεων Χρήστη
+ * EasyRide - Ρυθμίσεις Ειδοποιήσεων Χρήστη
  * Allows each user to control which notifications they receive (email & in-app).
  */
 require_once __DIR__ . '/bootstrap.php';

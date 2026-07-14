@@ -1,6 +1,6 @@
-﻿<?php
+<?php
 /**
- * VolunteerOps - Inventory Notes Management (Admin)
+ * EasyRide - Inventory Notes Management (Admin)
  * Centralized view of all inventory notes/deficiencies.
  * Admin can filter, update status, resolve, and track issues.
  */

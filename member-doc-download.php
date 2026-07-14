@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Member Document Download
+ * EasyRide - Member Document Download
  * Serves member documents securely (admins only)
  */
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Web Push Notification Library
+ * EasyRide - Web Push Notification Library
  * Raw PHP implementation using openssl + curl (no Composer required)
  * Implements RFC 8291 (Message Encryption for Web Push) + RFC 8188 (aes128gcm) + RFC 8292 (VAPID)
  */

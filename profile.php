@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Profile Page
+ * EasyRide - Profile Page
  */
 
 require_once __DIR__ . '/bootstrap.php';

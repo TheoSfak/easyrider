@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Logout
+ * EasyRide - Logout
  */
 
 require_once __DIR__ . '/bootstrap.php';

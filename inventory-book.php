@@ -1,6 +1,6 @@
-﻿<?php
+<?php
 /**
- * VolunteerOps - Inventory Booking (Checkout / Return)
+ * EasyRide - Inventory Booking (Checkout / Return)
  * Allows booking an item to a member / returning it.
  */
 

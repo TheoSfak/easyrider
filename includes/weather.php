@@ -312,7 +312,7 @@ function _owmCurlGet(string $url, ?int &$httpCode = null, ?string &$curlError = 
         CURLOPT_RETURNTRANSFER => true,
         CURLOPT_TIMEOUT        => 8,
         CURLOPT_SSL_VERIFYPEER => true,
-        CURLOPT_USERAGENT      => 'VolunteerOps/' . APP_VERSION,
+        CURLOPT_USERAGENT      => 'EasyRide/' . APP_VERSION,
         CURLOPT_FOLLOWLOCATION => false,
     ]);
 

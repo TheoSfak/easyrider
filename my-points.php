@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - My Points & History
+ * EasyRide - My Points & History
  */
 
 require_once __DIR__ . '/bootstrap.php';

@@ -1,6 +1,6 @@
-﻿<?php
+<?php
 /**
- * VolunteerOps - Inventory Label Printer
+ * EasyRide - Inventory Label Printer
  * Generates printable QR code labels for inventory items.
  * Usage: ?id=X  (single item) or ?ids=X,Y,Z  (multiple items)
  */

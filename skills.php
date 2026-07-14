@@ -1,6 +1,6 @@
-﻿<?php
+<?php
 /**
- * VolunteerOps - Skills & Categories Management
+ * EasyRide - Skills & Categories Management
  */
 
 require_once __DIR__ . '/bootstrap.php';

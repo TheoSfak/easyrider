@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Newsletter Content Presets (Πρότυπα Περιεχομένου)
+ * EasyRide - Newsletter Content Presets (Πρότυπα Περιεχομένου)
  */
 require_once __DIR__ . '/bootstrap.php';
 requireRole([ROLE_SYSTEM_ADMIN]);

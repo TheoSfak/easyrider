@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Newsletter Preset Form (Create / Edit)
+ * EasyRide - Newsletter Preset Form (Create / Edit)
  * Summernote editor for reusable content presets
  */
 require_once __DIR__ . '/bootstrap.php';

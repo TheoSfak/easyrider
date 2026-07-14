@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Email Template Preview
+ * EasyRide - Email Template Preview
  * Returns raw HTML for iframe preview
  */
 
@@ -36,8 +36,8 @@ $sampleData = [
     'end_date' => '20/02/2026',
     'points' => '50',
     'total_points' => '350',
-    'login_url' => 'http://localhost/volunteerops/login.php',
-    'mission_url' => 'http://localhost/volunteerops/mission-view.php?id=1',
+    'login_url' => rtrim(BASE_URL, '/') . '/login.php',
+    'mission_url' => rtrim(BASE_URL, '/') . '/mission-view.php?id=1',
 ];
 
 $html = $template['body_html'];

@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Ημερολόγιο Κύκλων Εγγραφών
+ * EasyRide - Ημερολόγιο Κύκλων Εγγραφών
  * Interactive FullCalendar view of all shifts with colour-coded fill rates.
  */
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Member Field Status Endpoint
+ * EasyRide - Member Field Status Endpoint
  * Το μέλος ενημερώνει κατάσταση: Σε Κίνηση / Επί Τόπου / Χρειάζεται Βοήθεια.
  * AJAX POST only.
  */

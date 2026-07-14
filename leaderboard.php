@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Leaderboard
+ * EasyRide - Leaderboard
  */
 
 require_once __DIR__ . '/bootstrap.php';

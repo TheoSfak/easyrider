@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Registration disabled.
+ * EasyRide - Registration disabled.
  * New users are added exclusively by an administrator.
  */
 require_once __DIR__ . '/bootstrap.php';

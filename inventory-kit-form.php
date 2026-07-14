@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Inventory Kit Form
+ * EasyRide - Inventory Kit Form
  * Φόρμα δημιουργίας/επεξεργασίας Σετ Εξοπλισμού
  */
 

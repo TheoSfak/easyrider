@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Newsletter Unsubscribe (PUBLIC - no login required)
+ * EasyRide - Newsletter Unsubscribe (PUBLIC - no login required)
  *
  * URL: /newsletter-unsubscribe.php?token=XXXX
  */

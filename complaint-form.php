@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Complaint Form
+ * EasyRide - Complaint Form
  * Φόρμα υποβολής παραπόνου μέλους
  */
 

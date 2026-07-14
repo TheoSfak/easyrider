@@ -33,7 +33,7 @@ curl_setopt_array($ch, [
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_TIMEOUT        => 8,
     CURLOPT_SSL_VERIFYPEER => true,
-    CURLOPT_USERAGENT      => 'VolunteerOps/' . APP_VERSION,
+    CURLOPT_USERAGENT      => 'EasyRide/' . APP_VERSION,
     CURLOPT_FOLLOWLOCATION => false,
 ]);
 $response  = curl_exec($ch);

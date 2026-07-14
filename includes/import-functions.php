@@ -108,6 +108,11 @@ function validateMemberData(array $row, int $rowNumber): array {
     }
 
     $role = trim($row['Ρόλος'] ?? '');
+    // CSVs expose the current product label, while existing databases retain
+    // the legacy enum value behind ROLE_MEMBER for compatibility.
+    if ($role === 'MEMBER') {
+        $role = ROLE_MEMBER;
+    }
     if (empty($role)) {
         $errors[] = "Γραμμή $rowNumber: Πεδίο 'Ρόλος' — υποχρεωτικό.";
     } elseif (!in_array($role, $validRoles)) {
@@ -115,6 +120,9 @@ function validateMemberData(array $row, int $rowNumber): array {
     }
 
     $vtype = _col($row, 'Τύπος Μέλους');
+    if ($vtype === 'MEMBER') {
+        $vtype = ROLE_MEMBER;
+    }
     if ($vtype !== null && $vtype !== '0' && !in_array($vtype, $validTypes)) {
         $errors[] = "Γραμμή $rowNumber: Πεδίο 'Τύπος Μέλους' — μη έγκυρη τιμή '$vtype'. Επιτρεπτοί: " . implode(', ', $validTypes);
     }
@@ -162,7 +170,9 @@ function importMembersFromCsv(array $rows, bool $dryRun = false): array {
         if ($phone !== null) $phone = preg_replace('/[\s\-\.]+/', '', $phone);
         $deptId           = (int) trim($row['Τμήμα ID']);
         $role             = trim($row['Ρόλος']);
+        if ($role === 'MEMBER') $role = ROLE_MEMBER;
         $rawType          = _col($row, 'Τύπος Μέλους');
+        if ($rawType === 'MEMBER') $rawType = ROLE_MEMBER;
         $memberType    = ($rawType && $rawType !== '0') ? $rawType : 'VOLUNTEER';
         $idCard           = _col($row, 'Ταυτότητα');
         $afm              = _col($row, 'ΑΦΜ');
@@ -235,4 +245,3 @@ function importMembersFromCsv(array $rows, bool $dryRun = false): array {
 
     return $results;
 }
-

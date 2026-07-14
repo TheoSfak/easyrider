@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Member Activity Report (Printable / Save as PDF)
+ * EasyRide - Member Activity Report (Printable / Save as PDF)
  */
 require_once __DIR__ . '/bootstrap.php';
 requireLogin();

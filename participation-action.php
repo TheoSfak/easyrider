@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Quick Participation Actions
+ * EasyRide - Quick Participation Actions
  * Handle quick approve/reject actions from dashboard
  * Uses POST + CSRF for security
  */

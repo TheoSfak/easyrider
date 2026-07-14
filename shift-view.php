@@ -1,6 +1,6 @@
-﻿<?php
+<?php
 /**
- * VolunteerOps - Shift View & Manage Participants
+ * EasyRide - Shift View & Manage Participants
  */
 
 require_once __DIR__ . '/bootstrap.php';

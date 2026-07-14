@@ -600,9 +600,8 @@ INSERT INTO `achievements` (`code`, `name`, `description`, `category`, `icon`, `
 ('loyal_member',   'Πιστό Μέλος',             'Μέλος της ομάδας για 1+ χρόνο',                  'special',   '💙', 0,    365 ),
 ('rescuer_elite',  'Ελίτ Διασώστης',          '250+ ώρες εθελοντισμού και 50+ αποστολές',       'special',   '⭐', 0,    0   );
 
--- Default admin user (password: admin123)
-INSERT INTO `users` (`name`, `email`, `password`, `role`, `is_active`) VALUES
-('Διαχειριστής', 'admin@volunteerops.gr', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'SYSTEM_ADMIN', 1);
+-- An administrator is created from the credentials supplied during install.php.
+-- Never ship a known privileged account in the schema.
 
 -- Default settings
 INSERT INTO `settings` (`setting_key`, `setting_value`) VALUES

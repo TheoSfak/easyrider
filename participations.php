@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Participations Management
+ * EasyRide - Participations Management
  * Διαχείριση αιτήσεων συμμετοχής σε Κύκλους Εγγραφών
  */
 

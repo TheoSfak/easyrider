@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Audit Log
+ * EasyRide - Audit Log
  */
 
 require_once __DIR__ . '/bootstrap.php';

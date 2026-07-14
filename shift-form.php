@@ -1,6 +1,6 @@
-﻿<?php
+<?php
 /**
- * VolunteerOps - Shift Form (Create/Edit)
+ * EasyRide - Shift Form (Create/Edit)
  */
 
 require_once __DIR__ . '/bootstrap.php';

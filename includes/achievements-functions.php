@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Achievement Checking & Awarding Functions
+ * EasyRide - Achievement Checking & Awarding Functions
  */
 
 if (!defined('VOLUNTEEROPS')) {

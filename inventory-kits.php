@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Inventory Kits List
+ * EasyRide - Inventory Kits List
  * Λίστα με τα Σετ Εξοπλισμού
  */
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Complaint View
+ * EasyRide - Complaint View
  * Προβολή παραπόνου (μέλος & admin)
  */
 

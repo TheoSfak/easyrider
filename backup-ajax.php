@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Chunked AJAX Backup Endpoint
+ * EasyRide - Chunked AJAX Backup Endpoint
  *
  * Handles backup creation in small async chunks to avoid PHP memory/timeout
  * limits on large databases and upload folders (shared hosting friendly).
@@ -142,7 +142,7 @@ function handleInit(): void
     mkdir($dir . '/files/uploads', 0755, true);
 
     // Write SQL file header (streaming — no large strings in RAM later)
-    $sqlHeader = "-- VolunteerOps Database Backup\n"
+    $sqlHeader = "-- EasyRide Database Backup\n"
         . '-- Generated: ' . date('Y-m-d H:i:s') . "\n"
         . '-- Version: '   . APP_VERSION          . "\n"
         . '-- Skipped tables: ' . (empty($skipTables) ? 'none' : implode(', ', $skipTables)) . "\n\n"

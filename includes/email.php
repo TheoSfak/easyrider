@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Email Helper Functions
+ * EasyRide - Email Helper Functions
  */
 
 if (!defined('VOLUNTEEROPS')) {
@@ -98,7 +98,7 @@ function getSmtpSettings(): array {
         'password' => $settings['smtp_password'] ?? '',
         'encryption' => $settings['smtp_encryption'] ?? 'tls',
         'from_email' => $settings['smtp_from_email'] ?? '',
-        'from_name' => $settings['smtp_from_name'] ?? 'VolunteerOps',
+        'from_name' => $settings['smtp_from_name'] ?? APP_NAME,
     ];
     return $cached;
 }
@@ -205,7 +205,7 @@ function sendEmail(string $to, string $subject, string $htmlBody, ?string $fromN
         'Content-Type: text/html; charset=UTF-8',
         'From: ' . $fromName . ' <' . $fromEmail . '>',
         'Reply-To: ' . $fromEmail,
-        'X-Mailer: VolunteerOps/' . APP_VERSION
+        'X-Mailer: ' . APP_NAME . '/' . APP_VERSION
     ];
     
     // If SMTP host is configured, use socket connection
@@ -395,7 +395,7 @@ function sendSmtpEmail(string $to, string $subject, string $htmlBody, array $smt
         $message .= "List-Unsubscribe-Post: List-Unsubscribe=One-Click\r\n";
         $message .= "Precedence: bulk\r\n";
         $message .= "Content-Type: multipart/alternative; boundary=\"$boundary\"\r\n";
-        $message .= "X-Mailer: VolunteerOps/" . APP_VERSION . "\r\n";
+        $message .= 'X-Mailer: ' . APP_NAME . '/' . APP_VERSION . "\r\n";
         $message .= "\r\n";
         // Plain text part
         $message .= "--$boundary\r\n";
@@ -453,7 +453,7 @@ function sendSmtpEmail(string $to, string $subject, string $htmlBody, array $smt
  */
 function sendTestEmail(string $to): array {
     $smtp = getSmtpSettings();
-    $appName = dbFetchValue("SELECT setting_value FROM settings WHERE setting_key = 'app_name'") ?? 'VolunteerOps';
+    $appName = dbFetchValue("SELECT setting_value FROM settings WHERE setting_key = 'app_name'") ?? APP_NAME;
     
     $subject = "Δοκιμαστικό Email - $appName";
     $body = '<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -508,12 +508,12 @@ function sendNotificationEmail(string $notificationCode, string $to, array $vari
     // Add default variables (using getSetting() which is cached per request — zero extra queries)
     $appName = getSetting('app_name', 'EasyRide');
     $variables['app_name'] = $appName;
-    $variables['login_url'] = rtrim(BASE_URL ?? 'http://localhost/volunteerops', '/') . '/login.php';
+    $variables['login_url'] = rtrim(BASE_URL, '/') . '/login.php';
 
     // Inject logo_html — resolves to an <img> if a logo is configured, empty string otherwise
     $logoFile = getSetting('app_logo', '');
     if (!empty($logoFile)) {
-        $baseUrl = rtrim(BASE_URL ?? 'http://localhost/volunteerops', '/');
+        $baseUrl = rtrim(BASE_URL, '/');
         $logoUrl = $baseUrl . '/uploads/logos/' . $logoFile;
         $variables['logo_html'] = '<div style="margin:0 auto 14px;line-height:1;">'
             . '<img src="' . $logoUrl . '" alt="' . htmlspecialchars($appName, ENT_QUOTES) . '" '

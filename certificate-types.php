@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Certificate Types Management
+ * EasyRide - Certificate Types Management
  */
 
 require_once __DIR__ . '/bootstrap.php';

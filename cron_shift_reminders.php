@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Shift Reminders (Run daily via cron)
+ * EasyRide - Shift Reminders (Run daily via cron)
  * This script sends reminders for approved shifts happening within configured hours
  */
 

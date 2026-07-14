@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Inactive Members
+ * EasyRide - Inactive Members
  * Shows members with is_active = 0 and not soft-deleted
  */
 

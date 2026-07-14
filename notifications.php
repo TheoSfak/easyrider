@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Ειδοποιήσεις χρήστη
+ * EasyRide - Ειδοποιήσεις χρήστη
  * View, mark-read, delete in-app notifications.
  */
 require_once __DIR__ . '/bootstrap.php';
