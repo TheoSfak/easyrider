@@ -3,7 +3,7 @@
  * ONE-TIME question pool seeder — run once as system admin, then DELETE this file.
  * Access: https://yphresies.gr/seed_questions_run.php
  */
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 requireRole([ROLE_SYSTEM_ADMIN]);
 
 $pageTitle = 'Seed Ερωτήσεων Pool';
@@ -249,7 +249,7 @@ if (isPost() && post('confirm') === 'SEED') {
     }
 }
 
-include __DIR__ . '/includes/header.php';
+include __DIR__ . '/../../includes/header.php';
 ?>
 <div class="container" style="max-width:700px">
     <h2 class="mb-4"><i class="bi bi-collection me-2"></i>Seed Ερωτήσεων Pool</h2>
@@ -309,4 +309,4 @@ include __DIR__ . '/includes/header.php';
         </script>
     <?php endif; ?>
 </div>
-<?php include __DIR__ . '/includes/footer.php'; ?>
+<?php include __DIR__ . '/../../includes/footer.php'; ?>

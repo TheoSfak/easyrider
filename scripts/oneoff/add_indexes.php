@@ -1,9 +1,9 @@
 <?php
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 requireRole([ROLE_SYSTEM_ADMIN]);
 
 try {
-    $sql = file_get_contents(__DIR__ . '/sql/add_indexes.sql');
+    $sql = file_get_contents(__DIR__ . '/../../sql/add_indexes.sql');
     $statements = array_filter(array_map('trim', explode(';', $sql)));
     
     $success = 0;

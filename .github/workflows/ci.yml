@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: calendar, zip, pdo_mysql, gd
+          coverage: none
+
+      - name: Syntax-check every PHP file
+        run: |
+          set -e
+          errors=0
+          while IFS= read -r file; do
+            php -l "$file" > /dev/null || errors=1
+          done < <(git ls-files '*.php')
+          exit $errors
+
+      - name: Run unit tests
+        run: php tests/run-tests.php

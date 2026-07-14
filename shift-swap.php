@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Shift Swap / Cover Request
+ * EasyRide - Shift Swap / Cover Request
  * Μέλος ζητά αντικαταστάτη για εγκεκριμένο Κύκλο Εγγραφών του
  */
 
@@ -90,11 +90,8 @@ if (isPost()) {
 
     logAudit('swap_requested', 'shift_swap_requests', $swapId);
 
-    // Build action URL
-    $proto      = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $host       = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    $basePath   = dirname($_SERVER['SCRIPT_NAME'] ?? '/volunteerops');
-    $actionUrl  = rtrim($proto . '://' . $host . $basePath, '/') . '/my-participations.php';
+    // Build action URL (appBaseUrl avoids Host-header-derived links in emails)
+    $actionUrl  = appBaseUrl() . '/my-participations.php';
 
     // Email to replacement member
     if (!empty($replacement['email']) && isNotificationEnabled('shift_swap_requested')) {

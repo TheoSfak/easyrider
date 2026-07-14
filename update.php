@@ -14,10 +14,11 @@ requireRole([ROLE_SYSTEM_ADMIN]);
 define('GITHUB_REPO', 'TheoSfak/easyrider'); // GitHub repository
 define('GITHUB_API_URL', 'https://api.github.com/repos/' . GITHUB_REPO);
 
-// SSL CA bundle: prefer XAMPP's bundled CA cert, fall back to system default
+// TLS peer verification is ALWAYS on: this endpoint downloads code that gets
+// extracted over the live installation, so an unverified connection means RCE.
+// If XAMPP's CA bundle exists use it; otherwise PHP uses the system CA store.
 $sslCaFile = 'C:/xampp/apache/bin/curl-ca-bundle.crt';
-define('SSL_VERIFY', file_exists($sslCaFile));
-define('SSL_CA_FILE', $sslCaFile);
+define('SSL_CA_FILE', file_exists($sslCaFile) ? $sslCaFile : '');
 define('BACKUP_DIR', __DIR__ . '/backups');
 define('UPDATE_LOG_FILE', __DIR__ . '/update.log');
 
@@ -40,6 +41,20 @@ function updateLog($message, $type = 'info') {
     return $logLine;
 }
 
+/**
+ * TLS options for updater HTTP requests. Verification is never disabled.
+ */
+function updaterSslOptions(): array {
+    $ssl = [
+        'verify_peer'      => true,
+        'verify_peer_name' => true,
+    ];
+    if (SSL_CA_FILE !== '') {
+        $ssl['cafile'] = SSL_CA_FILE;
+    }
+    return $ssl;
+}
+
 function getLatestRelease() {
     $url = GITHUB_API_URL . '/releases/latest';
     
@@ -52,11 +67,7 @@ function getLatestRelease() {
             ],
             'timeout' => 30
         ],
-        'ssl' => [
-            'verify_peer' => SSL_VERIFY,
-            'verify_peer_name' => SSL_VERIFY,
-            'cafile' => SSL_CA_FILE
-        ]
+        'ssl' => updaterSslOptions()
     ]);
     
     $response = @file_get_contents($url, false, $context);
@@ -101,7 +112,11 @@ function createBackup() {
     if (!is_dir($backupDir)) {
         mkdir($backupDir, 0755, true);
     }
-    
+    // Backups hold full source + DB dumps inside the webroot — keep them unservable.
+    if (!file_exists($backupDir . '/.htaccess')) {
+        file_put_contents($backupDir . '/.htaccess', "Require all denied\n");
+    }
+
     $timestamp = date('Y-m-d_His');
     $backupName = "backup_{$timestamp}";
     $backupPath = "{$backupDir}/{$backupName}";
@@ -205,7 +220,7 @@ function copyDirectory($source, $dest) {
 
 function exportDatabase() {
     $tables = dbFetchAll("SHOW TABLES");
-    $dump  = "-- VolunteerOps Database Backup\n";
+    $dump  = "-- EasyRide Database Backup\n";
     $dump .= "-- Generated: " . date('Y-m-d H:i:s') . "\n";
     $dump .= "-- Version: " . APP_VERSION . "\n\n";
     $dump .= "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci;\n";
@@ -249,6 +264,14 @@ function exportDatabase() {
 }
 
 function downloadUpdate($zipUrl, $version) {
+    // Defense in depth: only ever download release archives from GitHub hosts.
+    $host = strtolower(parse_url($zipUrl, PHP_URL_HOST) ?? '');
+    $scheme = strtolower(parse_url($zipUrl, PHP_URL_SCHEME) ?? '');
+    $allowedHosts = ['github.com', 'api.github.com', 'codeload.github.com', 'objects.githubusercontent.com'];
+    if ($scheme !== 'https' || !in_array($host, $allowedHosts, true)) {
+        throw new Exception('Μη αποδεκτή διεύθυνση λήψης ενημέρωσης: ' . $zipUrl);
+    }
+
     updateLog("Λήψη έκδοσης {$version}...");
     
     $tempDir = sys_get_temp_dir() . '/easyride_update_' . time();
@@ -268,11 +291,7 @@ function downloadUpdate($zipUrl, $version) {
             'timeout' => 120,
             'follow_location' => true
         ],
-        'ssl' => [
-            'verify_peer' => SSL_VERIFY,
-            'verify_peer_name' => SSL_VERIFY,
-            'cafile' => SSL_CA_FILE
-        ]
+        'ssl' => updaterSslOptions()
     ]);
     
     $zipContent = @file_get_contents($zipUrl, false, $context);

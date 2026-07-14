@@ -1,0 +1,3 @@
+# Maintenance and one-off scripts are never served over the web.
+# Run them via CLI: php scripts/oneoff/<script>.php
+Require all denied

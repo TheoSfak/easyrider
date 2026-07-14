@@ -3,12 +3,12 @@
  * Import inventory data from FirstAid Manager JSON database
  * 
  * Imports all 45 resources + 2 fixed assets from C:\Users\theo\Desktop\multi\data\
- * into VolunteerOps inventory tables with proper UTF-8 encoding.
+ * into EasyRide inventory tables with proper UTF-8 encoding.
  * 
- * Run once: http://localhost/volunteerops/import_firstaid_data.php
+ * Run once: http://localhost/easyride/import_firstaid_data.php
  */
 
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 
 if (!isLoggedIn() || !isSystemAdmin()) {
     die('Πρέπει να είστε συνδεδεμένος ως System Admin.');
@@ -19,7 +19,7 @@ $dataPath = 'C:/Users/theo/Desktop/multi/data';
 echo "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Import FirstAid Data</title></head><body>";
 echo "<pre style='font-family: Consolas, monospace; font-size: 14px; line-height: 1.5;'>\n";
 echo "╔══════════════════════════════════════════════════════════════╗\n";
-echo "║  Import FirstAid Manager → VolunteerOps Inventory          ║\n";
+echo "║  Import FirstAid Manager → EasyRide Inventory          ║\n";
 echo "╚══════════════════════════════════════════════════════════════╝\n\n";
 
 // =============================================

@@ -3,7 +3,7 @@
  * Restore Mission Email Template with proper Greek encoding
  */
 
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 requireRole([ROLE_SYSTEM_ADMIN]);
 
 try {

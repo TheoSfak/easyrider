@@ -1,11 +1,11 @@
 <?php
 /**
- * VolunteerOps - Inventory Migration v3.0.0
+ * EasyRide - Inventory Migration v3.0.0
  * Run this script ONCE in the browser to create all inventory tables.
  * Delete this file after running.
  */
 
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 requireLogin();
 requireRole([ROLE_SYSTEM_ADMIN]);
 
@@ -286,7 +286,7 @@ END",
     $results[] = "Inventory tables found: " . implode(', ', $inventoryTables);
 }
 
-include __DIR__ . '/includes/header.php';
+include __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="container-fluid">
@@ -336,4 +336,4 @@ include __DIR__ . '/includes/header.php';
     <?php endif; ?>
 </div>
 
-<?php include __DIR__ . '/includes/footer.php'; ?>
+<?php include __DIR__ . '/../../includes/footer.php'; ?>

@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Database Connection
+ * EasyRide - Database Connection
  */
 
 if (!defined('VOLUNTEEROPS')) {
@@ -29,10 +29,12 @@ class Database {
                 PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci, time_zone = '" . $phpTzOffset . "'"
             ]);
         } catch (PDOException $e) {
+            error_log('[EasyRide] DB connection failed: ' . $e->getMessage());
             if (DEBUG_MODE) {
                 die("Σφάλμα σύνδεσης: " . $e->getMessage());
             }
-            die("Σφάλμα σύνδεσης βάσης δεδομένων.");
+            http_response_code(503);
+            die("Σφάλμα σύνδεσης βάσης δεδομένων. Παρακαλώ δοκιμάστε ξανά σε λίγο.");
         }
     }
     

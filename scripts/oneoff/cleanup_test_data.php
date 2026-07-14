@@ -5,7 +5,7 @@
  * DANGER: This will permanently delete data - use with caution!
  */
 
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 requireLogin();
 requireRole([ROLE_SYSTEM_ADMIN]);
 
@@ -120,7 +120,7 @@ $testMissions = dbFetchAll("
     ORDER BY m.created_at DESC
 ");
 
-include __DIR__ . '/includes/header.php';
+include __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="row">
@@ -326,4 +326,4 @@ document.getElementById('select-all-missions')?.addEventListener('change', funct
 });
 </script>
 
-<?php include __DIR__ . '/includes/footer.php'; ?>
+<?php include __DIR__ . '/../../includes/footer.php'; ?>

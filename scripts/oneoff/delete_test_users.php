@@ -3,7 +3,7 @@
  * Delete all test and debug users from database
  */
 
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 requireLogin();
 requireRole([ROLE_SYSTEM_ADMIN]);
 
@@ -55,7 +55,7 @@ if (isPost()) {
 }
 
 $pageTitle = 'Διαγραφή Χρηστών Δοκιμών';
-include __DIR__ . '/includes/header.php';
+include __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="container-fluid">
@@ -132,4 +132,4 @@ include __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<?php include __DIR__ . '/includes/footer.php'; ?>
+<?php include __DIR__ . '/../../includes/footer.php'; ?>

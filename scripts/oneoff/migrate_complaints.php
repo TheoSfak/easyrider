@@ -3,7 +3,7 @@
  * One-time migration: Create complaints table + email templates
  * Τρέξτε αυτό το αρχείο μία φορά από το browser, μετά διαγράψτε το.
  */
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 requireRole([ROLE_SYSTEM_ADMIN]);
 
 $results = [];

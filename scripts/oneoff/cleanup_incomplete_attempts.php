@@ -5,7 +5,7 @@
  * even though they haven't finished it.
  */
 
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 requireRole([ROLE_SYSTEM_ADMIN]);
 
 $pageTitle = 'Καθαρισμός Μη-Ολοκληρωμένων Προσπαθειών';
@@ -35,7 +35,7 @@ $incompleteAttempts = dbFetchAll("
     ORDER BY ea.created_at DESC
 ");
 
-include __DIR__ . '/includes/header.php';
+include __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="container-fluid py-4">
@@ -120,4 +120,4 @@ include __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<?php include __DIR__ . '/includes/footer.php'; ?>
+<?php include __DIR__ . '/../../includes/footer.php'; ?>

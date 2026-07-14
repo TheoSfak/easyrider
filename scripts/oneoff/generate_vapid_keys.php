@@ -1,11 +1,11 @@
 <?php
 /**
- * VolunteerOps - VAPID Key Generator
+ * EasyRide - VAPID Key Generator
  * Run once to generate and store VAPID keys for Web Push notifications.
  * Usage: Access via browser as admin or run from CLI.
  */
 
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 
 // Allow CLI execution
 $isCli = php_sapi_name() === 'cli';
@@ -83,11 +83,11 @@ if ($isCli) {
     echo $msg . "\n";
 } else {
     $pageTitle = 'VAPID Keys Generated';
-    include __DIR__ . '/includes/header.php';
+    include __DIR__ . '/../../includes/header.php';
     echo '<div class="container py-4">';
     echo '<div class="alert alert-success"><i class="bi bi-check-circle me-2"></i>VAPID keys δημιουργήθηκαν επιτυχώς!</div>';
     echo '<div class="card"><div class="card-body"><pre class="mb-0">' . h($msg) . '</pre></div></div>';
     echo '<p class="mt-3"><a href="settings.php" class="btn btn-primary">← Πίσω στις Ρυθμίσεις</a></p>';
     echo '</div>';
-    include __DIR__ . '/includes/footer.php';
+    include __DIR__ . '/../../includes/footer.php';
 }

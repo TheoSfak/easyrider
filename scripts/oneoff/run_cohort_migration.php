@@ -4,7 +4,7 @@
  * Run this once to add cohort tracking for trainee rescuer statistics
  */
 
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 requireRole([ROLE_SYSTEM_ADMIN]);
 
 // Check if already migrated
@@ -18,7 +18,7 @@ echo "Starting migration: Adding cohort_year column to users table...\n";
 
 try {
     // Read and execute migration SQL
-    $sql = file_get_contents(__DIR__ . '/sql/migrations/add_cohort_year.sql');
+    $sql = file_get_contents(__DIR__ . '/../../sql/migrations/add_cohort_year.sql');
     
     // Split by semicolon and execute each statement
     $statements = array_filter(array_map('trim', explode(';', $sql)));

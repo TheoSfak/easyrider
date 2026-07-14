@@ -4,7 +4,7 @@
  * Τρέξε αυτό το αρχείο μέσω browser για να κάνεις import όλα τα email templates
  */
 
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 requireRole([ROLE_SYSTEM_ADMIN]);
 
 echo "<!DOCTYPE html><html><head><meta charset='utf-8'><title>Email Templates Import</title>";

@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Authentication Functions
+ * EasyRide - Authentication Functions
  */
 
 if (!defined('VOLUNTEEROPS')) {
@@ -23,15 +23,12 @@ function initSession() {
         session_name(SESSION_NAME);
         session_start();
 
-        // Enforce session timeout (use DB setting if available, else SESSION_LIFETIME constant)
+        // Enforce session timeout (DB setting if available, else SESSION_LIFETIME).
+        // getSetting() serves this from the settings cache — no dedicated query.
         $timeoutSeconds = SESSION_LIFETIME;
-        try {
-            $dbTimeout = dbFetchValue("SELECT setting_value FROM settings WHERE setting_key = 'session_timeout_minutes'");
-            if ($dbTimeout !== null && $dbTimeout !== false && (int)$dbTimeout > 0) {
-                $timeoutSeconds = (int)$dbTimeout * 60;
-            }
-        } catch (Exception $e) {
-            // DB not ready yet (install phase), use constant
+        $dbTimeout = getSetting('session_timeout_minutes');
+        if ($dbTimeout !== null && (int)$dbTimeout > 0) {
+            $timeoutSeconds = (int)$dbTimeout * 60;
         }
         if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $timeoutSeconds) {
             logout();
@@ -221,8 +218,13 @@ function login($email, $password) {
     $_SESSION['user_role']  = $user['role'];
     $_SESSION['login_time'] = time();
 
-    // Update last login
-    dbExecute("UPDATE users SET updated_at = NOW() WHERE id = ?", [$user['id']]);
+    // Update last login (dedicated column — updated_at means "record modified", not "logged in")
+    try {
+        dbExecute("UPDATE users SET last_login_at = NOW() WHERE id = ?", [$user['id']]);
+    } catch (Exception $e) {
+        // Column arrives with migration v83; don't block login on older schemas
+        error_log('[login] last_login_at update failed: ' . $e->getMessage());
+    }
 
     // Log action
     logAudit('login', 'users', $user['id'], null, ['ip' => $ip]);
@@ -270,39 +272,49 @@ function registerUser($data) {
     $approvalStatus = $requireApproval ? 'PENDING' : 'APPROVED';
     $isActive = $requireApproval ? 0 : 1;
     
-    // Insert user
-    $userId = dbInsert(
-        "INSERT INTO users (name, email, password, phone, role, department_id, is_active, approval_status, email_verification_token, created_at, updated_at) 
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())",
-        [
-            $data['name'],
-            $data['email'],
-            $hashedPassword,
-            $data['phone'] ?? null,
-            ROLE_MEMBER,
-            $data['department_id'] ?? null,
-            $isActive,
-            $approvalStatus,
-            $verificationToken
-        ]
-    );
-    
-    if ($userId) {
-        // Create member profile
-        dbInsert(
-            "INSERT INTO member_profiles (user_id, created_at, updated_at) VALUES (?, NOW(), NOW())",
-            [$userId]
+    // Insert user + profile atomically — a failure between the two used to
+    // leave a user row with no member_profiles row.
+    try {
+        db()->beginTransaction();
+
+        $userId = dbInsert(
+            "INSERT INTO users (name, email, password, phone, role, department_id, is_active, approval_status, email_verification_token, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())",
+            [
+                $data['name'],
+                $data['email'],
+                $hashedPassword,
+                $data['phone'] ?? null,
+                ROLE_MEMBER,
+                $data['department_id'] ?? null,
+                $isActive,
+                $approvalStatus,
+                $verificationToken
+            ]
         );
-        
+
+        if ($userId) {
+            dbInsert(
+                "INSERT INTO member_profiles (user_id, created_at, updated_at) VALUES (?, NOW(), NOW())",
+                [$userId]
+            );
+        }
+
+        db()->commit();
+    } catch (Exception $e) {
+        if (db()->inTransaction()) {
+            db()->rollBack();
+        }
+        error_log('[registerUser] Failed: ' . $e->getMessage());
+        return ['success' => false, 'message' => 'Σφάλμα κατά την εγγραφή.'];
+    }
+
+    if ($userId) {
         logAudit('register', 'users', $userId);
         
-        // Build verification URL
-        $appName = getSetting('app_name', 'EasyRide');
-        $proto   = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-        $host    = $_SERVER['HTTP_HOST'] ?? 'localhost';
-        $path    = dirname($_SERVER['SCRIPT_NAME'] ?? '/volunteerops');
-        $baseUrl = getSetting('app_url', $proto . '://' . $host . rtrim($path, '/'));
-        $verifyUrl = rtrim($baseUrl, '/') . '/verify-email.php?token=' . $verificationToken;
+        // Build verification URL (appBaseUrl avoids Host-header-derived links)
+        $appName   = getSetting('app_name', 'EasyRide');
+        $verifyUrl = appBaseUrl() . '/verify-email.php?token=' . $verificationToken;
         
         // Send verification email
         $subject = 'Επιβεβαίωση Email - ' . $appName;

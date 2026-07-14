@@ -1,10 +1,10 @@
 <?php
 /**
- * VolunteerOps - One-time Achievement Backfill
+ * EasyRide - One-time Achievement Backfill
  * Retroactively awards badges to all members based on their existing history.
  * Run once as a system admin, then it can be deleted or left (it's idempotent).
  */
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 requireRole([ROLE_SYSTEM_ADMIN]);
 
 $pageTitle = 'Backfill Επιτευγμάτων';
@@ -60,7 +60,7 @@ $alreadyHaveBadges = (int)dbFetchValue(
     "SELECT COUNT(DISTINCT user_id) FROM user_achievements"
 );
 
-include __DIR__ . '/includes/header.php';
+include __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -219,4 +219,4 @@ function toggleOnlyNew() {
 
 <?php endif; ?>
 
-<?php include __DIR__ . '/includes/footer.php'; ?>
+<?php include __DIR__ . '/../../includes/footer.php'; ?>

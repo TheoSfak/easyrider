@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Forgot Password
+ * EasyRide - Forgot Password
  * Sends a password reset link to the user's email.
  */
 require_once __DIR__ . '/bootstrap.php';
@@ -36,12 +36,8 @@ if (isPost()) {
                 [$user['id'], $token, $expires]
             );
 
-            $appName = getSetting('app_name', 'EasyRide');
-            $proto   = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-            $host    = $_SERVER['HTTP_HOST'] ?? 'localhost';
-            $path    = dirname($_SERVER['SCRIPT_NAME'] ?? '/');
-            $baseUrl = getSetting('app_url', $proto . '://' . $host . rtrim($path, '/'));
-            $resetUrl = rtrim($baseUrl, '/') . '/reset-password.php?token=' . $token;
+            $appName  = getSetting('app_name', 'EasyRide');
+            $resetUrl = appBaseUrl() . '/reset-password.php?token=' . $token;
 
             $subject = 'Επαναφορά Κωδικού - ' . $appName;
             $body = '

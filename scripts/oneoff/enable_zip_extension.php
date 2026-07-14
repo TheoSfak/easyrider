@@ -4,7 +4,7 @@
  * This script helps enable the PHP zip extension needed for updates
  */
 
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 requireRole([ROLE_SYSTEM_ADMIN]);
 
 echo "<!DOCTYPE html>
@@ -88,7 +88,7 @@ echo "<hr>
 <ol>
     <li>Να κατεβάσετε τις ενημερώσεις χειροκίνητα από το GitHub</li>
     <li>Να τις εξάγετε με έναν συμπιεστή αρχείων (WinRAR, 7-Zip)</li>
-    <li>Να τις αντιγράψετε χειροκίνητα στο φάκελο <code>c:\\xampp\\htdocs\\volunteerops</code></li>
+    <li>Να τις αντιγράψετε χειροκίνητα στο φάκελο <code>c:\\xampp\\htdocs\\easyride</code></li>
 </ol>
 
 </body>

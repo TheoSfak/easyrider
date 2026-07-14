@@ -3,7 +3,7 @@
  * Migration utility: creates the weather_cache table for existing installs.
  * Run once from the browser (admin only) or via CLI.
  */
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 requireRole([ROLE_SYSTEM_ADMIN]);
 
 $sql = "

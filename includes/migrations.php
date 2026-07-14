@@ -4828,6 +4828,19 @@ body{margin:0;padding:0;background:#0d1117;font-family:"Segoe UI",Roboto,"Helvet
                 }
             },
         ],
+        [
+            'version'     => 83,
+            'description' => 'Add users.last_login_at — login() used to overwrite updated_at, destroying modification history',
+            'up' => function () {
+                $colExists = dbFetchValue(
+                    "SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+                     WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'users' AND COLUMN_NAME = 'last_login_at'"
+                );
+                if (!$colExists) {
+                    dbExecute("ALTER TABLE users ADD COLUMN last_login_at TIMESTAMP NULL DEFAULT NULL AFTER updated_at");
+                }
+            },
+        ],
 
     ];
     // ────────────────────────────────────────────────────────────────────────

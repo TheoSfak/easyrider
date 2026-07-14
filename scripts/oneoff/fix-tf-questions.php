@@ -3,11 +3,11 @@
  * Fix corrupted TF questions - run once on production then delete
  * Checks and fixes TF questions that have correct_option = A/B/C/D (from the questions-pool.php bug)
  */
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 requireRole([ROLE_SYSTEM_ADMIN]);
 
 $pageTitle = 'Διόρθωση Ερωτήσεων Σωστό/Λάθος';
-include __DIR__ . '/includes/header.php';
+include __DIR__ . '/../../includes/header.php';
 ?>
 <div class="container-fluid">
     <h2 class="mb-4"><i class="bi bi-wrench"></i> Διόρθωση Ερωτήσεων Σωστό/Λάθος</h2>
@@ -126,4 +126,4 @@ if ($badQuiz > 0 || $badExam > 0) {
         <a href="dashboard.php" class="btn btn-secondary"><i class="bi bi-arrow-left"></i> Επιστροφή</a>
     </div>
 </div>
-<?php include __DIR__ . '/includes/footer.php'; ?>
+<?php include __DIR__ . '/../../includes/footer.php'; ?>

@@ -4,7 +4,7 @@
  * Run this script to fix Greek character encoding in task-related email templates
  */
 
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 requireRole([ROLE_SYSTEM_ADMIN]);
 
 try {

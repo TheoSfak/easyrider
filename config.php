@@ -11,8 +11,8 @@ if (!defined('VOLUNTEEROPS')) {
 
 // Application
 define('APP_NAME', 'EasyRide');
-define('APP_VERSION', '3.91.2');
-define('DB_SCHEMA_VERSION', 82);
+define('APP_VERSION', '3.92.0');
+define('DB_SCHEMA_VERSION', 83);
 
 // Load local config if exists (created by installer)
 if (file_exists(__DIR__ . '/config.local.php')) {
@@ -54,8 +54,20 @@ if (DEBUG_MODE) {
     error_reporting(E_ALL);
     ini_set('display_errors', 1);
 } else {
-    error_reporting(0);
+    // Report and LOG everything, but never display. error_reporting(0) here
+    // used to mean production errors vanished without a trace.
+    error_reporting(E_ALL & ~E_DEPRECATED);
     ini_set('display_errors', 0);
+    ini_set('log_errors', 1);
+    $__logDir = __DIR__ . '/logs';
+    if (!is_dir($__logDir)) {
+        @mkdir($__logDir, 0750, true);
+        @file_put_contents($__logDir . '/.htaccess', "Require all denied\n");
+    }
+    if (is_dir($__logDir) && is_writable($__logDir)) {
+        ini_set('error_log', $__logDir . '/php-error.log');
+    }
+    unset($__logDir);
 }
 
 // Upload settings

@@ -162,12 +162,8 @@ if (isPost()) {
                 // Notify user (in-app)
                 sendNotification($userId, 'Η εγγραφή σας εγκρίθηκε!', 'Καλωσήρθατε! Ο λογαριασμός σας εγκρίθηκε. Μπορείτε τώρα να συνδεθείτε.', 'success');
                 // Email notification
-                $appName = getSetting('app_name', 'EasyRide');
-                $proto   = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-                $host    = $_SERVER['HTTP_HOST'] ?? 'localhost';
-                $path    = dirname($_SERVER['SCRIPT_NAME'] ?? '/volunteerops');
-                $baseUrl = getSetting('app_url', $proto . '://' . $host . rtrim($path, '/'));
-                $loginUrl = rtrim($baseUrl, '/') . '/login.php';
+                $appName  = getSetting('app_name', 'EasyRide');
+                $loginUrl = appBaseUrl() . '/login.php';
                 $body = '<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
   <h2 style="color:#27ae60">✅ Η εγγραφή σας εγκρίθηκε!</h2>
   <p>Γεια σας <strong>' . htmlspecialchars($targetUser['name']) . '</strong>,</p>

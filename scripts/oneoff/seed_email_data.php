@@ -3,7 +3,7 @@
  * Script to insert email templates with proper UTF-8 encoding
  */
 
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 requireRole([ROLE_SYSTEM_ADMIN]);
 
 // Insert email templates

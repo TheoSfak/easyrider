@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Helper Functions
+ * EasyRide - Helper Functions
  */
 
 if (!defined('VOLUNTEEROPS')) {
@@ -448,12 +448,37 @@ function jsonResponse($data, $statusCode = 200) {
 }
 
 /**
- * Get application setting from database (with per-request static cache)
- * Using static instead of $_SESSION prevents stale values across users
- * when an admin updates settings.
+ * Path of the cross-request settings cache file. Lives inside the app (not the
+ * shared system temp dir) because settings can contain secrets (SMTP, VAPID).
+ * The cache/ directory is created web-unreachable (.htaccess deny).
+ */
+function settingsCacheFile(): string {
+    $dir = __DIR__ . '/../cache';
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0750, true);
+        @file_put_contents($dir . '/.htaccess', "Require all denied\n");
+    }
+    return $dir . '/settings.json';
+}
+
+/**
+ * Get application setting.
+ * Lookup order: per-request static cache → 60s file cache → database.
+ * The file cache removes one settings-table query from every request;
+ * clearSettingsCache() (called on save) plus the short TTL keep it fresh.
  */
 function getSetting($key, $default = null) {
     static $cache = null;
+
+    if ($cache === null) {
+        $file = settingsCacheFile();
+        if (is_file($file) && (time() - (int) @filemtime($file)) < 60) {
+            $data = json_decode((string) @file_get_contents($file), true);
+            if (is_array($data)) {
+                $cache = $data;
+            }
+        }
+    }
 
     if ($cache === null) {
         $cache = [];
@@ -461,6 +486,13 @@ function getSetting($key, $default = null) {
             $rows = dbFetchAll("SELECT setting_key, setting_value FROM settings");
             foreach ($rows as $row) {
                 $cache[$row['setting_key']] = $row['setting_value'];
+            }
+            // Atomic write so a concurrent request never reads a torn file
+            $file = settingsCacheFile();
+            $tmp  = $file . '.' . getmypid() . '.tmp';
+            if (@file_put_contents($tmp, json_encode($cache, JSON_UNESCAPED_UNICODE)) !== false) {
+                @chmod($tmp, 0640);
+                @rename($tmp, $file);
             }
         } catch (Exception $e) {
             // Database might not be ready
@@ -472,11 +504,22 @@ function getSetting($key, $default = null) {
 }
 
 /**
- * Clear settings cache (forces reload on next getSetting() call)
+ * Clear settings cache (forces DB reload on the next request).
+ * Called by settings.php after every save.
  */
 function clearSettingsCache() {
-    // No-op for backward compatibility — static cache auto-resets per request.
-    // Call getSetting() after saving settings; new request will fetch fresh data.
+    @unlink(settingsCacheFile());
+}
+
+/**
+ * Absolute base URL for links placed in emails (verification, password reset).
+ * Prefers the app_url setting so those links never depend on the spoofable
+ * Host header of the request that triggered the email. Falls back to BASE_URL
+ * (override it in config.local.php on production if app_url is unset).
+ */
+function appBaseUrl(): string {
+    $url = trim((string) getSetting('app_url', ''));
+    return rtrim($url !== '' ? $url : BASE_URL, '/');
 }
 
 /**

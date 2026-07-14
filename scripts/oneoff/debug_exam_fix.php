@@ -3,13 +3,14 @@
  * Debug Script - Check canUserTakeExam() function version
  */
 
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 requireLogin();
+requireRole([ROLE_SYSTEM_ADMIN]);
 
 $pageTitle = 'Debug: canUserTakeExam()';
 
 // Get the actual function code
-$functionsFile = file_get_contents(__DIR__ . '/includes/functions.php');
+$functionsFile = file_get_contents(__DIR__ . '/../../includes/functions.php');
 
 // Find the canUserTakeExam function
 preg_match('/function canUserTakeExam\(.*?\}(?=\s*\/\*\*|\s*function|\s*$)/s', $functionsFile, $matches);
@@ -20,7 +21,7 @@ $functionCode = $matches[0] ?? 'Function not found';
 $hasFix = strpos($functionCode, 'completed_at IS NOT NULL') !== false;
 $hasOldBug = strpos($functionCode, 'completed_at IS NOT NULL') === false && strpos($functionCode, 'exam_attempts') !== false;
 
-include __DIR__ . '/includes/header.php';
+include __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="container-fluid py-4">
@@ -115,4 +116,4 @@ include __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<?php include __DIR__ . '/includes/footer.php'; ?>
+<?php include __DIR__ . '/../../includes/footer.php'; ?>

@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Εισαγωγή Υλικών Αποθέματος (Production)
+ * EasyRide - Εισαγωγή Υλικών Αποθέματος (Production)
  * 
  * Εισάγει 46 υλικά, 7 κατηγορίες, 12 τοποθεσίες από τα δεδομένα του localhost.
  * Ασφαλές για επανεκτέλεση - χρησιμοποιεί ON DUPLICATE KEY / IF NOT EXISTS.
@@ -9,13 +9,13 @@
  * Μετά διαγράψτε το αρχείο.
  */
 
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 requireLogin();
 requireRole([ROLE_SYSTEM_ADMIN]);
 
 // Check inventory tables exist
 if (!inventoryTablesExist()) {
-    echo "<h2>❌ Οι πίνακες αποθέματος δεν υπάρχουν. Τρέξτε πρώτα το <a href='migrate_v3.php'>migrate_v3.php</a></h2>";
+    echo "<h2>❌ Οι πίνακες αποθέματος δεν υπάρχουν. Τρέξτε πρώτα το scripts/oneoff/migrate_v3.php</h2>";
     exit;
 }
 
@@ -208,7 +208,7 @@ if (isPost()) {
     $results[] = "Σύνολο στη βάση: {$totalItems} υλικά, {$totalCats} κατηγορίες, {$totalLocs} τοποθεσίες";
 }
 
-include __DIR__ . '/includes/header.php';
+include __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="container-fluid">
@@ -260,4 +260,4 @@ include __DIR__ . '/includes/header.php';
     <?php endif; ?>
 </div>
 
-<?php include __DIR__ . '/includes/footer.php'; ?>
+<?php include __DIR__ . '/../../includes/footer.php'; ?>

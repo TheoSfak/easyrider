@@ -1,9 +1,9 @@
 <?php
-require_once __DIR__ . '/bootstrap.php';
+require_once __DIR__ . '/../../bootstrap.php';
 requireLogin();
 requireRole([ROLE_SYSTEM_ADMIN]);
 
-$migrationFile = __DIR__ . '/sql/migrations/add_quiz_selection_fields.sql';
+$migrationFile = __DIR__ . '/../../sql/migrations/add_quiz_selection_fields.sql';
 
 if (!file_exists($migrationFile)) {
     die('Migration file not found!');

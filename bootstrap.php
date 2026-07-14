@@ -1,6 +1,6 @@
 <?php
 /**
- * VolunteerOps - Bootstrap file
+ * EasyRide - Bootstrap file
  * Include this at the top of every page
  */
 
@@ -8,6 +8,9 @@ define('VOLUNTEEROPS', true);
 
 // Load configuration
 require_once __DIR__ . '/config.php';
+
+// Global exception/fatal handlers — must load before anything that can throw
+require_once __DIR__ . '/includes/error-handler.php';
 
 // Load core includes
 require_once __DIR__ . '/includes/db.php';
